@@ -262,6 +262,17 @@ class StatsController extends Controller
     }
 
     /**
+     * Show Extra-Stats Groups.
+     */
+    public function group(int $id): \Illuminate\Contracts\View\Factory|\Illuminate\View\View
+    {
+        return view('stats.groups.group', [
+            'group' => Group::findOrFail($id),
+            'users' => User::with(['group'])->withTrashed()->where('group_id', '=', $id)->latest()->paginate(100),
+        ]);
+    }
+
+    /**
      * Show Group Requirements.
      */
     public function groupsRequirements(): \Illuminate\Contracts\View\Factory|\Illuminate\View\View
@@ -272,7 +283,7 @@ class StatsController extends Controller
             'current'           => Carbon::now(),
             'user'              => $user,
             'user_avg_seedtime' => DB::table('history')->where('user_id', '=', $user->id)->avg('seedtime'),
-            'user_account_age'  => (int) Carbon::now()->diffInSeconds($user->created_at, true),
+            'user_account_age'  => Carbon::now()->diffInSeconds($user->created_at),
             'user_seed_size'    => $user->seedingTorrents()->sum('size'),
             'user_uploads'      => $user->torrents()->count(),
             'groups'            => Group::orderBy('position')->where('is_modo', '=', 0)->get(),
@@ -338,11 +349,8 @@ class StatsController extends Controller
     public function themes(): \Illuminate\Contracts\View\Factory|\Illuminate\View\View
     {
         return view('stats.themes.index', [
-            'siteThemes' => User::query()
-                ->withTrashed()
-                ->leftJoin('user_settings', 'users.id', '=', 'user_settings.user_id')
-                ->selectRaw('COALESCE(style, ?) as total_style, COUNT(*) as value', [config('other.default_style')])
-                ->groupBy('total_style')
+            'siteThemes' => UserSetting::select(DB::raw('style, count(*) as value'))
+                ->groupBy('style')
                 ->orderByDesc('value')
                 ->get(),
             'customThemes' => UserSetting::where('custom_css', '!=', '')
@@ -355,28 +363,6 @@ class StatsController extends Controller
                 ->groupBy('standalone_css')
                 ->orderByDesc('value')
                 ->get(),
-        ]);
-    }
-
-    /**
-     * Show Extra-Stats User Messages.
-     */
-    public function messages(): \Illuminate\Contracts\View\Factory|\Illuminate\View\View
-    {
-        $users = User::withCount(['messages' => function ($query): void {
-            $query->where('chatroom_id', '!=', 0);  // Exclude private chatbox messages;
-        }])
-            ->withSum(['messages as characters_typed' => function ($query): void {
-                $query->where('chatroom_id', '!=', 0);  // Exclude private chatbox messages;
-            }], DB::raw('CHAR_LENGTH(message)'))
-            ->orderByDesc('messages_count')
-            ->where('id', '!=', User::SYSTEM_USER_ID)
-            ->whereDoesntHave('group', fn ($query) => $query->whereIn('slug', ['banned', 'validating', 'disabled', 'pruned', 'bot']))
-            ->take(100)
-            ->get();
-
-        return view('stats.users.messages', [
-            'users' => $users,
         ]);
     }
 }

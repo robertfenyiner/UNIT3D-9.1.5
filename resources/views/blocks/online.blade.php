@@ -23,19 +23,23 @@
                 </li>
             @endforeach
         </ul>
+
+        <!-- Sección de grupos eliminada para que solo salgan los nombres Online -->
+        <!--                                   
         <hr />
         <ul style="column-width: 200px; column-gap: 1rem; list-style-type: none; padding: 0">
             @foreach ($groups as $group)
                 <span class="user-tag" style="padding: 4px 8px; display: block">
-                    <span
+                    <a
                         class="user-tag__link {{ $group->icon }}"
                         style="color: {{ $group->color }}"
                         title="{{ $group->name }}"
                     >
                         {{ $group->name }}
-                    </span>
+                    </a>
                 </span>
             @endforeach
         </ul>
-    </div>
+        -->                                
+        </div>
 </section>

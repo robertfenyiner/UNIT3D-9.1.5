@@ -16,8 +16,6 @@ declare(strict_types=1);
 
 namespace App\Http;
 
-use App\Enums\GlobalRateLimit;
-use App\Enums\MiddlewareGroup;
 use Illuminate\Foundation\Http\Kernel as HttpKernel;
 
 class Kernel extends HttpKernel
@@ -31,11 +29,11 @@ class Kernel extends HttpKernel
      */
     protected $middleware = [
         // Default Laravel
-        \Illuminate\Foundation\Http\Middleware\PreventRequestsDuringMaintenance::class,
+        Middleware\PreventRequestsDuringMaintenance::class,
         \Illuminate\Foundation\Http\Middleware\ValidatePostSize::class,
-        \Illuminate\Foundation\Http\Middleware\TrimStrings::class,
+        Middleware\TrimStrings::class,
         \Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull::class,
-        //\App\Http\Middleware\TrustProxies::class,
+        \App\Http\Middleware\TrustProxies::class,
         \Illuminate\Http\Middleware\HandleCors::class,
         Middleware\BlockIpAddress::class,
     ];
@@ -46,38 +44,38 @@ class Kernel extends HttpKernel
      * @var array<string, array<int, class-string|string>>
      */
     protected $middlewareGroups = [
-        MiddlewareGroup::WEB->value => [
-            \Illuminate\Cookie\Middleware\EncryptCookies::class,
+        'web' => [
+            Middleware\EncryptCookies::class,
             \Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class,
             \Illuminate\Session\Middleware\StartSession::class,
             \Illuminate\Session\Middleware\AuthenticateSession::class,
             \Illuminate\View\Middleware\ShareErrorsFromSession::class,
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
-            \Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class,
+            Middleware\VerifyCsrfToken::class,
             Middleware\UpdateLastAction::class,
             \HDVinnie\SecureHeaders\SecureHeadersMiddleware::class,
-            'throttle:'.GlobalRateLimit::WEB->value,
+            'throttle:web',
         ],
-        MiddlewareGroup::CHAT->value => [
-            \Illuminate\Cookie\Middleware\EncryptCookies::class,
+        'chat' => [
+            Middleware\EncryptCookies::class,
             \Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class,
             \Illuminate\Session\Middleware\StartSession::class,
             \Illuminate\Session\Middleware\AuthenticateSession::class,
             \Illuminate\View\Middleware\ShareErrorsFromSession::class,
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
-            \Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class,
+            Middleware\VerifyCsrfToken::class,
             Middleware\UpdateLastAction::class,
             \HDVinnie\SecureHeaders\SecureHeadersMiddleware::class,
-            'throttle:'.GlobalRateLimit::CHAT->value,
+            'throttle:chat',
         ],
-        MiddlewareGroup::API->value => [
-            'throttle:'.GlobalRateLimit::API->value,
+        'api' => [
+            'throttle:api',
         ],
-        MiddlewareGroup::ANNOUNCE->value => [
-            'throttle:'.GlobalRateLimit::ANNOUNCE->value,
+        'announce' => [
+            'throttle:announce',
         ],
-        MiddlewareGroup::RSS->value => [
-            'throttle:'.GlobalRateLimit::RSS->value,
+        'rss' => [
+            'throttle:rss',
         ],
     ];
 
@@ -90,14 +88,14 @@ class Kernel extends HttpKernel
      */
     protected $middlewareAliases = [
         'admin'            => Middleware\CheckForAdmin::class,
-        'auth'             => \Illuminate\Auth\Middleware\Authenticate::class,
+        'auth'             => Middleware\Authenticate::class,
         'auth.basic'       => \Illuminate\Auth\Middleware\AuthenticateWithBasicAuth::class,
         'banned'           => Middleware\CheckIfBanned::class,
         'bindings'         => \Illuminate\Routing\Middleware\SubstituteBindings::class,
         'cache.headers'    => \Illuminate\Http\Middleware\SetCacheHeaders::class,
         'can'              => \Illuminate\Auth\Middleware\Authorize::class,
-        'csrf'             => \Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class,
-        'guest'            => \Illuminate\Auth\Middleware\RedirectIfAuthenticated::class,
+        'csrf'             => Middleware\VerifyCsrfToken::class,
+        'guest'            => Middleware\RedirectIfAuthenticated::class,
         'language'         => Middleware\SetLanguage::class,
         'modo'             => Middleware\CheckForModo::class,
         'owner'            => Middleware\CheckForOwner::class,

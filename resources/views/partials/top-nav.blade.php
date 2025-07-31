@@ -1,8 +1,10 @@
 <nav class="top-nav" x-data="{ expanded: false }" x-bind:class="expanded && 'mobile'">
     <div class="top-nav__left">
-        <a class="top-nav__branding" href="{{ route('home.index') }}">
-            <img src="{{ url('/favicon.ico') }}" style="height: 35px" />
-            <span class="top-nav__site-logo">{{ \config('other.title') }}</span>
+        <!--<a class="top-nav__branding" href="{{ route('home.index') }}">-->
+            <!--<img src="{{ url('/favicon.ico') }}" style="height: 35px" />-->
+            <!--<span class="top-nav__site-logo">{{ \config('other.title') }}</span>-->
+            <a href="{{ route('home.index') }}" style="height: 32px;"><img src="{{ url('/img/ltsmall.png') }}" style="height: 32px;">
+        
         </a>
         @include('partials.quick-search-dropdown')
     </div>
@@ -25,12 +27,14 @@
                         {{ __('torrent.torrents') }}
                     </a>
                 </li>
+                <!--
                 <li>
                     <a href="{{ route('torrents.pending') }}">
                         <i class="{{ config('other.font-awesome') }} fa-hourglass-half"></i>
                         {{ __('common.pending-torrents') }}
                     </a>
                 </li>
+                -->
                 <li>
                     <a href="{{ route('torrents.create') }}">
                         <i class="{{ config('other.font-awesome') }} fa-upload"></i>
@@ -184,9 +188,9 @@
                     </a>
                 </li>
                 <li>
-                    <a href="{{ route('trending.index') }}">
-                        <i class="{{ config('other.font-awesome') }} fa-arrow-trend-up"></i>
-                        {{ __('common.trending') }}
+                    <a href="{{ route('top10.index') }}">
+                        <i class="{{ config('other.font-awesome') }} fa-trophy-alt"></i>
+                        {{ __('common.top-10') }}
                     </a>
                 </li>
                 <li>
@@ -211,7 +215,7 @@
                             class="{{ $donationPercentage < 100 ? 'fa-fade' : '' }}"
                             style="color: lightcoral"
                         >
-                            Donate
+                            Apoya A Lat-Team
                         </span>
                         <div class="progress" style="background-color: slategray">
                             <div
@@ -234,14 +238,14 @@
                     <li>
                         <a href="{{ route('donations.index') }}">
                             <i class="fas fa-display-chart-up-circle-dollar"></i>
-                            Support {{ config('other.title') }} ({{ $donationPercentage }}%)
+                            Donaciones {{ config('other.title') }} ({{ $donationPercentage }}%)
                         </a>
                     </li>
-                    <li>
+                    <!--<li>
                         <a href="https://square.link/u/VjB1CNfm" target="_blank">
                             <i class="fas fa-handshake"></i>
                             Support UNIT3D
-                        </a>
+                        </a>-->
                     </li>
                 </ul>
             </li>

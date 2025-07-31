@@ -487,8 +487,8 @@ return [
             'self' => true,
 
             'allow' => [
-                'https://'.parse_url(env('VITE_ECHO_ADDRESS'), PHP_URL_HOST).(parse_url(env('VITE_ECHO_ADDRESS'), PHP_URL_PORT) === null ? '' : ':'.parse_url(env('VITE_ECHO_ADDRESS'), PHP_URL_PORT)).'/socket.io/',
-                'wss://'.parse_url(env('VITE_ECHO_ADDRESS'), PHP_URL_HOST).(parse_url(env('VITE_ECHO_ADDRESS'), PHP_URL_PORT) === null ? '' : ':'.parse_url(env('VITE_ECHO_ADDRESS'), PHP_URL_PORT)).'/socket.io/',
+                'https://'.parse_url(env('APP_URL'), PHP_URL_HOST).':8443/socket.io/',
+                'wss://'.parse_url(env('APP_URL'), PHP_URL_HOST).':8443/socket.io/',
                 'https://api.themoviedb.org/',
             ],
         ],
@@ -523,6 +523,11 @@ return [
 
         // https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Security-Policy/frame-src
         'frame-src' => [
+            'allow' => [
+                'https://e.widgetbot.io/',
+	            'https://www.youtube-nocookie.com/',
+	            'https://youtu.be/',
+            ],  
         ],
 
         // https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Security-Policy/img-src
