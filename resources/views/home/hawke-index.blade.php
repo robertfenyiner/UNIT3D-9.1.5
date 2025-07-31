@@ -52,7 +52,7 @@
                         <i class="{{ config('other.font-awesome') }} fa-clock"></i>
                     </div>
                     <div class="stat-content">
-                        <div class="stat-value">{{ number_format(\App\Models\User::where('last_action', '>=', now()->subMinutes(5))->count()) }}</div>
+                        <div class="stat-value">{{ number_format(\App\Models\User::where('last_login', '>=', now()->subMinutes(5))->count()) }}</div>
                         <div class="stat-label">{{ __('common.online') }}</div>
                     </div>
                 </div>
