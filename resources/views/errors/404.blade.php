@@ -159,7 +159,7 @@
         .btn-minimize { background: #ffaa00; }
         .btn-maximize { background: #44ff44; }
 
-        /* Área de búsqueda DHT */
+        /* Animaciones CSS puras para evitar problemas de CSP */
         .dht-search {
             background: #111;
             padding: 1rem;
@@ -173,6 +173,22 @@
             line-height: 1.4;
             position: relative;
             transition: all 0.3s ease;
+        }
+
+        .dht-search::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 68, 68, 0.1), transparent);
+            animation: scanning 3s linear infinite;
+        }
+
+        @keyframes scanning {
+            0% { left: -100%; }
+            100% { left: 100%; }
         }
 
         .dht-search::-webkit-scrollbar {
@@ -190,11 +206,26 @@
 
         .search-line {
             margin-bottom: 0.3rem;
-            animation: typewriter 0.5s ease-out;
+            animation: typewriter 0.5s ease-out, fadeIn 1s ease-in;
             transition: all 0.3s ease;
             opacity: 1;
             transform: translateX(0);
         }
+
+        /* Simulación de escritura progresiva */
+        .search-line:nth-child(1) { animation-delay: 0.5s; }
+        .search-line:nth-child(2) { animation-delay: 1.5s; }
+        .search-line:nth-child(3) { animation-delay: 2.5s; }
+        .search-line:nth-child(4) { animation-delay: 3.5s; }
+        .search-line:nth-child(5) { animation-delay: 4.5s; }
+        .search-line:nth-child(6) { animation-delay: 5.5s; }
+        .search-line:nth-child(7) { animation-delay: 6.5s; }
+        .search-line:nth-child(8) { animation-delay: 7.5s; }
+        .search-line:nth-child(9) { animation-delay: 8.5s; }
+        .search-line:nth-child(10) { animation-delay: 9.5s; }
+        .search-line:nth-child(11) { animation-delay: 10.5s; }
+        .search-line:nth-child(12) { animation-delay: 11.5s; }
+        .search-line:nth-child(13) { animation-delay: 12.5s; }
 
         .search-line.error {
             color: #ff4444;
@@ -216,6 +247,73 @@
         @keyframes typewriter {
             from { opacity: 0; transform: translateX(-10px); }
             to { opacity: 1; transform: translateX(0); }
+        }
+
+        @keyframes fadeIn {
+            0% { opacity: 0; }
+            100% { opacity: 1; }
+        }
+
+        /* Barra de progreso animada automáticamente */
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #ff4444, #ffaa00, #ff4444);
+            animation: progress-fill 13s ease-out forwards, progress-pulse 2s ease-in-out infinite;
+            width: 0%;
+        }
+
+        @keyframes progress-fill {
+            0% { width: 0%; }
+            20% { width: 15%; }
+            40% { width: 35%; }
+            60% { width: 60%; }
+            80% { width: 85%; }
+            100% { width: 100%; }
+        }
+
+        /* Estadísticas que se actualizan automáticamente */
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #ff4444;
+            display: block;
+            transition: all 0.3s ease;
+            animation: countUp 13s ease-out forwards;
+        }
+
+        #nodes-contacted { animation: countUpNodes 13s ease-out forwards; }
+        #timeout { animation: countDownTimeout 13s ease-out forwards; }
+
+        @keyframes countUpNodes {
+            0% { transform: scale(1); }
+            20% { transform: scale(1.1); }
+            21% { transform: scale(1); }
+            40% { transform: scale(1.1); }
+            41% { transform: scale(1); }
+            60% { transform: scale(1.1); }
+            61% { transform: scale(1); }
+            80% { transform: scale(1.1); }
+            81% { transform: scale(1); }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes countDownTimeout {
+            0% { color: #ff4444; }
+            80% { color: #ffaa00; }
+            90% { color: #ff4444; font-size: 2.2rem; }
+            100% { color: #ff4444; font-size: 2rem; }
+        }
+
+        /* Cursor terminal parpadeante */
+        .terminal-cursor {
+            color: #ff4444;
+            animation: blink 1s infinite;
+            font-weight: bold;
+        }
+
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
         }
 
         /* Información del magnet */
@@ -321,9 +419,8 @@
         .progress-bar {
             height: 100%;
             background: linear-gradient(90deg, #ff4444, #ffaa00, #ff4444);
-            animation: progress-pulse 2s ease-in-out infinite;
+            animation: progress-fill 13s ease-out forwards, progress-pulse 2s ease-in-out infinite;
             width: 0%;
-            transition: width 0.5s ease-out;
         }
 
         @keyframes progress-pulse {
@@ -338,6 +435,48 @@
             .action-buttons { flex-direction: column; align-items: center; }
             .btn { width: 200px; }
             .dht-stats { grid-template-columns: 1fr 1fr; }
+        }
+
+        /* Efectos adicionales de animación */
+        .terminal-panel {
+            animation: terminalGlow 4s ease-in-out infinite alternate;
+        }
+
+        @keyframes terminalGlow {
+            0% { 
+                box-shadow: 0 0 20px rgba(255, 68, 68, 0.5), inset 0 0 20px rgba(255, 68, 68, 0.1);
+            }
+            100% { 
+                box-shadow: 0 0 30px rgba(255, 68, 68, 0.7), inset 0 0 25px rgba(255, 68, 68, 0.15);
+            }
+        }
+
+        /* Efecto de matriz de fondo */
+        body::after {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                radial-gradient(circle at 20% 50%, rgba(255, 68, 68, 0.03) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(255, 68, 68, 0.03) 0%, transparent 50%),
+                radial-gradient(circle at 40% 80%, rgba(255, 68, 68, 0.03) 0%, transparent 50%);
+            pointer-events: none;
+            animation: matrixFloat 8s ease-in-out infinite;
+            z-index: 1;
+        }
+
+        @keyframes matrixFloat {
+            0%, 100% { 
+                transform: translateY(0px) rotate(0deg);
+                opacity: 0.3;
+            }
+            50% { 
+                transform: translateY(-10px) rotate(1deg);
+                opacity: 0.1;
+            }
         }
     </style>
 </head>
@@ -378,11 +517,25 @@
 
             <div class="dht-search" id="dht-log">
                 <div class="search-line info">[DHT] Initializing distributed hash table search...</div>
+                <div class="search-line info">[DHT] Connecting to bootstrap nodes...</div>
+                <div class="search-line success">[DHT] Connected to 4.4.4.4:6881</div>
+                <div class="search-line info">[DHT] Sending find_node query...</div>
+                <div class="search-line warning">[DHT] Node 192.168.1.1:6881 timeout</div>
+                <div class="search-line success">[DHT] Response from 8.8.8.8:6881</div>
+                <div class="search-line info">[DHT] Sending get_peers query...</div>
+                <div class="search-line warning">[DHT] No peers returned for infohash</div>
+                <div class="search-line info">[DHT] Querying additional nodes...</div>
+                <div class="search-line warning">[DHT] Node 176.32.98.166:6881 unreachable</div>
+                <div class="search-line info">[DHT] Expanding search radius...</div>
+                <div class="search-line warning">[DHT] All bootstrap nodes exhausted</div>
+                <div class="search-line error">[DHT] SEARCH FAILED: Hash not found in DHT</div>
+                <div class="search-line error">[DHT] ERROR: Torrent may be dead or removed</div>
+                <span class="terminal-cursor">█</span>
             </div>
 
             <div class="dht-stats">
                 <div class="stat-item">
-                    <span class="stat-value" id="nodes-contacted">0</span>
+                    <span class="stat-value" id="nodes-contacted">8</span>
                     <div class="stat-label">Nodes Contacted</div>
                 </div>
                 <div class="stat-item">
@@ -394,7 +547,7 @@
                     <div class="stat-label">Seeders</div>
                 </div>
                 <div class="stat-item">
-                    <span class="stat-value" id="timeout">30</span>
+                    <span class="stat-value" id="timeout">0</span>
                     <div class="stat-label">Timeout (s)</div>
                 </div>
             </div>
@@ -414,192 +567,31 @@
     </div>
 
     <script>
-        let searchProgress = 0;
-        let nodesContacted = 0;
-        let timeout = 30;
-        let searchInterval;
-        
-        const dhtMessages = [
-            { type: 'info', text: '[DHT] Connecting to bootstrap nodes...', delay: 1000 },
-            { type: 'success', text: '[DHT] Connected to 4.4.4.4:6881', delay: 2000 },
-            { type: 'info', text: '[DHT] Sending find_node query...', delay: 3000 },
-            { type: 'warning', text: '[DHT] Node 192.168.1.1:6881 timeout', delay: 4000 },
-            { type: 'success', text: '[DHT] Response from 8.8.8.8:6881', delay: 5000 },
-            { type: 'info', text: '[DHT] Sending get_peers query...', delay: 6000 },
-            { type: 'warning', text: '[DHT] No peers returned for infohash', delay: 7000 },
-            { type: 'info', text: '[DHT] Querying additional nodes...', delay: 8000 },
-            { type: 'warning', text: '[DHT] Node 176.32.98.166:6881 unreachable', delay: 9000 },
-            { type: 'info', text: '[DHT] Expanding search radius...', delay: 10000 },
-            { type: 'warning', text: '[DHT] All bootstrap nodes exhausted', delay: 11000 },
-            { type: 'error', text: '[DHT] SEARCH FAILED: Hash not found in DHT', delay: 12000 },
-            { type: 'error', text: '[DHT] ERROR: Torrent may be dead or removed', delay: 13000 }
-        ];
-
-        function updateProgress(percent) {
-            const progressBar = document.getElementById('search-progress');
-            if (progressBar) {
-                progressBar.style.width = percent + '%';
-                searchProgress = percent;
-            }
-        }
-
-        function updateStats() {
-            const nodesElement = document.getElementById('nodes-contacted');
-            const timeoutElement = document.getElementById('timeout');
-            
-            if (nodesElement) {
-                nodesElement.textContent = nodesContacted;
-                // Añadir efecto visual al actualizar
-                nodesElement.style.transform = 'scale(1.1)';
-                setTimeout(() => {
-                    nodesElement.style.transform = 'scale(1)';
-                }, 200);
-            }
-            
-            if (timeoutElement) {
-                timeoutElement.textContent = timeout;
-                if (timeout < 10) {
-                    timeoutElement.style.color = '#ff4444';
-                }
-            }
-        }
-
-        function addLogMessage(message, type) {
-            const log = document.getElementById('dht-log');
-            if (!log) return;
-            
-            const line = document.createElement('div');
-            line.className = `search-line ${type}`;
-            line.textContent = message;
-            line.style.opacity = '0';
-            line.style.transform = 'translateX(-10px)';
-            
-            log.appendChild(line);
-            
-            // Animar la entrada del mensaje
-            setTimeout(() => {
-                line.style.opacity = '1';
-                line.style.transform = 'translateX(0)';
-            }, 50);
-            
-            log.scrollTop = log.scrollHeight;
-        }
-
-        function simulateDHTSearch() {
-            console.log('Starting DHT search simulation...');
-            
-            dhtMessages.forEach((msg, index) => {
-                setTimeout(() => {
-                    console.log(`Adding message ${index}: ${msg.text}`);
-                    addLogMessage(msg.text, msg.type);
-                    
-                    // Update progress
-                    const progress = ((index + 1) / dhtMessages.length) * 100;
-                    updateProgress(progress);
-                    
-                    // Update nodes contacted
-                    if (msg.type === 'success' || msg.type === 'warning') {
-                        nodesContacted++;
-                        updateStats();
-                    }
-                    
-                    // Update timeout countdown
-                    if (index > 3) {
-                        timeout = Math.max(0, 30 - Math.floor((index - 3) * 2));
-                        updateStats();
-                    }
-                    
-                }, msg.delay);
-            });
-        }
-
-        // Screen flicker effect
-        function addScreenFlicker() {
-            setInterval(() => {
-                if (Math.random() > 0.95) {
-                    document.body.style.filter = 'brightness(1.3) contrast(1.2)';
-                    setTimeout(() => {
+        // Efectos adicionales solo si no hay problemas de CSP
+        document.addEventListener('DOMContentLoaded', function() {
+            // Efecto de parpadeo de pantalla ocasional
+            setInterval(function() {
+                if (Math.random() > 0.97) {
+                    document.body.style.filter = 'brightness(1.2) contrast(1.1)';
+                    setTimeout(function() {
                         document.body.style.filter = '';
                     }, 80);
                 }
-            }, 1500);
-        }
-
-        // Terminal text cursor effect
-        function addCursorEffect() {
-            const style = document.createElement('style');
-            style.textContent = `
-                @keyframes blink {
-                    0%, 50% { opacity: 1; }
-                    51%, 100% { opacity: 0; }
-                }
-                .terminal-cursor {
-                    color: #ff4444;
-                    animation: blink 1s infinite;
-                    font-weight: bold;
-                }
-            `;
-            document.head.appendChild(style);
+            }, 2000);
             
-            // Añadir cursor parpadeante al final del log
-            setInterval(() => {
-                const log = document.getElementById('dht-log');
-                if (log) {
-                    // Remover cursor anterior
-                    const oldCursor = log.querySelector('.terminal-cursor');
-                    if (oldCursor) {
-                        oldCursor.remove();
-                    }
-                    
-                    // Añadir nuevo cursor
-                    const cursor = document.createElement('span');
-                    cursor.className = 'terminal-cursor';
-                    cursor.innerHTML = '█';
-                    log.appendChild(cursor);
-                }
-            }, 1000);
-        }
-
-        // Añadir efectos de glitch ocasionales
-        function addGlitchEffects() {
-            setInterval(() => {
+            // Efecto glitch en el código de error
+            setInterval(function() {
                 if (Math.random() > 0.98) {
-                    const errorCode = document.querySelector('.error-code');
+                    var errorCode = document.querySelector('.error-code');
                     if (errorCode) {
                         errorCode.style.textShadow = '2px 2px #00ffff, -2px -2px #ff00ff';
-                        setTimeout(() => {
+                        setTimeout(function() {
                             errorCode.style.textShadow = '0 0 10px #ff4444, 0 0 20px #ff4444, 0 0 40px #ff4444, 0 0 80px #ff4444';
                         }, 100);
                     }
                 }
             }, 2000);
-        }
-
-        // Initialize everything when page loads
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('DOM loaded, initializing...');
-            
-            // Initialize stats
-            updateProgress(0);
-            updateStats();
-            
-            // Start DHT search simulation after a short delay
-            setTimeout(() => {
-                simulateDHTSearch();
-            }, 500);
-            
-            // Start visual effects
-            addScreenFlicker();
-            addCursorEffect();
-            addGlitchEffects();
-            
-            console.log('All effects initialized');
         });
-
-        // Debug function - you can call this in browser console
-        window.restartAnimation = function() {
-            location.reload();
-        };
     </script>
 </body>
 </html>
