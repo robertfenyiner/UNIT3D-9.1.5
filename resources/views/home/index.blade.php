@@ -12,8 +12,8 @@
                         <i class="{{ config('other.font-awesome') }} fa-users"></i>
                     </div>
                     <div class="stat-content">
-                        <div class="stat-value">{{ number_format(\App\Models\User::where('group_id', '!=', 5)->count()) }}</div>
-                        <div class="stat-label">{{ __('common.users') }}</div>
+                        <div class="stat-value">{{ isset($users) ? count($users) : 'N/A' }}</div>
+                        <div class="stat-label">{{ __('common.online') }}</div>
                     </div>
                 </div>
                 
@@ -22,28 +22,28 @@
                         <i class="{{ config('other.font-awesome') }} fa-download"></i>
                     </div>
                     <div class="stat-content">
-                        <div class="stat-value">{{ number_format(\App\Models\Torrent::approved()->count()) }}</div>
-                        <div class="stat-label">{{ __('torrent.torrents') }}</div>
+                        <div class="stat-value">{{ isset($featured) ? count($featured) : 'N/A' }}</div>
+                        <div class="stat-label">Featured</div>
                     </div>
                 </div>
                 
                 <div class="stat-card">
                     <div class="stat-icon">
-                        <i class="{{ config('other.font-awesome') }} fa-arrow-up"></i>
+                        <i class="{{ config('other.font-awesome') }} fa-newspaper"></i>
                     </div>
                     <div class="stat-content">
-                        <div class="stat-value">{{ number_format(\App\Models\Peer::where('seeder', '=', 1)->count()) }}</div>
-                        <div class="stat-label">{{ __('torrent.seeders') }}</div>
+                        <div class="stat-value">{{ isset($articles) ? count($articles) : 'N/A' }}</div>
+                        <div class="stat-label">{{ __('common.news') }}</div>
                     </div>
                 </div>
                 
                 <div class="stat-card">
                     <div class="stat-icon">
-                        <i class="{{ config('other.font-awesome') }} fa-arrow-down"></i>
+                        <i class="{{ config('other.font-awesome') }} fa-comments"></i>
                     </div>
                     <div class="stat-content">
-                        <div class="stat-value">{{ number_format(\App\Models\Peer::where('seeder', '=', 0)->count()) }}</div>
-                        <div class="stat-label">{{ __('torrent.leechers') }}</div>
+                        <div class="stat-value">{{ isset($topics) ? count($topics) : 'N/A' }}</div>
+                        <div class="stat-label">Topics</div>
                     </div>
                 </div>
                 
@@ -52,8 +52,8 @@
                         <i class="{{ config('other.font-awesome') }} fa-clock"></i>
                     </div>
                     <div class="stat-content">
-                        <div class="stat-value">{{ number_format(\App\Models\User::where('last_action', '>=', now()->subMinutes(5))->count()) }}</div>
-                        <div class="stat-label">{{ __('common.online') }}</div>
+                        <div class="stat-value">{{ now()->format('H:i') }}</div>
+                        <div class="stat-label">Server Time</div>
                     </div>
                 </div>
             </div>
