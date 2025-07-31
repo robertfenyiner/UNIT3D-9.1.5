@@ -39,11 +39,11 @@ class HomeController extends Controller
     public function index(Request $request): \Illuminate\Contracts\View\Factory|\Illuminate\View\View
     {
         // SSL Info
-        try {
-            $certificate = $request->secure() ? SslCertificate::createForHostName(config('app.url')) : '';
-        } catch (Exception) {
+        //try {
+        //    $certificate = $request->secure() ? SslCertificate::createForHostName(config('app.url')) : '';
+        //} catch (Exception) {
             $certificate = '';
-        }
+        //}
 
         // System Information
         $systemInformation = new SystemInformation();
