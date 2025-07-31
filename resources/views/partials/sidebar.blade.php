@@ -61,14 +61,14 @@
     <div class="nav-section">
         <h5 class="nav-title">Comunidad</h5>
         <ul class="nav-list">
-            <li class="nav-item {{ request()->routeIs('users.index') ? 'active' : '' }}">
-                <a href="{{ route('users.index') }}" class="nav-link">
-                    <i class="fas fa-users"></i>
-                    <span>Usuarios</span>
+            <li class="nav-item {{ request()->routeIs('mediahub.index') ? 'active' : '' }}">
+                <a href="{{ route('mediahub.index') }}" class="nav-link">
+                    <i class="fas fa-film"></i>
+                    <span>MediaHub</span>
                 </a>
             </li>
-            <li class="nav-item {{ request()->routeIs('forum.index') ? 'active' : '' }}">
-                <a href="{{ route('forum.index') }}" class="nav-link">
+            <li class="nav-item {{ request()->routeIs('forums.*') ? 'active' : '' }}">
+                <a href="{{ route('forums.index') }}" class="nav-link">
                     <i class="fas fa-comments"></i>
                     <span>Foro</span>
                 </a>
@@ -86,28 +86,28 @@
     <div class="nav-section">
         <h5 class="nav-title">Mi cuenta</h5>
         <ul class="nav-list">
-            <li class="nav-item {{ request()->routeIs('user.profile', auth()->user()->username) ? 'active' : '' }}">
-                <a href="{{ route('user.profile', ['username' => auth()->user()->username]) }}" class="nav-link">
+            <li class="nav-item {{ request()->routeIs('users.show', auth()->user()) ? 'active' : '' }}">
+                <a href="{{ route('users.show', ['user' => auth()->user()]) }}" class="nav-link">
                     <i class="fas fa-user"></i>
                     <span>Mi perfil</span>
                 </a>
             </li>
-            <li class="nav-item {{ request()->routeIs('user.settings') ? 'active' : '' }}">
-                <a href="{{ route('user.settings.index') }}" class="nav-link">
+            <li class="nav-item {{ request()->routeIs('users.general_settings.*') ? 'active' : '' }}">
+                <a href="{{ route('users.general_settings.edit', ['user' => auth()->user()]) }}" class="nav-link">
                     <i class="fas fa-cog"></i>
                     <span>Configuración</span>
                 </a>
             </li>
-            <li class="nav-item {{ request()->routeIs('user.uploads') ? 'active' : '' }}">
-                <a href="{{ route('user.uploads', ['username' => auth()->user()->username]) }}" class="nav-link">
-                    <i class="fas fa-upload"></i>
-                    <span>Mis subidas</span>
+            <li class="nav-item {{ request()->routeIs('users.history.*') ? 'active' : '' }}">
+                <a href="{{ route('users.history.index', ['user' => auth()->user()]) }}" class="nav-link">
+                    <i class="fas fa-history"></i>
+                    <span>Mi historial</span>
                 </a>
             </li>
-            <li class="nav-item {{ request()->routeIs('user.downloads') ? 'active' : '' }}">
-                <a href="{{ route('user.downloads', ['username' => auth()->user()->username]) }}" class="nav-link">
-                    <i class="fas fa-download"></i>
-                    <span>Mis descargas</span>
+            <li class="nav-item {{ request()->routeIs('users.bookmarks.*') ? 'active' : '' }}">
+                <a href="{{ route('users.bookmarks.index', ['user' => auth()->user()]) }}" class="nav-link">
+                    <i class="fas fa-bookmark"></i>
+                    <span>Marcadores</span>
                 </a>
             </li>
         </ul>
