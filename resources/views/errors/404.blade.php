@@ -20,7 +20,8 @@
             color: #ff4444;
             font-family: 'Courier New', monospace;
             min-height: 100vh;
-            overflow: hidden;
+            overflow-x: hidden;
+            overflow-y: auto;
             position: relative;
         }
 
@@ -52,20 +53,20 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
+            justify-content: flex-start;
             min-height: 100vh;
-            padding: 2rem;
+            padding: 1rem;
             position: relative;
             z-index: 10;
         }
 
         .header {
             text-align: center;
-            margin-bottom: 2rem;
+            margin-bottom: 1.5rem;
         }
 
         .error-code {
-            font-size: 8rem;
+            font-size: 6rem;
             font-weight: bold;
             color: #ff4444;
             text-shadow: 
@@ -74,7 +75,7 @@
                 0 0 40px #ff4444,
                 0 0 80px #ff4444;
             animation: glow-pulse 2s ease-in-out infinite alternate;
-            margin-bottom: 1rem;
+            margin-bottom: 0.5rem;
         }
 
         @keyframes glow-pulse {
@@ -95,16 +96,16 @@
         }
 
         .status-line {
-            font-size: 1.5rem;
+            font-size: 1.2rem;
             color: #ffaa00;
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.3rem;
             animation: flicker 3s infinite;
         }
 
         .subtitle {
-            font-size: 1rem;
+            font-size: 0.9rem;
             color: #888;
-            margin-bottom: 2rem;
+            margin-bottom: 1.5rem;
         }
 
         @keyframes flicker {
@@ -118,14 +119,15 @@
             background: rgba(0, 0, 0, 0.9);
             border: 2px solid #ff4444;
             border-radius: 8px;
-            padding: 1.5rem;
+            padding: 1rem;
             width: 100%;
-            max-width: 800px;
+            max-width: 900px;
             box-shadow: 
                 0 0 20px rgba(255, 68, 68, 0.5),
                 inset 0 0 20px rgba(255, 68, 68, 0.1);
             position: relative;
             overflow: hidden;
+            margin-bottom: 1rem;
         }
 
         .terminal-header {
@@ -162,15 +164,15 @@
         /* Animaciones CSS puras para evitar problemas de CSP */
         .dht-search {
             background: #111;
-            padding: 1rem;
+            padding: 0.8rem;
             border-radius: 4px;
-            margin-bottom: 1.5rem;
+            margin-bottom: 1rem;
             border: 1px solid #333;
-            min-height: 200px;
-            max-height: 300px;
+            min-height: 150px;
+            max-height: 200px;
             overflow-y: auto;
-            font-size: 0.9rem;
-            line-height: 1.4;
+            font-size: 0.8rem;
+            line-height: 1.3;
             position: relative;
             transition: all 0.3s ease;
         }
@@ -300,8 +302,8 @@
         @keyframes countDownTimeout {
             0% { color: #ff4444; }
             80% { color: #ffaa00; }
-            90% { color: #ff4444; font-size: 2.2rem; }
-            100% { color: #ff4444; font-size: 2rem; }
+            90% { color: #ff4444; font-size: 1.7rem; }
+            100% { color: #ff4444; font-size: 1.5rem; }
         }
 
         /* Cursor terminal parpadeante */
@@ -321,8 +323,8 @@
             background: #1a1a1a;
             border: 1px solid #ff4444;
             border-radius: 4px;
-            padding: 1rem;
-            margin: 1.5rem 0;
+            padding: 0.8rem;
+            margin: 1rem 0;
         }
 
         .magnet-hash {
@@ -330,30 +332,31 @@
             color: #ffaa00;
             word-break: break-all;
             background: #000;
-            padding: 0.5rem;
+            padding: 0.4rem;
             border-radius: 3px;
             border: 1px solid #333;
-            margin: 0.5rem 0;
+            margin: 0.3rem 0;
+            font-size: 0.8rem;
         }
 
         /* Estadísticas DHT */
         .dht-stats {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 1rem;
-            margin: 1.5rem 0;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 0.8rem;
+            margin: 1rem 0;
         }
 
         .stat-item {
             background: rgba(255, 68, 68, 0.1);
             border: 1px solid #ff4444;
             border-radius: 4px;
-            padding: 1rem;
+            padding: 0.8rem;
             text-align: center;
         }
 
         .stat-value {
-            font-size: 2rem;
+            font-size: 1.5rem;
             font-weight: bold;
             color: #ff4444;
             display: block;
@@ -361,28 +364,29 @@
         }
 
         .stat-label {
-            font-size: 0.8rem;
+            font-size: 0.7rem;
             color: #888;
-            margin-top: 0.5rem;
+            margin-top: 0.3rem;
         }
 
         /* Botones de acción */
         .action-buttons {
             display: flex;
-            gap: 1rem;
+            gap: 0.8rem;
             justify-content: center;
             flex-wrap: wrap;
-            margin-top: 2rem;
+            margin-top: 1rem;
+            margin-bottom: 2rem;
         }
 
         .btn {
             background: linear-gradient(45deg, #ff4444, #ff6666);
             color: white;
             border: none;
-            padding: 0.8rem 1.5rem;
+            padding: 0.6rem 1.2rem;
             border-radius: 4px;
             font-family: 'Courier New', monospace;
-            font-size: 0.9rem;
+            font-size: 0.8rem;
             cursor: pointer;
             text-decoration: none;
             transition: all 0.3s ease;
@@ -430,11 +434,159 @@
 
         /* Responsive */
         @media (max-width: 768px) {
-            .error-code { font-size: 4rem; }
-            .container { padding: 1rem; }
-            .action-buttons { flex-direction: column; align-items: center; }
-            .btn { width: 200px; }
-            .dht-stats { grid-template-columns: 1fr 1fr; }
+            .container {
+                padding: 0.5rem;
+            }
+            
+            .error-code { 
+                font-size: 3.5rem;
+                margin-bottom: 0.3rem;
+            }
+            
+            .status-line {
+                font-size: 1rem;
+                margin-bottom: 0.2rem;
+            }
+            
+            .subtitle {
+                font-size: 0.8rem;
+                margin-bottom: 1rem;
+            }
+            
+            .terminal-panel {
+                padding: 0.8rem;
+                max-width: 100%;
+            }
+            
+            .terminal-title {
+                font-size: 1rem;
+            }
+            
+            .dht-search {
+                padding: 0.6rem;
+                min-height: 120px;
+                max-height: 150px;
+                font-size: 0.7rem;
+                line-height: 1.2;
+            }
+            
+            .magnet-info {
+                padding: 0.6rem;
+                margin: 0.8rem 0;
+            }
+            
+            .magnet-hash {
+                padding: 0.3rem;
+                font-size: 0.7rem;
+            }
+            
+            .dht-stats { 
+                grid-template-columns: 1fr 1fr;
+                gap: 0.5rem;
+                margin: 0.8rem 0;
+            }
+            
+            .stat-item {
+                padding: 0.6rem;
+            }
+            
+            .stat-value {
+                font-size: 1.2rem;
+            }
+            
+            .stat-label {
+                font-size: 0.6rem;
+            }
+            
+            .action-buttons { 
+                flex-direction: column; 
+                align-items: center;
+                gap: 0.6rem;
+                margin-top: 0.8rem;
+                margin-bottom: 1rem;
+            }
+            
+            .btn { 
+                width: 180px;
+                padding: 0.8rem 1rem;
+                font-size: 0.8rem;
+            }
+            
+            .search-line {
+                font-size: 0.7rem;
+                margin-bottom: 0.2rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .error-code { 
+                font-size: 2.8rem;
+            }
+            
+            .status-line {
+                font-size: 0.9rem;
+            }
+            
+            .subtitle {
+                font-size: 0.7rem;
+            }
+            
+            .terminal-panel {
+                padding: 0.6rem;
+            }
+            
+            .dht-search {
+                padding: 0.5rem;
+                min-height: 100px;
+                max-height: 120px;
+                font-size: 0.65rem;
+            }
+            
+            .dht-stats { 
+                grid-template-columns: 1fr;
+                gap: 0.4rem;
+            }
+            
+            .stat-value {
+                font-size: 1rem;
+            }
+            
+            .btn { 
+                width: 160px;
+                padding: 0.7rem 0.8rem;
+                font-size: 0.75rem;
+            }
+        }
+
+        /* Ajustes para pantallas grandes */
+        @media (min-width: 1200px) {
+            .container {
+                padding: 2rem;
+            }
+            
+            .error-code {
+                font-size: 7rem;
+            }
+            
+            .terminal-panel {
+                max-width: 1000px;
+                padding: 1.5rem;
+            }
+            
+            .dht-search {
+                min-height: 180px;
+                max-height: 220px;
+                font-size: 0.9rem;
+            }
+            
+            .stat-value {
+                font-size: 1.8rem;
+            }
+            
+            .btn {
+                padding: 0.8rem 1.4rem;
+                font-size: 0.9rem;
+            }
         }
 
         /* Efectos adicionales de animación */
