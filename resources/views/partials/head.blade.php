@@ -11,8 +11,8 @@
 
 @yield('meta')
 
-<link rel="shortcut icon" href="{{ url('/favicon.ico') }}" type="image/x-icon" />
-<link rel="icon" href="{{ url('/favicon.ico') }}" type="image/x-icon" />
+<link rel="shortcut icon" href="{{ url('/favicon.ico?v=' . filemtime(public_path('favicon.ico'))) }}" type="image/x-icon" />
+<link rel="icon" href="{{ url('/favicon.ico?v=' . filemtime(public_path('favicon.ico'))) }}" type="image/x-icon" />
 
 @if (auth()->user()->settings?->standalone_css === null)
     @vite('resources/sass/main.scss')
