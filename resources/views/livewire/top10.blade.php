@@ -6,7 +6,7 @@
     ])
 >
     <header class="panel__header">
-        <h2 class="panel__heading">Top Titles</h2>
+        <h2 class="panel__heading">Top 10</h2>
         <div class="panel__actions">
             <div class="panel__action">
                 <div class="form__group">

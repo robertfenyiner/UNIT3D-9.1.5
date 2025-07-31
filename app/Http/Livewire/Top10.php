@@ -288,7 +288,7 @@ class Top10 extends Component
     {
         return <<<'HTML'
         <section class="panelV2">
-            <h2 class="panel__heading">Top Titles</h2>
+            <h2 class="panel__heading">Top 10</h2>
             <div class="panel__body">Loading...</div>
         </section>
         HTML;
