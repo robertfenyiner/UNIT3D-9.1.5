@@ -167,14 +167,33 @@
             margin-bottom: 1.5rem;
             border: 1px solid #333;
             min-height: 200px;
+            max-height: 300px;
             overflow-y: auto;
             font-size: 0.9rem;
             line-height: 1.4;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .dht-search::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .dht-search::-webkit-scrollbar-track {
+            background: #222;
+        }
+
+        .dht-search::-webkit-scrollbar-thumb {
+            background: #ff4444;
+            border-radius: 3px;
         }
 
         .search-line {
             margin-bottom: 0.3rem;
             animation: typewriter 0.5s ease-out;
+            transition: all 0.3s ease;
+            opacity: 1;
+            transform: translateX(0);
         }
 
         .search-line.error {
@@ -240,6 +259,7 @@
             font-weight: bold;
             color: #ff4444;
             display: block;
+            transition: all 0.3s ease;
         }
 
         .stat-label {
@@ -303,6 +323,7 @@
             background: linear-gradient(90deg, #ff4444, #ffaa00, #ff4444);
             animation: progress-pulse 2s ease-in-out infinite;
             width: 0%;
+            transition: width 0.5s ease-out;
         }
 
         @keyframes progress-pulse {
@@ -396,127 +417,189 @@
         let searchProgress = 0;
         let nodesContacted = 0;
         let timeout = 30;
+        let searchInterval;
         
         const dhtMessages = [
-            { type: 'info', text: '[DHT] Connecting to bootstrap nodes...', delay: 800 },
-            { type: 'success', text: '[DHT] Connected to 4.4.4.4:6881', delay: 1200 },
-            { type: 'info', text: '[DHT] Sending find_node query...', delay: 1500 },
-            { type: 'warning', text: '[DHT] Node 192.168.1.1:6881 timeout', delay: 2000 },
-            { type: 'success', text: '[DHT] Response from 8.8.8.8:6881', delay: 2500 },
-            { type: 'info', text: '[DHT] Sending get_peers query...', delay: 3000 },
-            { type: 'warning', text: '[DHT] No peers returned for infohash', delay: 3800 },
-            { type: 'info', text: '[DHT] Querying additional nodes...', delay: 4500 },
-            { type: 'warning', text: '[DHT] Node 176.32.98.166:6881 unreachable', delay: 5200 },
-            { type: 'info', text: '[DHT] Expanding search radius...', delay: 6000 },
-            { type: 'warning', text: '[DHT] All bootstrap nodes exhausted', delay: 7000 },
-            { type: 'error', text: '[DHT] SEARCH FAILED: Hash not found in DHT', delay: 8000 },
-            { type: 'error', text: '[DHT] ERROR: Torrent may be dead or removed', delay: 8500 }
+            { type: 'info', text: '[DHT] Connecting to bootstrap nodes...', delay: 1000 },
+            { type: 'success', text: '[DHT] Connected to 4.4.4.4:6881', delay: 2000 },
+            { type: 'info', text: '[DHT] Sending find_node query...', delay: 3000 },
+            { type: 'warning', text: '[DHT] Node 192.168.1.1:6881 timeout', delay: 4000 },
+            { type: 'success', text: '[DHT] Response from 8.8.8.8:6881', delay: 5000 },
+            { type: 'info', text: '[DHT] Sending get_peers query...', delay: 6000 },
+            { type: 'warning', text: '[DHT] No peers returned for infohash', delay: 7000 },
+            { type: 'info', text: '[DHT] Querying additional nodes...', delay: 8000 },
+            { type: 'warning', text: '[DHT] Node 176.32.98.166:6881 unreachable', delay: 9000 },
+            { type: 'info', text: '[DHT] Expanding search radius...', delay: 10000 },
+            { type: 'warning', text: '[DHT] All bootstrap nodes exhausted', delay: 11000 },
+            { type: 'error', text: '[DHT] SEARCH FAILED: Hash not found in DHT', delay: 12000 },
+            { type: 'error', text: '[DHT] ERROR: Torrent may be dead or removed', delay: 13000 }
         ];
 
         function updateProgress(percent) {
             const progressBar = document.getElementById('search-progress');
-            progressBar.style.width = percent + '%';
-            searchProgress = percent;
+            if (progressBar) {
+                progressBar.style.width = percent + '%';
+                searchProgress = percent;
+            }
         }
 
         function updateStats() {
-            document.getElementById('nodes-contacted').textContent = nodesContacted;
-            document.getElementById('timeout').textContent = timeout;
+            const nodesElement = document.getElementById('nodes-contacted');
+            const timeoutElement = document.getElementById('timeout');
+            
+            if (nodesElement) {
+                nodesElement.textContent = nodesContacted;
+                // Añadir efecto visual al actualizar
+                nodesElement.style.transform = 'scale(1.1)';
+                setTimeout(() => {
+                    nodesElement.style.transform = 'scale(1)';
+                }, 200);
+            }
+            
+            if (timeoutElement) {
+                timeoutElement.textContent = timeout;
+                if (timeout < 10) {
+                    timeoutElement.style.color = '#ff4444';
+                }
+            }
         }
 
         function addLogMessage(message, type) {
             const log = document.getElementById('dht-log');
+            if (!log) return;
+            
             const line = document.createElement('div');
             line.className = `search-line ${type}`;
             line.textContent = message;
+            line.style.opacity = '0';
+            line.style.transform = 'translateX(-10px)';
+            
             log.appendChild(line);
+            
+            // Animar la entrada del mensaje
+            setTimeout(() => {
+                line.style.opacity = '1';
+                line.style.transform = 'translateX(0)';
+            }, 50);
+            
             log.scrollTop = log.scrollHeight;
         }
 
         function simulateDHTSearch() {
-            let messageIndex = 0;
+            console.log('Starting DHT search simulation...');
             
-            function processNextMessage() {
-                if (messageIndex < dhtMessages.length) {
-                    const msg = dhtMessages[messageIndex];
+            dhtMessages.forEach((msg, index) => {
+                setTimeout(() => {
+                    console.log(`Adding message ${index}: ${msg.text}`);
+                    addLogMessage(msg.text, msg.type);
                     
-                    setTimeout(() => {
-                        addLogMessage(msg.text, msg.type);
-                        
-                        // Update progress
-                        const progress = ((messageIndex + 1) / dhtMessages.length) * 100;
-                        updateProgress(progress);
-                        
-                        // Update nodes contacted
-                        if (msg.type === 'success' || msg.type === 'warning') {
-                            nodesContacted++;
-                            updateStats();
-                        }
-                        
-                        // Update timeout countdown
-                        if (messageIndex > 5) {
-                            timeout = Math.max(0, 30 - Math.floor((messageIndex - 5) * 3));
-                            updateStats();
-                        }
-                        
-                        messageIndex++;
-                        processNextMessage();
-                    }, msg.delay);
-                }
-            }
-            
-            processNextMessage();
+                    // Update progress
+                    const progress = ((index + 1) / dhtMessages.length) * 100;
+                    updateProgress(progress);
+                    
+                    // Update nodes contacted
+                    if (msg.type === 'success' || msg.type === 'warning') {
+                        nodesContacted++;
+                        updateStats();
+                    }
+                    
+                    // Update timeout countdown
+                    if (index > 3) {
+                        timeout = Math.max(0, 30 - Math.floor((index - 3) * 2));
+                        updateStats();
+                    }
+                    
+                }, msg.delay);
+            });
         }
 
         // Screen flicker effect
         function addScreenFlicker() {
             setInterval(() => {
-                if (Math.random() > 0.92) {
-                    document.body.style.filter = 'brightness(1.2) contrast(1.1)';
+                if (Math.random() > 0.95) {
+                    document.body.style.filter = 'brightness(1.3) contrast(1.2)';
                     setTimeout(() => {
                         document.body.style.filter = '';
-                    }, 100);
+                    }, 80);
                 }
-            }, 2000);
+            }, 1500);
         }
 
         // Terminal text cursor effect
         function addCursorEffect() {
-            const cursor = document.createElement('span');
-            cursor.innerHTML = '█';
-            cursor.style.color = '#ff4444';
-            cursor.style.animation = 'blink 1s infinite';
-            
             const style = document.createElement('style');
             style.textContent = `
                 @keyframes blink {
                     0%, 50% { opacity: 1; }
                     51%, 100% { opacity: 0; }
                 }
+                .terminal-cursor {
+                    color: #ff4444;
+                    animation: blink 1s infinite;
+                    font-weight: bold;
+                }
             `;
             document.head.appendChild(style);
             
+            // Añadir cursor parpadeante al final del log
             setInterval(() => {
                 const log = document.getElementById('dht-log');
-                const lastLine = log.lastElementChild;
-                if (lastLine && !lastLine.querySelector('span')) {
-                    lastLine.appendChild(cursor.cloneNode(true));
+                if (log) {
+                    // Remover cursor anterior
+                    const oldCursor = log.querySelector('.terminal-cursor');
+                    if (oldCursor) {
+                        oldCursor.remove();
+                    }
+                    
+                    // Añadir nuevo cursor
+                    const cursor = document.createElement('span');
+                    cursor.className = 'terminal-cursor';
+                    cursor.innerHTML = '█';
+                    log.appendChild(cursor);
                 }
-            }, 500);
+            }, 1000);
+        }
+
+        // Añadir efectos de glitch ocasionales
+        function addGlitchEffects() {
+            setInterval(() => {
+                if (Math.random() > 0.98) {
+                    const errorCode = document.querySelector('.error-code');
+                    if (errorCode) {
+                        errorCode.style.textShadow = '2px 2px #00ffff, -2px -2px #ff00ff';
+                        setTimeout(() => {
+                            errorCode.style.textShadow = '0 0 10px #ff4444, 0 0 20px #ff4444, 0 0 40px #ff4444, 0 0 80px #ff4444';
+                        }, 100);
+                    }
+                }
+            }, 2000);
         }
 
         // Initialize everything when page loads
         document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM loaded, initializing...');
+            
+            // Initialize stats
             updateProgress(0);
             updateStats();
             
+            // Start DHT search simulation after a short delay
             setTimeout(() => {
                 simulateDHTSearch();
-            }, 1000);
+            }, 500);
             
+            // Start visual effects
             addScreenFlicker();
             addCursorEffect();
+            addGlitchEffects();
+            
+            console.log('All effects initialized');
         });
+
+        // Debug function - you can call this in browser console
+        window.restartAnimation = function() {
+            location.reload();
+        };
     </script>
 </body>
 </html>
