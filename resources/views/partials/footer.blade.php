@@ -2,10 +2,10 @@
     <div class="footer__wrapper">
         <section class="footer__section">
             <h2 class="footer__section-title">
-                <img src="{{ url('/favicon.ico') }}" style="height: 30px; vertical-align: sub" />
-                <span class="top-nav__site-logo">{{ \config('other.title') }}</span>
+                <!--<img src="{{ url('/favicon.ico') }}" style="height: 30px; vertical-align: sub" />-->
+                <!--<span class="top-nav__site-logo">{{ \config('other.title') }}</span>-->
             </h2>
-            <p>{{ config('other.meta_description') }}</p>
+            <!--<p>{{ config('other.meta_description') }}</p>-->
             <p class="footer__icons">
                 @if (! empty(config('unit3d.chat-link-url')))
                     <a href="{{ config('unit3d.chat-link-url') }}">
@@ -13,6 +13,10 @@
                         {{ config('unit3d.chat-link-name') ?: __('common.chat') }}
                     </a>
                 @endif
+                <img src="/img/logo.png" alt="Lat-Team" class="footer__icon" style="width: 250px;">
+                <a title="Apoya a Lat-Team" href="https://lat-team.com/donations/"><img src="https://lat-team.com/img/dona.png" alt="Dona por Favor" class="footer__icon" style="width: 250px;">    
+  
+                
             </p>
         </section>
         <section class="footer__section">
@@ -256,12 +260,12 @@
             Site and design &copy;
             {{ date('Y', strtotime(config('other.birthdate'))) }}-{{ date('Y') }}
             {{ config('other.title') }} |
-            <a href="https://github.com/HDInnovations/UNIT3D-Community-Edition">
-                UNIT3D {{ config('unit3d.version') }}
+            <!--<a href="https://github.com/HDInnovations/UNIT3D-Community-Edition">-->
+                 {{ config('unit3d.version') }}
             </a>
             @if (config('announce.external_tracker.is_enabled'))
                 +
-                <a href="https://github.com/HDInnovations/UNIT3D-Announce">UNIT3D-Announce</a>
+                <!--<a href="https://github.com/HDInnovations/UNIT3D-Announce">UNIT3D-Announce</a>-->
             @endif
         </p>
     </div>
