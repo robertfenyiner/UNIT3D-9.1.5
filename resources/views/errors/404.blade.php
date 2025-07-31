@@ -117,6 +117,70 @@
             color: #66ff66;
             box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.5);
             border: 1px solid #333;
+            position: relative;
+        }
+
+        .matrix-line {
+            animation: matrixGlitch 0.3s infinite;
+        }
+
+        @keyframes matrixGlitch {
+            0% { color: #66ff66; }
+            10% { color: #ff0000; transform: translateX(1px); }
+            20% { color: #00ffff; transform: translateX(-1px); }
+            30% { color: #ffff00; }
+            40% { color: #ff00ff; transform: translateX(1px); }
+            50% { color: #66ff66; }
+            60% { color: #ff0000; transform: translateX(-1px); }
+            70% { color: #00ffff; }
+            80% { color: #ffff00; transform: translateX(1px); }
+            90% { color: #ff00ff; }
+            100% { color: #66ff66; transform: translateX(0); }
+        }
+
+        .glitch-text {
+            position: relative;
+            display: inline-block;
+        }
+
+        .glitch-text::before,
+        .glitch-text::after {
+            content: attr(data-text);
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        .glitch-text::before {
+            animation: glitch-1 0.5s infinite;
+            color: #ff0000;
+            z-index: -1;
+        }
+
+        .glitch-text::after {
+            animation: glitch-2 0.5s infinite;
+            color: #00ffff;
+            z-index: -2;
+        }
+
+        @keyframes glitch-1 {
+            0%, 14%, 15%, 49%, 50%, 99%, 100% { 
+                transform: translate(0);
+            }
+            15%, 49% { 
+                transform: translate(-2px, -1px);
+            }
+        }
+
+        @keyframes glitch-2 {
+            0%, 20%, 21%, 62%, 63%, 99%, 100% { 
+                transform: translate(0);
+            }
+            21%, 62% { 
+                transform: translate(2px, 1px);
+            }
         }
 
         @media (max-width: 768px) {
@@ -158,7 +222,7 @@
         </div>
 
         <div class="dht-log" id="dht-log">
-            [DHT] Inicializando búsqueda de pares...
+            <span class="glitch-text" data-text="[DHT] Inicializando búsqueda de pares...">[DHT] Inicializando búsqueda de pares...</span>
         </div>
     </div>
 
@@ -174,20 +238,82 @@
             "[DHT] Aún buscando en la red...",
             "[DHT] 0 seeders detectados...",
             "[DHT] Tiempo de espera agotado...",
-            "[DHT] Operación fallida."
+            "[DHT] ERROR: Operación fallida."
         ];
 
         let i = 0;
         const log = document.getElementById('dht-log');
 
-        const interval = setInterval(() => {
+        // Función para crear caracteres aleatorios (efecto Matrix)
+        function getRandomChar() {
+            const chars = '01234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz!@#$%^&*()[]{}|;:,.<>?';
+            return chars[Math.floor(Math.random() * chars.length)];
+        }
+
+        // Función para aplicar efecto Matrix a un texto
+        function matrixEffect(text, element) {
+            let iterations = 0;
+            const maxIterations = 8;
+            
+            const interval = setInterval(() => {
+                const result = text.split('').map((char, index) => {
+                    if (index < iterations) {
+                        return text[index];
+                    }
+                    return getRandomChar();
+                }).join('');
+                
+                element.textContent = result;
+                
+                if (iterations >= text.length) {
+                    clearInterval(interval);
+                    // Agregar clase para efecto de glitch ocasional
+                    if (Math.random() > 0.7) {
+                        element.classList.add('matrix-line');
+                        setTimeout(() => {
+                            element.classList.remove('matrix-line');
+                        }, 300);
+                    }
+                }
+                
+                iterations += 1/3;
+            }, 50);
+        }
+
+        const mainInterval = setInterval(() => {
             if (i < mensajes.length) {
-                log.innerHTML += `<br>${mensajes[i++]}`;
+                const newLine = document.createElement('div');
+                
+                // Aplicar efecto Matrix al mensaje
+                matrixEffect(mensajes[i], newLine);
+                
+                log.appendChild(newLine);
                 log.scrollTop = log.scrollHeight;
+                i++;
             } else {
-                clearInterval(interval);
+                clearInterval(mainInterval);
+                
+                // Efecto final de error crítico
+                setTimeout(() => {
+                    const errorLine = document.createElement('div');
+                    errorLine.innerHTML = '<span class="glitch-text" data-text="[CRITICAL ERROR] Sistema comprometido">[CRITICAL ERROR] Sistema comprometido</span>';
+                    errorLine.style.color = '#ff0000';
+                    errorLine.style.fontWeight = 'bold';
+                    log.appendChild(errorLine);
+                    log.scrollTop = log.scrollHeight;
+                }, 1000);
             }
         }, 1200);
+
+        // Efecto de parpadeo ocasional en todo el log
+        setInterval(() => {
+            if (Math.random() > 0.8) {
+                log.style.opacity = '0.3';
+                setTimeout(() => {
+                    log.style.opacity = '1';
+                }, 100);
+            }
+        }, 2000);
     </script>
 </body>
 </html>
