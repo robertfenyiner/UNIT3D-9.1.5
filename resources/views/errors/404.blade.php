@@ -7,6 +7,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <link rel="shortcut icon" href="{{ url('/favicon.ico?v=' . filemtime(public_path('favicon.ico'))) }}" type="image/x-icon" />
     <link rel="icon" href="{{ url('/favicon.ico?v=' . filemtime(public_path('favicon.ico'))) }}" type="image/x-icon" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         body {
             background: linear-gradient(135deg, #1e1e1e 0%, #2d2d2d 100%);
@@ -227,6 +228,22 @@
     </div>
 
     <script>
+        // Aplicar efecto glitch inmediatamente al texto inicial
+        document.addEventListener('DOMContentLoaded', function() {
+            const initialGlitch = document.querySelector('.glitch-text');
+            if (initialGlitch) {
+                // Forzar animación del texto inicial
+                setInterval(() => {
+                    if (Math.random() > 0.7) {
+                        initialGlitch.style.animation = 'none';
+                        setTimeout(() => {
+                            initialGlitch.style.animation = '';
+                        }, 50);
+                    }
+                }, 1000);
+            }
+        });
+
         const mensajes = [
             "[DHT] Buscando pares...",
             "[DHT] Conectando con nodo 10.7.3.42...",
@@ -253,7 +270,6 @@
         // Función para aplicar efecto Matrix a un texto
         function matrixEffect(text, element) {
             let iterations = 0;
-            const maxIterations = 8;
             
             const interval = setInterval(() => {
                 const result = text.split('').map((char, index) => {
@@ -268,16 +284,16 @@
                 if (iterations >= text.length) {
                     clearInterval(interval);
                     // Agregar clase para efecto de glitch ocasional
-                    if (Math.random() > 0.7) {
+                    if (Math.random() > 0.6) {
                         element.classList.add('matrix-line');
                         setTimeout(() => {
                             element.classList.remove('matrix-line');
-                        }, 300);
+                        }, 500);
                     }
                 }
                 
-                iterations += 1/3;
-            }, 50);
+                iterations += 0.5;
+            }, 30);
         }
 
         const mainInterval = setInterval(() => {
@@ -307,7 +323,7 @@
 
         // Efecto de parpadeo ocasional en todo el log
         setInterval(() => {
-            if (Math.random() > 0.8) {
+            if (Math.random() > 0.85) {
                 log.style.opacity = '0.3';
                 setTimeout(() => {
                     log.style.opacity = '1';
