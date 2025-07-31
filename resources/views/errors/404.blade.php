@@ -25,10 +25,10 @@
             position: relative;
         }
 
-        /* Efecto de líneas de escaneo de fondo */
+        /* Efecto de líneas de escaneo de fondo - sin temblor */
         body::before {
             content: '';
-            position: absolute;
+            position: fixed;
             top: 0;
             left: 0;
             right: 0;
@@ -37,11 +37,12 @@
                 0deg,
                 transparent,
                 transparent 2px,
-                rgba(255, 68, 68, 0.03) 2px,
-                rgba(255, 68, 68, 0.03) 4px
+                rgba(255, 68, 68, 0.02) 2px,
+                rgba(255, 68, 68, 0.02) 4px
             );
             pointer-events: none;
-            animation: scanlines 0.1s linear infinite;
+            animation: scanlines 0.2s linear infinite;
+            will-change: transform;
         }
 
         @keyframes scanlines {
@@ -58,6 +59,8 @@
             padding: 1rem;
             position: relative;
             z-index: 10;
+            transform: translateZ(0);
+            backface-visibility: hidden;
         }
 
         .header {
@@ -84,14 +87,14 @@
                     0 0 10px #ff4444,
                     0 0 20px #ff4444,
                     0 0 40px #ff4444,
-                    0 0 80px #ff4444;
+                    0 0 60px #ff4444;
             }
             to {
                 text-shadow: 
-                    0 0 5px #ff4444,
-                    0 0 10px #ff4444,
-                    0 0 20px #ff4444,
-                    0 0 40px #ff4444;
+                    0 0 8px #ff4444,
+                    0 0 16px #ff4444,
+                    0 0 32px #ff4444,
+                    0 0 48px #ff4444;
             }
         }
 
@@ -184,8 +187,9 @@
             left: -100%;
             width: 100%;
             height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 68, 68, 0.1), transparent);
-            animation: scanning 3s linear infinite;
+            background: linear-gradient(90deg, transparent, rgba(255, 68, 68, 0.08), transparent);
+            animation: scanning 4s linear infinite;
+            will-change: left;
         }
 
         @keyframes scanning {
@@ -589,21 +593,22 @@
             }
         }
 
-        /* Efectos adicionales de animación */
+        /* Efectos adicionales de animación - sin temblor */
         .terminal-panel {
-            animation: terminalGlow 4s ease-in-out infinite alternate;
+            animation: terminalGlow 6s ease-in-out infinite alternate;
+            will-change: box-shadow;
         }
 
         @keyframes terminalGlow {
             0% { 
-                box-shadow: 0 0 20px rgba(255, 68, 68, 0.5), inset 0 0 20px rgba(255, 68, 68, 0.1);
+                box-shadow: 0 0 20px rgba(255, 68, 68, 0.4), inset 0 0 20px rgba(255, 68, 68, 0.1);
             }
             100% { 
-                box-shadow: 0 0 30px rgba(255, 68, 68, 0.7), inset 0 0 25px rgba(255, 68, 68, 0.15);
+                box-shadow: 0 0 25px rgba(255, 68, 68, 0.6), inset 0 0 22px rgba(255, 68, 68, 0.12);
             }
         }
 
-        /* Efecto de matriz de fondo */
+        /* Efecto de matriz de fondo - estable sin rotación */
         body::after {
             content: '';
             position: fixed;
@@ -612,21 +617,22 @@
             width: 100%;
             height: 100%;
             background-image: 
-                radial-gradient(circle at 20% 50%, rgba(255, 68, 68, 0.03) 0%, transparent 50%),
-                radial-gradient(circle at 80% 20%, rgba(255, 68, 68, 0.03) 0%, transparent 50%),
-                radial-gradient(circle at 40% 80%, rgba(255, 68, 68, 0.03) 0%, transparent 50%);
+                radial-gradient(circle at 20% 50%, rgba(255, 68, 68, 0.02) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(255, 68, 68, 0.02) 0%, transparent 50%),
+                radial-gradient(circle at 40% 80%, rgba(255, 68, 68, 0.02) 0%, transparent 50%);
             pointer-events: none;
-            animation: matrixFloat 8s ease-in-out infinite;
+            animation: matrixFloat 6s ease-in-out infinite;
             z-index: 1;
+            will-change: opacity;
         }
 
         @keyframes matrixFloat {
             0%, 100% { 
-                transform: translateY(0px) rotate(0deg);
-                opacity: 0.3;
+                transform: translateY(0px);
+                opacity: 0.2;
             }
             50% { 
-                transform: translateY(-10px) rotate(1deg);
+                transform: translateY(-5px);
                 opacity: 0.1;
             }
         }
