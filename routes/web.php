@@ -96,6 +96,7 @@ Route::middleware('language')->group(function (): void {
     Route::middleware(['auth', 'banned', 'verified'])->group(function (): void {
         // General
         Route::get('/', [App\Http\Controllers\HomeController::class, 'index'])->name('home.index');
+        Route::get('/trending', [App\Http\Controllers\TrendingController::class, 'index'])->name('trending.index');
 
         // Articles System
         Route::prefix('articles')->group(function (): void {
