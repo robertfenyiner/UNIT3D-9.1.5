@@ -128,7 +128,7 @@
 </head>
 <body>
     <div class="container">
-        <img src="{{ url('/favicon.ico') }}" alt="{{ config('other.title') }}" class="logo">
+        <img src="{{ url('/img/logo.png') }}" alt="{{ config('other.title') }}" class="logo">
 
         <h1>404 - Torrent perdido en la red</h1>
         <h2>Este magnet no tiene *seeders*... 🧲</h2>
