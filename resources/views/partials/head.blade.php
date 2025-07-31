@@ -101,4 +101,7 @@
 
 @livewireStyles
 
+{{-- Sidebar Layout Styles --}}
+<link rel="stylesheet" href="{{ asset('css/sidebar-enhancements.css') }}" />
+
 @yield('stylesheets')
