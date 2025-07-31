@@ -11,15 +11,15 @@
     </div>
     <div class="profile-stats">
         <div class="stat-item">
-            <span class="stat-value">{{ $user->uploaded_formatted ?? '0' }}</span>
+            <span class="stat-value">{{ App\Helpers\StringHelper::formatBytes($user->uploaded ?? 0) }}</span>
             <span class="stat-label">Subido</span>
         </div>
         <div class="stat-item">
-            <span class="stat-value">{{ $user->downloaded_formatted ?? '0' }}</span>
+            <span class="stat-value">{{ App\Helpers\StringHelper::formatBytes($user->downloaded ?? 0) }}</span>
             <span class="stat-label">Bajado</span>
         </div>
         <div class="stat-item">
-            <span class="stat-value">{{ number_format($user->getRatio(), 2) ?? '∞' }}</span>
+            <span class="stat-value">{{ $user->formatted_ratio ?? '∞' }}</span>
             <span class="stat-label">Ratio</span>
         </div>
     </div>
