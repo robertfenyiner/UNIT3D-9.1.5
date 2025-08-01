@@ -44,11 +44,10 @@
             @endif
         </header>
         
-        {{-- Mobile sidebar toggle --}}
-        <button class="sidebar-toggle" onclick="toggleSidebar()">
-            <i class="fas fa-bars"></i>
-        </button>
-        <div class="sidebar-overlay" onclick="closeSidebar()"></div>
+        {{-- User Sidebar --}}
+        @auth
+            @include('partials.user-sidebar')
+        @endauth
         
         <main class="@yield('page')">
             @yield('content')

@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UNIT3D - User Sidebar Demo</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+/* User Sidebar Styles */
+.user-sidebar {
+    position: fixed;
+    top: 0;
+    left: -280px;
+    width: 280px;
+    height: 100vh;
+    background: #1a1a1a;
+    border-right: 1px solid #333;
+    z-index: 1050;
+    transition: left 0.3s ease-in-out;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.3);
+}
+
+.user-sidebar.open {
+    left: 0;
+}
+
+/* Header */
+.user-sidebar__header {
+    padding: 20px;
+    border-bottom: 1px solid #333;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    background: #2a2a2a;
+}
+
+.user-sidebar__user-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+}
+
+.user-sidebar__avatar {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #007bff;
+}
+
+.user-sidebar__user-details {
+    flex: 1;
+    min-width: 0;
+}
+
+.user-sidebar__username {
+    font-size: 16px;
+    font-weight: 600;
+    margin: 0 0 4px 0;
+    color: #fff;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.user-sidebar__group {
+    font-size: 12px;
+    font-weight: 500;
+    opacity: 0.8;
+    color: #007bff;
+}
+
+.user-sidebar__close {
+    background: none;
+    border: none;
+    color: #ccc;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+    margin-left: 10px;
+}
+
+.user-sidebar__close:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+}
+
+/* Navigation */
+.user-sidebar__nav {
+    flex: 1;
+    padding: 10px 0;
+}
+
+.user-sidebar__menu {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.user-sidebar__menu-item {
+    margin: 0;
+}
+
+.user-sidebar__menu-link {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 20px;
+    color: #ccc;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    border-left: 3px solid transparent;
+    position: relative;
+}
+
+.user-sidebar__menu-link:hover {
+    background: rgba(255, 255, 255, 0.05);
+    color: #fff;
+    border-left-color: #007bff;
+}
+
+.user-sidebar__menu-link.active {
+    background: rgba(0, 123, 255, 0.1);
+    color: #007bff;
+    border-left-color: #007bff;
+}
+
+.user-sidebar__menu-link i {
+    width: 20px;
+    text-align: center;
+    font-size: 16px;
+    flex-shrink: 0;
+}
+
+.user-sidebar__menu-link span {
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.user-sidebar__badge {
+    background: #dc3545;
+    color: #fff;
+    font-size: 11px;
+    padding: 2px 6px;
+    border-radius: 10px;
+    min-width: 18px;
+    text-align: center;
+    line-height: 1.2;
+}
+
+.user-sidebar__separator {
+    height: 1px;
+    background: #333;
+    margin: 10px 20px;
+}
+
+/* Footer */
+.user-sidebar__footer {
+    padding: 20px;
+    border-top: 1px solid #333;
+    background: #2a2a2a;
+}
+
+.user-sidebar__stats {
+    display: flex;
+    gap: 20px;
+}
+
+.user-sidebar__stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex: 1;
+}
+
+.user-sidebar__stat-label {
+    font-size: 11px;
+    color: #999;
+    margin-bottom: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.user-sidebar__stat-value {
+    font-size: 14px;
+    font-weight: 600;
+    color: #007bff;
+}
+
+/* Toggle Button */
+.user-sidebar__toggle {
+    position: fixed;
+    top: 60px;
+    left: 20px;
+    width: 50px;
+    height: 50px;
+    background: #007bff;
+    border: none;
+    border-radius: 50%;
+    color: white;
+    font-size: 20px;
+    cursor: pointer;
+    z-index: 1040;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.user-sidebar__toggle:hover {
+    background: #0056b3;
+    transform: scale(1.05);
+}
+
+.user-sidebar.open + .user-sidebar__overlay + .user-sidebar__toggle {
+    left: 300px;
+}
+
+/* Overlay */
+.user-sidebar__overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1049;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+}
+
+.user-sidebar__overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* Responsive Design */
+@media screen and (max-width: 768px) {
+    .user-sidebar {
+        width: 100%;
+        max-width: 320px;
+        left: -100%;
+    }
+    
+    .user-sidebar.open {
+        left: 0;
+    }
+    
+    .user-sidebar__toggle {
+        top: 70px;
+        left: 15px;
+        width: 45px;
+        height: 45px;
+        font-size: 18px;
+    }
+    
+    .user-sidebar.open + .user-sidebar__overlay + .user-sidebar__toggle {
+        left: calc(100% - 60px);
+    }
+}
+
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #111;
+    color: #fff;
+}
+
+.demo-content {
+    padding: 20px;
+    margin-left: 0;
+    transition: margin-left 0.3s ease;
+}
+
+.user-sidebar.open ~ .demo-content {
+    margin-left: 280px;
+}
+
+@media screen and (max-width: 768px) {
+    .user-sidebar.open ~ .demo-content {
+        margin-left: 0;
+    }
+}
+    </style>
+</head>
+<body>
+    <!-- User Sidebar -->
+    <div class="user-sidebar" id="userSidebar">
+        <!-- Header -->
+        <div class="user-sidebar__header">
+            <div class="user-sidebar__user-info">
+                <img class="user-sidebar__avatar" src="https://via.placeholder.com/50" alt="Avatar">
+                <div class="user-sidebar__user-details">
+                    <h3 class="user-sidebar__username">Usuario Demo</h3>
+                    <span class="user-sidebar__group">Administrador</span>
+                </div>
+            </div>
+            <button class="user-sidebar__close" onclick="closeSidebar()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <!-- Navigation -->
+        <nav class="user-sidebar__nav">
+            <ul class="user-sidebar__menu">
+                <li class="user-sidebar__menu-item">
+                    <a href="#" class="user-sidebar__menu-link active">
+                        <i class="fas fa-user"></i>
+                        <span>Mi Perfil</span>
+                    </a>
+                </li>
+                <li class="user-sidebar__menu-item">
+                    <a href="#" class="user-sidebar__menu-link">
+                        <i class="fas fa-cog"></i>
+                        <span>Configuración</span>
+                    </a>
+                </li>
+                <li class="user-sidebar__menu-item">
+                    <a href="#" class="user-sidebar__menu-link">
+                        <i class="fas fa-shield-alt"></i>
+                        <span>Privacidad</span>
+                    </a>
+                </li>
+                <li class="user-sidebar__menu-item">
+                    <a href="#" class="user-sidebar__menu-link">
+                        <i class="fas fa-trophy"></i>
+                        <span>Logros</span>
+                        <span class="user-sidebar__badge">3</span>
+                    </a>
+                </li>
+                <li class="user-sidebar__menu-item">
+                    <a href="#" class="user-sidebar__menu-link">
+                        <i class="fas fa-upload"></i>
+                        <span>Mis Uploads</span>
+                        <span class="user-sidebar__badge">42</span>
+                    </a>
+                </li>
+                <li class="user-sidebar__menu-item">
+                    <a href="#" class="user-sidebar__menu-link">
+                        <i class="fas fa-download"></i>
+                        <span>Mis Descargas</span>
+                    </a>
+                </li>
+                <div class="user-sidebar__separator"></div>
+                <li class="user-sidebar__menu-item">
+                    <a href="#" class="user-sidebar__menu-link">
+                        <i class="fas fa-history"></i>
+                        <span>Historial</span>
+                    </a>
+                </li>
+                <li class="user-sidebar__menu-item">
+                    <a href="#" class="user-sidebar__menu-link">
+                        <i class="fas fa-bookmark"></i>
+                        <span>Marcadores</span>
+                    </a>
+                </li>
+                <li class="user-sidebar__menu-item">
+                    <a href="#" class="user-sidebar__menu-link">
+                        <i class="fas fa-bell"></i>
+                        <span>Notificaciones</span>
+                        <span class="user-sidebar__badge">7</span>
+                    </a>
+                </li>
+                <div class="user-sidebar__separator"></div>
+                <li class="user-sidebar__menu-item">
+                    <a href="#" class="user-sidebar__menu-link">
+                        <i class="fas fa-shield"></i>
+                        <span>Panel Staff</span>
+                    </a>
+                </li>
+                <li class="user-sidebar__menu-item">
+                    <a href="#" class="user-sidebar__menu-link">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span>Cerrar Sesión</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+
+        <!-- Footer -->
+        <div class="user-sidebar__footer">
+            <div class="user-sidebar__stats">
+                <div class="user-sidebar__stat">
+                    <span class="user-sidebar__stat-label">Ratio</span>
+                    <span class="user-sidebar__stat-value">2.45</span>
+                </div>
+                <div class="user-sidebar__stat">
+                    <span class="user-sidebar__stat-label">BON</span>
+                    <span class="user-sidebar__stat-value">1,250</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Overlay -->
+    <div class="user-sidebar__overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+    <!-- Toggle Button -->
+    <button class="user-sidebar__toggle" onclick="toggleSidebar()">
+        <i class="fas fa-bars"></i>
+    </button>
+
+    <!-- Demo Content -->
+    <div class="demo-content">
+        <h1>UNIT3D - Demo del Sidebar de Usuario</h1>
+        <p>Haz clic en el botón circular azul para abrir/cerrar el sidebar de usuario.</p>
+        <p>El sidebar incluye:</p>
+        <ul>
+            <li>Información del usuario con avatar</li>
+            <li>Menú de navegación completo</li>
+            <li>Badges para notificaciones y contadores</li>
+            <li>Estadísticas del usuario (ratio, BON points)</li>
+            <li>Diseño responsive para móvil y desktop</li>
+            <li>Animaciones suaves</li>
+        </ul>
+        
+        <h2>Características:</h2>
+        <ul>
+            <li>✅ Diseño responsive</li>
+            <li>✅ Animaciones suaves</li>
+            <li>✅ Overlay para cerrar en móvil</li>
+            <li>✅ Acceso rápido a funciones principales</li>
+            <li>✅ Badges para notificaciones</li>
+            <li>✅ Estadísticas del usuario</li>
+            <li>✅ Navegación intuitiva</li>
+        </ul>
+    </div>
+
+    <script>
+        function toggleSidebar() {
+            const sidebar = document.getElementById('userSidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('active');
+            
+            // Prevent body scroll on mobile when sidebar is open
+            if (window.innerWidth <= 768) {
+                if (sidebar.classList.contains('open')) {
+                    document.body.style.overflow = 'hidden';
+                } else {
+                    document.body.style.overflow = '';
+                }
+            }
+        }
+        
+        function closeSidebar() {
+            const sidebar = document.getElementById('userSidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            
+            sidebar.classList.remove('open');
+            overlay.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+        
+        // Close sidebar with Escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeSidebar();
+            }
+        });
+        
+        // Handle window resize
+        window.addEventListener('resize', function() {
+            if (window.innerWidth > 768) {
+                document.body.style.overflow = '';
+            }
+        });
+    </script>
+</body>
+</html>

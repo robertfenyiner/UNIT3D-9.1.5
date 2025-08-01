@@ -51,4 +51,7 @@ import './components/alpine/tabs';
 import './components/alpine/toggle';
 import './components/alpine/torrentGrouping';
 
+// User Sidebar Component
+import './user-sidebar';
+
 Livewire.start();
