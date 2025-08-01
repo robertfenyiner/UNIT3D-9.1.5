@@ -112,17 +112,13 @@
             display: none;
         }
 
-        .top-nav__dropdown > a {
-            padding: 12px 10px;
+        /* Hide the entire user menu item in mobile expanded view */
+        .top-nav__dropdown.user-menu {
+            display: none;
         }
 
-        /* User sidebar toggle specific styling in mobile */
-        .user-sidebar__toggle--top-nav {
+        .top-nav__dropdown > a {
             padding: 12px 10px;
-            width: 100%;
-            justify-content: flex-start;
-            gap: 12px;
-            border-radius: 0;
         }
     }
 
@@ -230,6 +226,11 @@
     position: static;
     background-color: inherit;
     box-shadow: none;
+}
+
+/* Hide user menu completely in mobile icon bar */
+.top-nav__icon-bar.mobile .top-nav__dropdown.user-menu {
+    display: none;
 }
 
 .top-nav__dropdown > ul > li > a,
