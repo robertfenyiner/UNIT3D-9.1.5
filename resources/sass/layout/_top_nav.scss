@@ -113,9 +113,11 @@
         }
 
         /* Hide the entire user menu item in mobile expanded view */
+        /* Commented out to keep user menu visible
         .top-nav__dropdown.user-menu {
             display: none;
         }
+        */
 
         .top-nav__dropdown > a {
             padding: 12px 10px;
@@ -229,9 +231,11 @@
 }
 
 /* Hide user menu completely in mobile icon bar */
+/* Commented out to keep user menu visible in mobile
 .top-nav__icon-bar.mobile .top-nav__dropdown.user-menu {
     display: none;
 }
+*/
 
 .top-nav__dropdown > ul > li > a,
 .top-nav__dropdown > ul > li > form > button {
@@ -382,7 +386,18 @@
     }
 
     @media screen and (max-width: 767px) {
-        display: none;
+        display: flex; /* Show the icon bar in mobile */
+        justify-content: flex-end; /* Align to the right */
+        
+        /* Hide other icons in mobile, show only user menu */
+        > li:not(.user-menu) {
+            display: none;
+        }
+        
+        /* Ensure user menu is visible */
+        .top-nav__dropdown.user-menu {
+            display: flex;
+        }
     }
 
     &.mobile {

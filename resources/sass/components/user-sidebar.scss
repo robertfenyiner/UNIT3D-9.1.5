@@ -481,3 +481,27 @@ body.has-breadcrumbs .user-sidebar__toggle {
     margin-top: 8px;
     padding-top: 8px;
 }
+
+/* Mobile specific styles for user sidebar toggle */
+@media screen and (max-width: 767px) {
+    .user-sidebar__toggle--top-nav {
+        padding: 8px;
+        background: rgba(0, 0, 0, 0.1);
+        border-radius: 50%;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    .user-sidebar__toggle--top-nav .user-sidebar__toggle-avatar {
+        width: 28px;
+        height: 28px;
+    }
+    
+    .user-sidebar__toggle--top-nav .user-sidebar__toggle-label {
+        display: none; /* Hide label in mobile to save space */
+    }
+    
+    /* Ensure the button is always visible in mobile */
+    .top-nav__icon-bar .top-nav__dropdown.user-menu {
+        display: flex !important;
+    }
+}
