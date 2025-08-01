@@ -249,6 +249,25 @@
     }
 }
 
+/* Mobile navigation styles */
+.top-nav__icon-bar.mobile .user-sidebar__toggle--top-nav {
+    padding: 12px 10px;
+    width: 100%;
+    justify-content: flex-start;
+    gap: 12px;
+    border-radius: 0;
+}
+
+.top-nav__icon-bar.mobile .user-sidebar__toggle--top-nav .user-sidebar__toggle-label {
+    display: block;
+    font-size: 14px;
+}
+
+.top-nav__icon-bar.mobile .user-sidebar__toggle--top-nav .user-sidebar__toggle-avatar {
+    width: 24px;
+    height: 24px;
+}
+
 /* Adjust position when there are breadcrumbs or secondary nav */
 .secondary-nav + * .user-sidebar__toggle,
 body.has-breadcrumbs .user-sidebar__toggle {

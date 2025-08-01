@@ -384,7 +384,7 @@
                     @endif
                 </a>
             </li>
-            <li class="top-nav__dropdown">
+            <li class="top-nav__dropdown user-menu">
                 {{-- Replaced with new user sidebar toggle --}}
                 <div class="user-sidebar__toggle user-sidebar__toggle--top-nav" onclick="toggleUserSidebar()">
                     <img 

@@ -107,8 +107,22 @@
             background-color: inherit;
         }
 
+        /* Hide dropdown content for user menu specifically */
+        .top-nav__dropdown.user-menu > ul {
+            display: none;
+        }
+
         .top-nav__dropdown > a {
             padding: 12px 10px;
+        }
+
+        /* User sidebar toggle specific styling in mobile */
+        .user-sidebar__toggle--top-nav {
+            padding: 12px 10px;
+            width: 100%;
+            justify-content: flex-start;
+            gap: 12px;
+            border-radius: 0;
         }
     }
 
