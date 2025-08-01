@@ -190,7 +190,7 @@
 /* Toggle Button with Avatar */
 .user-sidebar__toggle {
     position: fixed;
-    top: 60px;
+    top: 120px;
     left: 20px;
     width: 80px;
     background: #353535;
@@ -205,6 +205,12 @@
     flex-direction: column;
     align-items: center;
     padding: 10px 8px 8px 8px;
+}
+
+/* Adjust position when there are breadcrumbs or secondary nav */
+.secondary-nav + * .user-sidebar__toggle,
+body.has-breadcrumbs .user-sidebar__toggle {
+    top: 140px;
 }
 
 .user-sidebar__toggle:hover {
@@ -268,7 +274,7 @@
     }
     
     .user-sidebar__toggle {
-        top: 70px;
+        top: 130px;
         left: 15px;
         width: 70px;
         padding: 8px 6px 6px 6px;
@@ -324,7 +330,7 @@
     
     .user-sidebar__toggle {
         width: 65px;
-        top: 65px;
+        top: 125px;
         left: 10px;
         padding: 6px 4px 4px 4px;
     }

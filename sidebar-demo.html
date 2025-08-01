@@ -199,7 +199,7 @@
 /* Toggle Button with Avatar */
 .user-sidebar__toggle {
     position: fixed;
-    top: 60px;
+    top: 120px;
     left: 20px;
     width: 80px;
     background: #353535;
@@ -278,7 +278,7 @@
     }
     
     .user-sidebar__toggle {
-        top: 70px;
+        top: 130px;
         left: 15px;
         width: 70px;
         padding: 8px 6px 6px 6px;
@@ -334,7 +334,7 @@
     
     .user-sidebar__toggle {
         width: 65px;
-        top: 65px;
+        top: 125px;
         left: 10px;
         padding: 6px 4px 4px 4px;
     }
@@ -368,9 +368,25 @@ body {
     color: #fff;
 }
 
+/* Simulate different header heights */
+.demo-header {
+    background: #333;
+    padding: 20px;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
 .demo-content {
     padding: 20px;
     margin-left: 0;
+    margin-top: 120px; /* Account for fixed header */
     transition: margin-left 0.3s ease;
 }
 
@@ -386,6 +402,12 @@ body {
     </style>
 </head>
 <body>
+    <!-- Simulate header like UNIT3D -->
+    <div class="demo-header">
+        <h1>UNIT3D - Simulando Header Real</h1>
+        <div>Breadcrumbs / Secondary Nav</div>
+    </div>
+
     <!-- User Sidebar -->
     <div class="user-sidebar" id="userSidebar">
         <!-- Header -->
