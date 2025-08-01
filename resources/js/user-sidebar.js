@@ -6,7 +6,7 @@ class UserSidebar {
     constructor() {
         this.sidebar = document.querySelector('.user-sidebar');
         this.overlay = document.querySelector('.user-sidebar__overlay');
-        this.toggleBtn = document.querySelector('.user-sidebar__toggle');
+        this.toggleBtn = document.querySelector('.user-sidebar__toggle--top-nav');
         this.closeBtn = document.querySelector('.user-sidebar__close');
         this.body = document.body;
         
@@ -22,28 +22,6 @@ class UserSidebar {
         this.bindEvents();
         this.updateResponsive();
         this.setActiveLink();
-        this.adjustTogglePosition();
-    }
-    
-    adjustTogglePosition() {
-        // Adjust toggle button position based on header height
-        const header = document.querySelector('header');
-        const secondaryNav = document.querySelector('.secondary-nav');
-        
-        if (header && this.toggleBtn) {
-            let headerHeight = header.offsetHeight;
-            
-            // Add extra spacing if there's secondary navigation
-            if (secondaryNav) {
-                headerHeight += 20; // Extra padding
-            }
-            
-            // Set minimum top position
-            const minTop = 120;
-            const calculatedTop = Math.max(minTop, headerHeight + 10);
-            
-            this.toggleBtn.style.top = calculatedTop + 'px';
-        }
     }
     
     bindEvents() {
@@ -155,7 +133,6 @@ class UserSidebar {
         }
         
         this.updateResponsive();
-        this.adjustTogglePosition(); // Reajust position on resize
     }
     
     updateResponsive() {
@@ -205,14 +182,6 @@ class UserSidebar {
 // Auto-initialize when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
     UserSidebar.getInstance();
-    
-    // Also adjust position after a short delay to ensure all content is loaded
-    setTimeout(() => {
-        const instance = UserSidebar.getInstance();
-        if (instance.adjustTogglePosition) {
-            instance.adjustTogglePosition();
-        }
-    }, 500);
 });
 
 // Alpine.js integration (if available)

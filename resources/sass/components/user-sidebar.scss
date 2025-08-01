@@ -207,6 +207,48 @@
     padding: 10px 8px 8px 8px;
 }
 
+/* Top nav version - replaces dropdown */
+.user-sidebar__toggle--top-nav {
+    position: static;
+    width: auto;
+    background: transparent;
+    border: none;
+    border-radius: 50%;
+    padding: 8px;
+    box-shadow: none;
+    flex-direction: row;
+    gap: 8px;
+    align-items: center;
+    transition: all 0.2s ease;
+}
+
+.user-sidebar__toggle--top-nav:hover {
+    background: rgba(255, 255, 255, 0.1);
+    transform: none;
+}
+
+.user-sidebar__toggle--top-nav .user-sidebar__toggle-avatar {
+    width: 32px;
+    height: 32px;
+    border: 2px solid #007bff;
+    margin-bottom: 0;
+}
+
+.user-sidebar__toggle--top-nav .user-sidebar__toggle-label {
+    font-size: 12px;
+    color: #ffffff;
+    text-transform: none;
+    letter-spacing: normal;
+    display: none; /* Hidden by default, show on larger screens */
+}
+
+/* Show label on larger screens */
+@media screen and (min-width: 1024px) {
+    .user-sidebar__toggle--top-nav .user-sidebar__toggle-label {
+        display: block;
+    }
+}
+
 /* Adjust position when there are breadcrumbs or secondary nav */
 .secondary-nav + * .user-sidebar__toggle,
 body.has-breadcrumbs .user-sidebar__toggle {
@@ -236,10 +278,6 @@ body.has-breadcrumbs .user-sidebar__toggle {
     color: #cccccc;
     text-transform: uppercase;
     letter-spacing: 0.3px;
-}
-
-.user-sidebar.open + .user-sidebar__overlay + .user-sidebar__toggle {
-    left: 300px;
 }
 
 /* Overlay */
@@ -273,27 +311,6 @@ body.has-breadcrumbs .user-sidebar__toggle {
         left: 0;
     }
     
-    .user-sidebar__toggle {
-        top: 130px;
-        left: 15px;
-        width: 70px;
-        padding: 8px 6px 6px 6px;
-    }
-    
-    .user-sidebar__toggle-avatar {
-        width: 35px;
-        height: 35px;
-        margin-bottom: 4px;
-    }
-    
-    .user-sidebar__toggle-label {
-        font-size: 8px;
-    }
-    
-    .user-sidebar.open + .user-sidebar__overlay + .user-sidebar__toggle {
-        left: calc(100% - 85px);
-    }
-    
     .user-sidebar__stats {
         grid-template-columns: 1fr 1fr;
         gap: 10px;
@@ -301,6 +318,12 @@ body.has-breadcrumbs .user-sidebar__toggle {
     
     .user-sidebar__stat-value {
         font-size: 11px;
+    }
+    
+    /* Top nav button adjustments for mobile */
+    .user-sidebar__toggle--top-nav .user-sidebar__toggle-avatar {
+        width: 28px;
+        height: 28px;
     }
 }
 
@@ -328,20 +351,10 @@ body.has-breadcrumbs .user-sidebar__toggle {
         gap: 10px;
     }
     
-    .user-sidebar__toggle {
-        width: 65px;
-        top: 125px;
-        left: 10px;
-        padding: 6px 4px 4px 4px;
-    }
-    
-    .user-sidebar__toggle-avatar {
-        width: 30px;
-        height: 30px;
-    }
-    
-    .user-sidebar__toggle-label {
-        font-size: 7px;
+    /* Even smaller avatar for very small screens */
+    .user-sidebar__toggle--top-nav .user-sidebar__toggle-avatar {
+        width: 24px;
+        height: 24px;
     }
 }
 
@@ -350,10 +363,6 @@ body.has-breadcrumbs .user-sidebar__toggle {
     .user-sidebar {
         width: 300px;
         left: -300px;
-    }
-    
-    .user-sidebar.open + .user-sidebar__overlay + .user-sidebar__toggle {
-        left: 320px;
     }
 }
 

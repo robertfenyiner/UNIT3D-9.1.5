@@ -385,138 +385,15 @@
                 </a>
             </li>
             <li class="top-nav__dropdown">
-                <a
-                    class="top-nav__dropdown--nontouch"
-                    href="{{ route('users.show', ['user' => auth()->user()]) }}"
-                >
-                    <img
-                        src="{{ $user->image ? route('authenticated_images.user_avatar', ['user' => $user]) : url('img/profile.png') }}"
-                        alt="{{ __('user.my-profile') }}"
-                        class="top-nav__profile-image"
+                {{-- Replaced with new user sidebar toggle --}}
+                <div class="user-sidebar__toggle user-sidebar__toggle--top-nav" onclick="toggleUserSidebar()">
+                    <img 
+                        src="{{ $user->image ? route('authenticated_images.user_avatar', ['user' => $user]) : url('img/profile.png') }}" 
+                        alt="{{ $user->username }}" 
+                        class="user-sidebar__toggle-avatar"
                     />
-                </a>
-                <a class="top-nav__dropdown--touch" tabindex="0">
-                    <img
-                        src="{{ $user->image ? route('authenticated_images.user_avatar', ['user' => $user]) : url('img/profile.png') }}"
-                        alt="{{ __('user.my-profile') }}"
-                        class="top-nav__profile-image"
-                    />
-                </a>
-                <ul>
-                    <li>
-                        <a
-                            class="top-nav__username"
-                            href="{{ route('users.show', ['user' => auth()->user()]) }}"
-                        >
-                            <span
-                                class="text-bold"
-                                style="
-                                    color: {{ auth()->user()->group->color }};
-                                    background-image: {{ auth()->user()->group->effect }};
-                                "
-                            >
-                                <i class="{{ auth()->user()->group->icon }}"></i>
-                                {{ $user->username }}
-                                @if ($hasActiveWarning)
-                                    <i
-                                        class="{{ config('other.font-awesome') }} fa-exclamation-circle text-orange"
-                                        title="{{ __('common.active-warning') }}"
-                                    ></i>
-                                @endif
-                            </span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="{{ route('users.show', ['user' => auth()->user()]) }}">
-                            <i class="{{ config('other.font-awesome') }} fa-user"></i>
-                            {{ __('user.my-profile') }}
-                        </a>
-                    </li>
-                    <li>
-                        <a
-                            class="top-nav--right__link"
-                            href="{{ route('users.general_settings.edit', ['user' => auth()->user()]) }}"
-                        >
-                            <i class="{{ config('other.font-awesome') }} fa-cogs"></i>
-                            {{ __('user.my-settings') }}
-                        </a>
-                    </li>
-                    <li>
-                        <a
-                            href="{{ route('users.privacy_settings.edit', ['user' => auth()->user()]) }}"
-                        >
-                            <i class="{{ config('other.font-awesome') }} fa-eye"></i>
-                            {{ __('user.my-privacy') }}
-                        </a>
-                    </li>
-                    <li>
-                        <a
-                            href="{{ route('users.achievements.index', ['user' => auth()->user()]) }}"
-                        >
-                            <i class="{{ config('other.font-awesome') }} fa-trophy-alt"></i>
-                            {{ __('user.my-achievements') }}
-                        </a>
-                    </li>
-                    <li>
-                        <a href="{{ route('users.torrents.index', ['user' => auth()->user()]) }}">
-                            <i class="{{ config('other.font-awesome') }} fa-upload"></i>
-                            {{ __('user.my-uploads') }}
-
-                            @if ($uploadCount > 0)
-                                ({{ $uploadCount }})
-                            @endif
-                        </a>
-                    </li>
-                    <li>
-                        <a
-                            href="{{ route('users.history.index', ['user' => auth()->user(), 'downloaded' => 'include']) }}"
-                        >
-                            <i class="{{ config('other.font-awesome') }} fa-download"></i>
-                            {{ __('user.my-downloads') }}
-
-                            @if ($downloadCount > 0)
-                                ({{ $downloadCount }})
-                            @endif
-                        </a>
-                    </li>
-                    <li>
-                        <a
-                            href="{{ route('requests.index', ['requestor' => auth()->user()->username]) }}"
-                        >
-                            <i class="{{ config('other.font-awesome') }} fa-question"></i>
-                            {{ __('user.my-requested') }}
-                        </a>
-                    </li>
-                    <li>
-                        <a href="{{ route('users.bookmarks.index', ['user' => auth()->user()]) }}">
-                            <i class="{{ config('other.font-awesome') }} fa-bookmark"></i>
-                            {{ __('user.my-bookmarks') }}
-                        </a>
-                    </li>
-                    <li>
-                        <a
-                            href="{{ route('playlists.index', ['username' => auth()->user()->username]) }}"
-                        >
-                            <i class="{{ config('other.font-awesome') }} fa-list-ol"></i>
-                            {{ __('user.my-playlists') }}
-                        </a>
-                    </li>
-                    <li>
-                        <a href="{{ route('users.wishes.index', ['user' => auth()->user()]) }}">
-                            <i class="{{ config('other.font-awesome') }} fa-clipboard-list"></i>
-                            {{ __('user.my-wishlist') }}
-                        </a>
-                    </li>
-                    <li>
-                        <form role="form" method="POST" action="{{ route('logout') }}">
-                            @csrf
-                            <button class="top-nav--right__link" type="submit">
-                                <i class="far fa-sign-out"></i>
-                                {{ __('auth.logout') }}
-                            </button>
-                        </form>
-                    </li>
-                </ul>
+                    <span class="user-sidebar__toggle-label">Menú de Usuario</span>
+                </div>
             </li>
         </ul>
     </div>

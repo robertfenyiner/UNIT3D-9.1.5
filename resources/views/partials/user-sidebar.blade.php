@@ -169,14 +169,4 @@
 
 {{-- Sidebar Overlay for mobile --}}
 <div class="user-sidebar__overlay" id="userSidebarOverlay" onclick="toggleUserSidebar()"></div>
-
-{{-- Toggle button with user avatar --}}
-<div class="user-sidebar__toggle" onclick="toggleUserSidebar()">
-    <img 
-        src="{{ auth()->user()->image ? route('authenticated_images.user_avatar', ['user' => auth()->user()]) : url('img/profile.png') }}" 
-        alt="{{ auth()->user()->username }}" 
-        class="user-sidebar__toggle-avatar"
-    />
-    <span class="user-sidebar__toggle-label">Menú de Usuario</span>
-</div>
 @endauth
