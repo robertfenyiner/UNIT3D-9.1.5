@@ -13,8 +13,8 @@
     left: -280px;
     width: 280px;
     height: 100vh;
-    background: #1a1a1a;
-    border-right: 1px solid #333;
+    background: #2a2a2a;
+    border-right: 1px solid #404040;
     z-index: 1050;
     transition: left 0.3s ease-in-out;
     overflow-y: auto;
@@ -30,11 +30,11 @@
 /* Header */
 .user-sidebar__header {
     padding: 20px;
-    border-bottom: 1px solid #333;
+    border-bottom: 1px solid #404040;
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    background: #2a2a2a;
+    background: #353535;
 }
 
 .user-sidebar__user-info {
@@ -77,7 +77,7 @@
 .user-sidebar__close {
     background: none;
     border: none;
-    color: #ccc;
+    color: #cccccc;
     cursor: pointer;
     padding: 8px;
     border-radius: 4px;
@@ -87,7 +87,7 @@
 
 .user-sidebar__close:hover {
     background: rgba(255, 255, 255, 0.1);
-    color: #fff;
+    color: #ffffff;
 }
 
 /* Navigation */
@@ -111,7 +111,7 @@
     align-items: center;
     gap: 12px;
     padding: 12px 20px;
-    color: #ccc;
+    color: #cccccc;
     text-decoration: none;
     transition: all 0.2s ease;
     border-left: 3px solid transparent;
@@ -120,7 +120,7 @@
 
 .user-sidebar__menu-link:hover {
     background: rgba(255, 255, 255, 0.05);
-    color: #fff;
+    color: #ffffff;
     border-left-color: #007bff;
 }
 
@@ -157,67 +157,88 @@
 
 .user-sidebar__separator {
     height: 1px;
-    background: #333;
+    background: #404040;
     margin: 10px 20px;
 }
 
 /* Footer */
 .user-sidebar__footer {
     padding: 20px;
-    border-top: 1px solid #333;
-    background: #2a2a2a;
+    border-top: 1px solid #404040;
+    background: #353535;
 }
 
 .user-sidebar__stats {
-    display: flex;
-    gap: 20px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
 }
 
 .user-sidebar__stat {
     display: flex;
     flex-direction: column;
     align-items: center;
-    flex: 1;
+    text-align: center;
 }
 
 .user-sidebar__stat-label {
-    font-size: 11px;
-    color: #999;
+    font-size: 10px;
+    color: #999999;
     margin-bottom: 4px;
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }
 
 .user-sidebar__stat-value {
-    font-size: 14px;
+    font-size: 12px;
     font-weight: 600;
     color: #007bff;
+    word-break: break-all;
 }
 
-/* Toggle Button */
+/* Toggle Button with Avatar */
 .user-sidebar__toggle {
     position: fixed;
     top: 60px;
     left: 20px;
-    width: 50px;
-    height: 50px;
-    background: #007bff;
-    border: none;
-    border-radius: 50%;
+    width: 80px;
+    background: #353535;
+    border: 2px solid #404040;
+    border-radius: 8px;
     color: white;
-    font-size: 20px;
     cursor: pointer;
     z-index: 1040;
     transition: all 0.3s ease;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
     display: flex;
+    flex-direction: column;
     align-items: center;
-    justify-content: center;
+    padding: 10px 8px 8px 8px;
 }
 
 .user-sidebar__toggle:hover {
-    background: #0056b3;
-    transform: scale(1.05);
+    background: #404040;
+    border-color: #007bff;
+    transform: translateY(-2px);
+}
+
+.user-sidebar__toggle-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #007bff;
+    margin-bottom: 6px;
+}
+
+.user-sidebar__toggle-label {
+    font-size: 9px;
+    font-weight: 500;
+    text-align: center;
+    line-height: 1.2;
+    color: #cccccc;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
 }
 
 .user-sidebar.open + .user-sidebar__overlay + .user-sidebar__toggle {
@@ -244,6 +265,7 @@
 }
 
 /* Responsive Design */
+/* Responsive Design */
 @media screen and (max-width: 768px) {
     .user-sidebar {
         width: 100%;
@@ -258,13 +280,84 @@
     .user-sidebar__toggle {
         top: 70px;
         left: 15px;
-        width: 45px;
-        height: 45px;
-        font-size: 18px;
+        width: 70px;
+        padding: 8px 6px 6px 6px;
+    }
+    
+    .user-sidebar__toggle-avatar {
+        width: 35px;
+        height: 35px;
+        margin-bottom: 4px;
+    }
+    
+    .user-sidebar__toggle-label {
+        font-size: 8px;
     }
     
     .user-sidebar.open + .user-sidebar__overlay + .user-sidebar__toggle {
-        left: calc(100% - 60px);
+        left: calc(100% - 85px);
+    }
+    
+    .user-sidebar__stats {
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+    }
+    
+    .user-sidebar__stat-value {
+        font-size: 11px;
+    }
+}
+
+@media screen and (max-width: 480px) {
+    .user-sidebar {
+        width: 100%;
+        left: -100%;
+    }
+    
+    .user-sidebar__header {
+        padding: 15px;
+    }
+    
+    .user-sidebar__avatar {
+        width: 40px;
+        height: 40px;
+    }
+    
+    .user-sidebar__username {
+        font-size: 14px;
+    }
+    
+    .user-sidebar__menu-link {
+        padding: 10px 15px;
+        gap: 10px;
+    }
+    
+    .user-sidebar__toggle {
+        width: 65px;
+        top: 65px;
+        left: 10px;
+        padding: 6px 4px 4px 4px;
+    }
+    
+    .user-sidebar__toggle-avatar {
+        width: 30px;
+        height: 30px;
+    }
+    
+    .user-sidebar__toggle-label {
+        font-size: 7px;
+    }
+}
+
+/* Desktop optimization */
+@media screen and (min-width: 1200px) {
+    .user-sidebar {
+        width: 300px;
+        left: -300px;
+    }
+    
+    .user-sidebar.open + .user-sidebar__overlay + .user-sidebar__toggle {
+        left: 320px;
     }
 }
 
@@ -390,12 +483,44 @@ body {
         <div class="user-sidebar__footer">
             <div class="user-sidebar__stats">
                 <div class="user-sidebar__stat">
-                    <span class="user-sidebar__stat-label">Ratio</span>
-                    <span class="user-sidebar__stat-value">2.45</span>
+                    <span class="user-sidebar__stat-label">Upload</span>
+                    <span class="user-sidebar__stat-value">44.76 GB</span>
                 </div>
                 <div class="user-sidebar__stat">
-                    <span class="user-sidebar__stat-label">BON</span>
-                    <span class="user-sidebar__stat-value">1,250</span>
+                    <span class="user-sidebar__stat-label">Download</span>
+                    <span class="user-sidebar__stat-value">86.05 GB</span>
+                </div>
+                <div class="user-sidebar__stat">
+                    <span class="user-sidebar__stat-label">Ratio</span>
+                    <span class="user-sidebar__stat-value">1.73</span>
+                </div>
+                <div class="user-sidebar__stat">
+                    <span class="user-sidebar__stat-label">Seedtime</span>
+                    <span class="user-sidebar__stat-value">25.94 GB</span>
+                </div>
+                <div class="user-sidebar__stat">
+                    <span class="user-sidebar__stat-label">Seeding</span>
+                    <span class="user-sidebar__stat-value">0</span>
+                </div>
+                <div class="user-sidebar__stat">
+                    <span class="user-sidebar__stat-label">Leeching</span>
+                    <span class="user-sidebar__stat-value">0</span>
+                </div>
+                <div class="user-sidebar__stat">
+                    <span class="user-sidebar__stat-label">Buffer</span>
+                    <span class="user-sidebar__stat-value">9,617,473</span>
+                </div>
+                <div class="user-sidebar__stat">
+                    <span class="user-sidebar__stat-label">BON Points</span>
+                    <span class="user-sidebar__stat-value">40</span>
+                </div>
+                <div class="user-sidebar__stat">
+                    <span class="user-sidebar__stat-label">Bonus Ratio</span>
+                    <span class="user-sidebar__stat-value">0.00</span>
+                </div>
+                <div class="user-sidebar__stat">
+                    <span class="user-sidebar__stat-label">FL Tokens</span>
+                    <span class="user-sidebar__stat-value">5</span>
                 </div>
             </div>
         </div>
@@ -404,10 +529,11 @@ body {
     <!-- Overlay -->
     <div class="user-sidebar__overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
 
-    <!-- Toggle Button -->
-    <button class="user-sidebar__toggle" onclick="toggleSidebar()">
-        <i class="fas fa-bars"></i>
-    </button>
+    <!-- Toggle Button with Avatar -->
+    <div class="user-sidebar__toggle" onclick="toggleSidebar()">
+        <img class="user-sidebar__toggle-avatar" src="https://via.placeholder.com/40" alt="Avatar">
+        <span class="user-sidebar__toggle-label">Menú de Usuario</span>
+    </div>
 
     <!-- Demo Content -->
     <div class="demo-content">

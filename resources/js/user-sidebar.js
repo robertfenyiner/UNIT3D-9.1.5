@@ -218,6 +218,19 @@ if (window.Alpine) {
     });
 }
 
+// Global functions for inline onclick handlers
+window.toggleUserSidebar = function() {
+    UserSidebar.toggle();
+};
+
+window.closeUserSidebar = function() {
+    UserSidebar.close();
+};
+
+window.openUserSidebar = function() {
+    UserSidebar.open();
+};
+
 // Export for module systems
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = UserSidebar;
