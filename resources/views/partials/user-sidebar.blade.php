@@ -118,6 +118,17 @@
                 </a>
             </li>
             @endif
+            
+            {{-- Logout Option --}}
+            <li class="user-sidebar__menu-item user-sidebar__menu-item--logout">
+                <form action="{{ route('logout') }}" method="POST" class="user-sidebar__logout-form">
+                    @csrf
+                    <button type="submit" class="user-sidebar__menu-link user-sidebar__menu-link--logout">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span>{{ __('common.logout') }}</span>
+                    </button>
+                </form>
+            </li>
         </ul>
     </nav>
     

@@ -450,3 +450,34 @@ body.has-breadcrumbs .user-sidebar__toggle {
         --badge-text: #fff;
     }
 }
+
+/* Logout Styles */
+.user-sidebar__logout-form {
+    width: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+.user-sidebar__menu-link--logout {
+    background: none;
+    border: none;
+    width: 100%;
+    text-align: left;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: inherit;
+    color: #ff6b6b; /* Red color for logout */
+    border-left-color: transparent;
+}
+
+.user-sidebar__menu-link--logout:hover {
+    background: rgba(255, 107, 107, 0.1);
+    color: #ff5252;
+    border-left-color: #ff6b6b;
+}
+
+.user-sidebar__menu-item--logout {
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    margin-top: 8px;
+    padding-top: 8px;
+}
