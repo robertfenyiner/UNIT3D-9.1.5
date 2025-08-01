@@ -89,5 +89,9 @@
 @use 'pages/torrents';
 @use 'pages/user';
 
+// Custom enhancements
+@use 'custom/user-menu';
+@use 'custom/responsive-nav';
+
 // Shame
 @use 'shame';
