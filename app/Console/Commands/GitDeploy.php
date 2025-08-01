@@ -6,6 +6,9 @@ namespace App\Console\Commands;
 
 use App\Console\ConsoleTools;
 use Illuminate\Console\Command;
+use Symfony\Component\Console\Input\ArgvInput;
+use Symfony\Component\Console\Output\ConsoleOutput;
+use Symfony\Component\Console\Style\SymfonyStyle;
 
 class GitDeploy extends Command
 {
@@ -26,10 +29,16 @@ class GitDeploy extends Command
      */
     public function handle(): int
     {
+        $this->input = new ArgvInput();
+        $this->output = new ConsoleOutput();
+        $this->io = new SymfonyStyle($this->input, $this->output);
+
         $this->info('🚀 Starting Git deployment...');
 
         // Check if we have uncommitted changes
-        $status = shell_exec('git status --porcelain');
+        $process = $this->execCommand('git status --porcelain');
+        $status = $process->getOutput();
+        
         if (!empty(trim($status))) {
             $this->warning('⚠️  You have uncommitted changes:');
             $this->line($status);
@@ -42,10 +51,10 @@ class GitDeploy extends Command
 
         // Backup critical files
         $this->info('📦 Backing up critical files...');
-        $this->execCommand('cp .env /tmp/env_backup_deploy');
-        if (file_exists('laravel-echo-server.json')) {
-            $this->execCommand('cp laravel-echo-server.json /tmp/echo_backup_deploy');
-        }
+        $this->execCommands([
+            'cp .env /tmp/env_backup_deploy',
+            'cp laravel-echo-server.json /tmp/echo_backup_deploy 2>/dev/null || true'
+        ], true);
 
         // Put application in maintenance mode
         $this->info('🔒 Putting application in maintenance mode...');
@@ -54,15 +63,17 @@ class GitDeploy extends Command
         try {
             // Pull latest changes
             $this->info('⬇️  Pulling latest changes...');
-            $this->execCommand('git fetch origin');
-            $this->execCommand('git pull origin master');
+            $this->execCommands([
+                'git fetch origin',
+                'git pull origin master'
+            ]);
 
             // Restore critical files
             $this->info('🔄 Restoring critical files...');
-            $this->execCommand('cp /tmp/env_backup_deploy .env');
-            if (file_exists('/tmp/echo_backup_deploy')) {
-                $this->execCommand('cp /tmp/echo_backup_deploy laravel-echo-server.json');
-            }
+            $this->execCommands([
+                'cp /tmp/env_backup_deploy .env',
+                'cp /tmp/echo_backup_deploy laravel-echo-server.json 2>/dev/null || true'
+            ], true);
 
             // Run migrations
             if ($this->confirm('Run database migrations?', true)) {
@@ -85,8 +96,10 @@ class GitDeploy extends Command
 
             if ($this->confirm('Build frontend assets?', false)) {
                 $this->info('🎨 Building frontend assets...');
-                $this->execCommand('npm ci');
-                $this->execCommand('npm run build');
+                $this->execCommands([
+                    'npm ci',
+                    'npm run build'
+                ]);
             }
 
         } catch (\Exception $e) {
@@ -94,16 +107,16 @@ class GitDeploy extends Command
             
             // Restore backups
             $this->info('🔄 Restoring backups...');
-            $this->execCommand('cp /tmp/env_backup_deploy .env');
-            if (file_exists('/tmp/echo_backup_deploy')) {
-                $this->execCommand('cp /tmp/echo_backup_deploy laravel-echo-server.json');
-            }
+            $this->execCommands([
+                'cp /tmp/env_backup_deploy .env',
+                'cp /tmp/echo_backup_deploy laravel-echo-server.json 2>/dev/null || true'
+            ], true);
             
             $this->call('up');
             return 1;
         } finally {
             // Clean up temporary files
-            $this->execCommand('rm -f /tmp/env_backup_deploy /tmp/echo_backup_deploy');
+            $this->execCommand('rm -f /tmp/env_backup_deploy /tmp/echo_backup_deploy', true);
         }
 
         // Bring application back up
@@ -112,23 +125,5 @@ class GitDeploy extends Command
 
         $this->info('✅ Deployment completed successfully!');
         return 0;
-    }
-
-    /**
-     * Execute a command and handle errors.
-     */
-    private function execCommand(string $command): void
-    {
-        $output = shell_exec($command . ' 2>&1');
-        if ($output === null) {
-            throw new \Exception("Failed to execute: {$command}");
-        }
-        
-        // Check exit code
-        $exitCode = 0;
-        exec($command, $result, $exitCode);
-        if ($exitCode !== 0) {
-            throw new \Exception("Command failed with exit code {$exitCode}: {$command}\nOutput: {$output}");
-        }
     }
 }
