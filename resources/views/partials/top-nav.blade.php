@@ -350,86 +350,101 @@
 </nav>
 
 <!-- User Statistics Section -->
-<div class="user-stats-sidebar" style="position: fixed; top: 60px; right: 20px; background: rgba(0,0,0,0.9); border-radius: 8px; padding: 15px; width: 250px; z-index: 1000; box-shadow: 0 4px 6px rgba(0,0,0,0.3);">
-    <div style="text-align: center; margin-bottom: 15px; color: #fff; font-weight: bold; border-bottom: 1px solid #444; padding-bottom: 10px;">
+<div class="user-stats-sidebar" style="position: fixed; top: 80px; right: 15px; background: rgba(0,0,0,0.92); border-radius: 10px; padding: 12px; width: 220px; z-index: 1000; box-shadow: 0 6px 12px rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1);">
+    <div style="text-align: center; margin-bottom: 12px; color: #fff; font-weight: bold; border-bottom: 1px solid #444; padding-bottom: 8px; font-size: 13px;">
         Estadísticas del Usuario
     </div>
-    <div class="stats-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-        <div class="stat-item" style="background: rgba(255,255,255,0.1); padding: 8px; border-radius: 4px; text-align: center;">
-            <div style="color: #4CAF50; font-size: 12px; margin-bottom: 2px;">
+    <div class="stats-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+        <!-- Subido -->
+        <div class="stat-item" style="background: rgba(76, 175, 80, 0.15); padding: 10px; border-radius: 6px; text-align: center; border: 1px solid rgba(76, 175, 80, 0.3);">
+            <div style="color: #4CAF50; font-size: 11px; margin-bottom: 3px; font-weight: 600;">
                 <i class="{{ config('other.font-awesome') }} fa-arrow-up"></i> Subido
             </div>
-            <div style="color: #fff; font-size: 11px; font-weight: bold;">
+            <div style="color: #fff; font-size: 10px; font-weight: bold; line-height: 1.2;">
                 <a href="{{ route('users.torrents.index', ['user' => auth()->user()]) }}" style="color: #fff; text-decoration: none;">
                     {{ $user->formatted_uploaded }}
                 </a>
             </div>
         </div>
-        <div class="stat-item" style="background: rgba(255,255,255,0.1); padding: 8px; border-radius: 4px; text-align: center;">
-            <div style="color: #f44336; font-size: 12px; margin-bottom: 2px;">
+        
+        <!-- Descargado -->
+        <div class="stat-item" style="background: rgba(244, 67, 54, 0.15); padding: 10px; border-radius: 6px; text-align: center; border: 1px solid rgba(244, 67, 54, 0.3);">
+            <div style="color: #f44336; font-size: 11px; margin-bottom: 3px; font-weight: 600;">
                 <i class="{{ config('other.font-awesome') }} fa-arrow-down"></i> Descargado
             </div>
-            <div style="color: #fff; font-size: 11px; font-weight: bold;">
+            <div style="color: #fff; font-size: 10px; font-weight: bold; line-height: 1.2;">
                 <a href="{{ route('users.history.index', ['user' => auth()->user(), 'downloaded' => 'include']) }}" style="color: #fff; text-decoration: none;">
                     {{ $user->formatted_downloaded }}
                 </a>
             </div>
         </div>
-        <div class="stat-item" style="background: rgba(255,255,255,0.1); padding: 8px; border-radius: 4px; text-align: center;">
-            <div style="color: #2196F3; font-size: 12px; margin-bottom: 2px;">
+        
+        <!-- Seeding -->
+        <div class="stat-item" style="background: rgba(33, 150, 243, 0.15); padding: 10px; border-radius: 6px; text-align: center; border: 1px solid rgba(33, 150, 243, 0.3);">
+            <div style="color: #2196F3; font-size: 11px; margin-bottom: 3px; font-weight: 600;">
                 <i class="{{ config('other.font-awesome') }} fa-upload"></i> Seeding
             </div>
-            <div style="color: #fff; font-size: 11px; font-weight: bold;">
+            <div style="color: #fff; font-size: 10px; font-weight: bold; line-height: 1.2;">
                 <a href="{{ route('users.peers.index', ['user' => auth()->user()]) }}" style="color: #fff; text-decoration: none;">
                     {{ $peerCount - $leechCount }}
                 </a>
             </div>
         </div>
-        <div class="stat-item" style="background: rgba(255,255,255,0.1); padding: 8px; border-radius: 4px; text-align: center;">
-            <div style="color: #FF9800; font-size: 12px; margin-bottom: 2px;">
+        
+        <!-- Leeching -->
+        <div class="stat-item" style="background: rgba(255, 152, 0, 0.15); padding: 10px; border-radius: 6px; text-align: center; border: 1px solid rgba(255, 152, 0, 0.3);">
+            <div style="color: #FF9800; font-size: 11px; margin-bottom: 3px; font-weight: 600;">
                 <i class="{{ config('other.font-awesome') }} fa-download"></i> Leeching
             </div>
-            <div style="color: #fff; font-size: 11px; font-weight: bold;">
+            <div style="color: #fff; font-size: 10px; font-weight: bold; line-height: 1.2;">
                 <a href="{{ route('users.peers.index', ['user' => auth()->user(), 'seeding' => 'exclude']) }}" style="color: #fff; text-decoration: none;">
                     {{ $leechCount }}
                 </a>
             </div>
         </div>
-        <div class="stat-item" style="background: rgba(255,255,255,0.1); padding: 8px; border-radius: 4px; text-align: center;">
-            <div style="color: #9C27B0; font-size: 12px; margin-bottom: 2px;">
+        
+        <!-- Buffer -->
+        <div class="stat-item" style="background: rgba(156, 39, 176, 0.15); padding: 10px; border-radius: 6px; text-align: center; border: 1px solid rgba(156, 39, 176, 0.3);">
+            <div style="color: #9C27B0; font-size: 11px; margin-bottom: 3px; font-weight: 600;">
                 <i class="{{ config('other.font-awesome') }} fa-exchange"></i> Buffer
             </div>
-            <div style="color: #fff; font-size: 11px; font-weight: bold;">
+            <div style="color: #fff; font-size: 10px; font-weight: bold; line-height: 1.2;">
                 <a href="{{ route('users.history.index', ['user' => auth()->user()]) }}" style="color: #fff; text-decoration: none;">
                     {{ $user->formatted_buffer }}
                 </a>
             </div>
         </div>
-        <div class="stat-item" style="background: rgba(255,255,255,0.1); padding: 8px; border-radius: 4px; text-align: center;">
-            <div style="color: #FFD700; font-size: 12px; margin-bottom: 2px;">
+        
+        <!-- Puntos -->
+        <div class="stat-item" style="background: rgba(255, 215, 0, 0.15); padding: 10px; border-radius: 6px; text-align: center; border: 1px solid rgba(255, 215, 0, 0.3);">
+            <div style="color: #FFD700; font-size: 11px; margin-bottom: 3px; font-weight: 600;">
                 <i class="{{ config('other.font-awesome') }} fa-coins"></i> Puntos
             </div>
-            <div style="color: #fff; font-size: 11px; font-weight: bold;">
+            <div style="color: #fff; font-size: 10px; font-weight: bold; line-height: 1.2;">
                 <a href="{{ route('users.earnings.index', ['user' => auth()->user()]) }}" style="color: #fff; text-decoration: none;">
                     {{ $user->formatted_seedbonus }}
                 </a>
             </div>
         </div>
-        <div class="stat-item" style="background: rgba(255,255,255,0.1); padding: 8px; border-radius: 4px; text-align: center;">
-            <div style="color: #00BCD4; font-size: 12px; margin-bottom: 2px;">
+        
+        <!-- Ratio -->
+        <div class="stat-item" style="background: rgba(0, 188, 212, 0.15); padding: 10px; border-radius: 6px; text-align: center; border: 1px solid rgba(0, 188, 212, 0.3);">
+            <div style="color: #00BCD4; font-size: 11px; margin-bottom: 3px; font-weight: 600;">
                 <i class="{{ config('other.font-awesome') }} fa-sync-alt"></i> Ratio
             </div>
-            <div style="color: #fff; font-size: 11px; font-weight: bold;">
+            <div style="color: #fff; font-size: 10px; font-weight: bold; line-height: 1.2;">
                 <a href="{{ route('users.history.index', ['user' => auth()->user()]) }}" style="color: #fff; text-decoration: none;">
                     {{ $user->formatted_ratio }}
                 </a>
             </div>
         </div>
-        <div class="stat-item" style="background: rgba(255,255,255,0.1); padding: 8px; border-radius: 4px; text-align: center;">
-            <div style="color: #FFC107; font-size: 12px; margin-bottom: 2px;">
+        
+        <!-- Tokens -->
+        <div class="stat-item" style="background: rgba(255, 193, 7, 0.15); padding: 10px; border-radius: 6px; text-align: center; border: 1px solid rgba(255, 193, 7, 0.3);">
+            <div style="color: #FFC107; font-size: 11px; margin-bottom: 3px; font-weight: 600;">
                 <i class="{{ config('other.font-awesome') }} fa-star"></i> Tokens
             </div>
-            <div style="color: #fff; font-size: 11px; font-weight: bold;">
+            <div style="color: #fff; font-size: 10px; font-weight: bold; line-height: 1.2;">
                 <a href="{{ route('users.show', ['user' => auth()->user()]) }}" style="color: #fff; text-decoration: none;">
                     {{ $user->fl_tokens }}
                 </a>
@@ -437,3 +452,52 @@
         </div>
     </div>
 </div>
+
+<!-- Responsive adjustments for mobile -->
+<style>
+@media (max-width: 768px) {
+    .user-stats-sidebar {
+        position: fixed !important;
+        top: 120px !important;
+        right: 10px !important;
+        left: 10px !important;
+        width: auto !important;
+        max-width: 300px !important;
+        margin: 0 auto !important;
+        transform: none !important;
+    }
+    
+    .user-stats-sidebar .stats-grid {
+        grid-template-columns: 1fr 1fr !important;
+        gap: 6px !important;
+    }
+    
+    .user-stats-sidebar .stat-item {
+        padding: 8px !important;
+    }
+    
+    .user-stats-sidebar .stat-item div:first-child {
+        font-size: 10px !important;
+    }
+    
+    .user-stats-sidebar .stat-item div:last-child {
+        font-size: 9px !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .user-stats-sidebar {
+        right: 5px !important;
+        left: 5px !important;
+        padding: 10px !important;
+    }
+    
+    .user-stats-sidebar .stats-grid {
+        gap: 4px !important;
+    }
+    
+    .user-stats-sidebar .stat-item {
+        padding: 6px !important;
+    }
+}
+</style>
