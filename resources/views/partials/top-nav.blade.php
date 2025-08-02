@@ -353,12 +353,12 @@
 <div id="user-stats-widget" style="
     position: fixed;
     top: 70px;
-    right: 20px;
+    right: 15px;
     background: linear-gradient(145deg, #1a1a1a, #2d2d2d);
     border: 1px solid #444;
     border-radius: 12px;
-    padding: 16px;
-    width: 280px;
+    padding: 12px;
+    width: 180px;
     z-index: 9999;
     box-shadow: 0 8px 32px rgba(0,0,0,0.6);
     backdrop-filter: blur(10px);
@@ -367,32 +367,34 @@
     <!-- Header -->
     <div style="
         text-align: center;
-        margin-bottom: 16px;
+        margin-bottom: 12px;
         color: #ffffff;
         font-weight: 700;
-        font-size: 14px;
+        font-size: 12px;
         border-bottom: 2px solid #444;
-        padding-bottom: 10px;
+        padding-bottom: 8px;
         letter-spacing: 0.5px;
     ">
-        📊 Estadísticas del Usuario
+        📊 Stats
     </div>
     
-    <!-- Stats Grid -->
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+    <!-- Stats Grid - Single Column -->
+    <div style="display: flex; flex-direction: column; gap: 8px;">
         <!-- Subido -->
         <div style="
             background: linear-gradient(135deg, rgba(76,175,80,0.2), rgba(76,175,80,0.05));
             border: 1px solid rgba(76,175,80,0.4);
-            border-radius: 8px;
-            padding: 12px 8px;
-            text-align: center;
+            border-radius: 6px;
+            padding: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             transition: transform 0.2s ease;
         " onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
-            <div style="color: #4CAF50; font-size: 11px; font-weight: 600; margin-bottom: 4px;">
+            <div style="color: #4CAF50; font-size: 10px; font-weight: 600;">
                 <i class="{{ config('other.font-awesome') }} fa-arrow-up"></i> Subido
             </div>
-            <div style="color: #fff; font-size: 10px; font-weight: 700;">
+            <div style="color: #fff; font-size: 9px; font-weight: 700;">
                 <a href="{{ route('users.torrents.index', ['user' => auth()->user()]) }}" 
                    style="color: #fff; text-decoration: none;" 
                    onmouseover="this.style.color='#4CAF50'" 
@@ -406,15 +408,17 @@
         <div style="
             background: linear-gradient(135deg, rgba(244,67,54,0.2), rgba(244,67,54,0.05));
             border: 1px solid rgba(244,67,54,0.4);
-            border-radius: 8px;
-            padding: 12px 8px;
-            text-align: center;
+            border-radius: 6px;
+            padding: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             transition: transform 0.2s ease;
         " onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
-            <div style="color: #f44336; font-size: 11px; font-weight: 600; margin-bottom: 4px;">
+            <div style="color: #f44336; font-size: 10px; font-weight: 600;">
                 <i class="{{ config('other.font-awesome') }} fa-arrow-down"></i> Descargado
             </div>
-            <div style="color: #fff; font-size: 10px; font-weight: 700;">
+            <div style="color: #fff; font-size: 9px; font-weight: 700;">
                 <a href="{{ route('users.history.index', ['user' => auth()->user(), 'downloaded' => 'include']) }}" 
                    style="color: #fff; text-decoration: none;"
                    onmouseover="this.style.color='#f44336'" 
@@ -428,15 +432,17 @@
         <div style="
             background: linear-gradient(135deg, rgba(33,150,243,0.2), rgba(33,150,243,0.05));
             border: 1px solid rgba(33,150,243,0.4);
-            border-radius: 8px;
-            padding: 12px 8px;
-            text-align: center;
+            border-radius: 6px;
+            padding: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             transition: transform 0.2s ease;
         " onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
-            <div style="color: #2196F3; font-size: 11px; font-weight: 600; margin-bottom: 4px;">
+            <div style="color: #2196F3; font-size: 10px; font-weight: 600;">
                 <i class="{{ config('other.font-awesome') }} fa-upload"></i> Seeding
             </div>
-            <div style="color: #fff; font-size: 10px; font-weight: 700;">
+            <div style="color: #fff; font-size: 9px; font-weight: 700;">
                 <a href="{{ route('users.peers.index', ['user' => auth()->user()]) }}" 
                    style="color: #fff; text-decoration: none;"
                    onmouseover="this.style.color='#2196F3'" 
@@ -450,15 +456,17 @@
         <div style="
             background: linear-gradient(135deg, rgba(255,152,0,0.2), rgba(255,152,0,0.05));
             border: 1px solid rgba(255,152,0,0.4);
-            border-radius: 8px;
-            padding: 12px 8px;
-            text-align: center;
+            border-radius: 6px;
+            padding: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             transition: transform 0.2s ease;
         " onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
-            <div style="color: #FF9800; font-size: 11px; font-weight: 600; margin-bottom: 4px;">
+            <div style="color: #FF9800; font-size: 10px; font-weight: 600;">
                 <i class="{{ config('other.font-awesome') }} fa-download"></i> Leeching
             </div>
-            <div style="color: #fff; font-size: 10px; font-weight: 700;">
+            <div style="color: #fff; font-size: 9px; font-weight: 700;">
                 <a href="{{ route('users.peers.index', ['user' => auth()->user(), 'seeding' => 'exclude']) }}" 
                    style="color: #fff; text-decoration: none;"
                    onmouseover="this.style.color='#FF9800'" 
@@ -472,15 +480,17 @@
         <div style="
             background: linear-gradient(135deg, rgba(156,39,176,0.2), rgba(156,39,176,0.05));
             border: 1px solid rgba(156,39,176,0.4);
-            border-radius: 8px;
-            padding: 12px 8px;
-            text-align: center;
+            border-radius: 6px;
+            padding: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             transition: transform 0.2s ease;
         " onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
-            <div style="color: #9C27B0; font-size: 11px; font-weight: 600; margin-bottom: 4px;">
+            <div style="color: #9C27B0; font-size: 10px; font-weight: 600;">
                 <i class="{{ config('other.font-awesome') }} fa-exchange"></i> Buffer
             </div>
-            <div style="color: #fff; font-size: 10px; font-weight: 700;">
+            <div style="color: #fff; font-size: 9px; font-weight: 700;">
                 <a href="{{ route('users.history.index', ['user' => auth()->user()]) }}" 
                    style="color: #fff; text-decoration: none;"
                    onmouseover="this.style.color='#9C27B0'" 
@@ -494,15 +504,17 @@
         <div style="
             background: linear-gradient(135deg, rgba(255,215,0,0.2), rgba(255,215,0,0.05));
             border: 1px solid rgba(255,215,0,0.4);
-            border-radius: 8px;
-            padding: 12px 8px;
-            text-align: center;
+            border-radius: 6px;
+            padding: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             transition: transform 0.2s ease;
         " onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
-            <div style="color: #FFD700; font-size: 11px; font-weight: 600; margin-bottom: 4px;">
+            <div style="color: #FFD700; font-size: 10px; font-weight: 600;">
                 <i class="{{ config('other.font-awesome') }} fa-coins"></i> Puntos
             </div>
-            <div style="color: #fff; font-size: 10px; font-weight: 700;">
+            <div style="color: #fff; font-size: 9px; font-weight: 700;">
                 <a href="{{ route('users.earnings.index', ['user' => auth()->user()]) }}" 
                    style="color: #fff; text-decoration: none;"
                    onmouseover="this.style.color='#FFD700'" 
@@ -516,15 +528,17 @@
         <div style="
             background: linear-gradient(135deg, rgba(0,188,212,0.2), rgba(0,188,212,0.05));
             border: 1px solid rgba(0,188,212,0.4);
-            border-radius: 8px;
-            padding: 12px 8px;
-            text-align: center;
+            border-radius: 6px;
+            padding: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             transition: transform 0.2s ease;
         " onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
-            <div style="color: #00BCD4; font-size: 11px; font-weight: 600; margin-bottom: 4px;">
+            <div style="color: #00BCD4; font-size: 10px; font-weight: 600;">
                 <i class="{{ config('other.font-awesome') }} fa-sync-alt"></i> Ratio
             </div>
-            <div style="color: #fff; font-size: 10px; font-weight: 700;">
+            <div style="color: #fff; font-size: 9px; font-weight: 700;">
                 <a href="{{ route('users.history.index', ['user' => auth()->user()]) }}" 
                    style="color: #fff; text-decoration: none;"
                    onmouseover="this.style.color='#00BCD4'" 
@@ -538,15 +552,17 @@
         <div style="
             background: linear-gradient(135deg, rgba(255,193,7,0.2), rgba(255,193,7,0.05));
             border: 1px solid rgba(255,193,7,0.4);
-            border-radius: 8px;
-            padding: 12px 8px;
-            text-align: center;
+            border-radius: 6px;
+            padding: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             transition: transform 0.2s ease;
         " onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
-            <div style="color: #FFC107; font-size: 11px; font-weight: 600; margin-bottom: 4px;">
+            <div style="color: #FFC107; font-size: 10px; font-weight: 600;">
                 <i class="{{ config('other.font-awesome') }} fa-star"></i> Tokens
             </div>
-            <div style="color: #fff; font-size: 10px; font-weight: 700;">
+            <div style="color: #fff; font-size: 9px; font-weight: 700;">
                 <a href="{{ route('users.show', ['user' => auth()->user()]) }}" 
                    style="color: #fff; text-decoration: none;"
                    onmouseover="this.style.color='#FFC107'" 
@@ -565,10 +581,7 @@
         position: fixed !important;
         top: 60px !important;
         right: 10px !important;
-        left: 10px !important;
-        width: auto !important;
-        max-width: 350px !important;
-        margin: 0 auto !important;
+        width: 160px !important;
     }
 }
 
@@ -576,30 +589,29 @@
     #user-stats-widget {
         top: 50px !important;
         right: 5px !important;
-        left: 5px !important;
-        padding: 12px !important;
-        width: auto !important;
+        width: 150px !important;
+        padding: 10px !important;
     }
     
     #user-stats-widget > div:first-child {
-        font-size: 12px !important;
-        margin-bottom: 12px !important;
+        font-size: 11px !important;
+        margin-bottom: 10px !important;
     }
     
     #user-stats-widget > div:last-child {
-        gap: 8px !important;
+        gap: 6px !important;
     }
     
     #user-stats-widget > div:last-child > div {
-        padding: 10px 6px !important;
+        padding: 6px !important;
     }
     
     #user-stats-widget > div:last-child > div > div:first-child {
-        font-size: 10px !important;
+        font-size: 9px !important;
     }
     
     #user-stats-widget > div:last-child > div > div:last-child {
-        font-size: 9px !important;
+        font-size: 8px !important;
     }
 }
 </style>
