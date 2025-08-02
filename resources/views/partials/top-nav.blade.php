@@ -252,61 +252,6 @@
         @endif
     </ul>
     <div class="top-nav__right" x-bind:class="expanded && 'mobile'">
-        <ul class="top-nav__ratio-bar" x-bind:class="expanded && 'mobile'">
-            <li class="ratio-bar__uploaded" title="{{ __('common.upload') }}">
-                <a href="{{ route('users.torrents.index', ['user' => auth()->user()]) }}">
-                    <i class="{{ config('other.font-awesome') }} fa-arrow-up"></i>
-                    {{ $user->formatted_uploaded }}
-                </a>
-            </li>
-            <li class="ratio-bar__downloaded" title="{{ __('common.download') }}">
-                <a
-                    href="{{ route('users.history.index', ['user' => auth()->user(), 'downloaded' => 'include']) }}"
-                >
-                    <i class="{{ config('other.font-awesome') }} fa-arrow-down"></i>
-                    {{ $user->formatted_downloaded }}
-                </a>
-            </li>
-
-            <li class="ratio-bar__seeding" title="{{ __('torrent.seeding') }}">
-                <a href="{{ route('users.peers.index', ['user' => auth()->user()]) }}">
-                    <i class="{{ config('other.font-awesome') }} fa-upload"></i>
-                    {{ $peerCount - $leechCount }}
-                </a>
-            </li>
-            <li class="ratio-bar__leeching" title="{{ __('torrent.leeching') }}">
-                <a
-                    href="{{ route('users.peers.index', ['user' => auth()->user(), 'seeding' => 'exclude']) }}"
-                >
-                    <i class="{{ config('other.font-awesome') }} fa-download"></i>
-                    {{ $leechCount }}
-                </a>
-            </li>
-            <li class="ratio-bar__buffer" title="{{ __('common.buffer') }}">
-                <a href="{{ route('users.history.index', ['user' => auth()->user()]) }}">
-                    <i class="{{ config('other.font-awesome') }} fa-exchange"></i>
-                    {{ $user->formatted_buffer }}
-                </a>
-            </li>
-            <li class="ratio-bar__points" title="{{ __('user.my-bonus-points') }}">
-                <a href="{{ route('users.earnings.index', ['user' => auth()->user()]) }}">
-                    <i class="{{ config('other.font-awesome') }} fa-coins"></i>
-                    {{ $user->formatted_seedbonus }}
-                </a>
-            </li>
-            <li class="ratio-bar__ratio" title="{{ __('common.ratio') }}">
-                <a href="{{ route('users.history.index', ['user' => auth()->user()]) }}">
-                    <i class="{{ config('other.font-awesome') }} fa-sync-alt"></i>
-                    {{ $user->formatted_ratio }}
-                </a>
-            </li>
-            <li class="ratio-bar__tokens" title="{{ __('user.my-fl-tokens') }}">
-                <a href="{{ route('users.show', ['user' => auth()->user()]) }}">
-                    <i class="{{ config('other.font-awesome') }} fa-star"></i>
-                    {{ $user->fl_tokens }}
-                </a>
-            </li>
-        </ul>
         <a
             class="top-nav__username--highresolution"
             href="{{ route('users.show', ['user' => auth()->user()]) }}"
@@ -403,3 +348,92 @@
         x-on:click="expanded = !expanded"
     ></button>
 </nav>
+
+<!-- User Statistics Section -->
+<div class="user-stats-sidebar" style="position: fixed; top: 60px; right: 20px; background: rgba(0,0,0,0.9); border-radius: 8px; padding: 15px; width: 250px; z-index: 1000; box-shadow: 0 4px 6px rgba(0,0,0,0.3);">
+    <div style="text-align: center; margin-bottom: 15px; color: #fff; font-weight: bold; border-bottom: 1px solid #444; padding-bottom: 10px;">
+        Estadísticas del Usuario
+    </div>
+    <div class="stats-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+        <div class="stat-item" style="background: rgba(255,255,255,0.1); padding: 8px; border-radius: 4px; text-align: center;">
+            <div style="color: #4CAF50; font-size: 12px; margin-bottom: 2px;">
+                <i class="{{ config('other.font-awesome') }} fa-arrow-up"></i> Subido
+            </div>
+            <div style="color: #fff; font-size: 11px; font-weight: bold;">
+                <a href="{{ route('users.torrents.index', ['user' => auth()->user()]) }}" style="color: #fff; text-decoration: none;">
+                    {{ $user->formatted_uploaded }}
+                </a>
+            </div>
+        </div>
+        <div class="stat-item" style="background: rgba(255,255,255,0.1); padding: 8px; border-radius: 4px; text-align: center;">
+            <div style="color: #f44336; font-size: 12px; margin-bottom: 2px;">
+                <i class="{{ config('other.font-awesome') }} fa-arrow-down"></i> Descargado
+            </div>
+            <div style="color: #fff; font-size: 11px; font-weight: bold;">
+                <a href="{{ route('users.history.index', ['user' => auth()->user(), 'downloaded' => 'include']) }}" style="color: #fff; text-decoration: none;">
+                    {{ $user->formatted_downloaded }}
+                </a>
+            </div>
+        </div>
+        <div class="stat-item" style="background: rgba(255,255,255,0.1); padding: 8px; border-radius: 4px; text-align: center;">
+            <div style="color: #2196F3; font-size: 12px; margin-bottom: 2px;">
+                <i class="{{ config('other.font-awesome') }} fa-upload"></i> Seeding
+            </div>
+            <div style="color: #fff; font-size: 11px; font-weight: bold;">
+                <a href="{{ route('users.peers.index', ['user' => auth()->user()]) }}" style="color: #fff; text-decoration: none;">
+                    {{ $peerCount - $leechCount }}
+                </a>
+            </div>
+        </div>
+        <div class="stat-item" style="background: rgba(255,255,255,0.1); padding: 8px; border-radius: 4px; text-align: center;">
+            <div style="color: #FF9800; font-size: 12px; margin-bottom: 2px;">
+                <i class="{{ config('other.font-awesome') }} fa-download"></i> Leeching
+            </div>
+            <div style="color: #fff; font-size: 11px; font-weight: bold;">
+                <a href="{{ route('users.peers.index', ['user' => auth()->user(), 'seeding' => 'exclude']) }}" style="color: #fff; text-decoration: none;">
+                    {{ $leechCount }}
+                </a>
+            </div>
+        </div>
+        <div class="stat-item" style="background: rgba(255,255,255,0.1); padding: 8px; border-radius: 4px; text-align: center;">
+            <div style="color: #9C27B0; font-size: 12px; margin-bottom: 2px;">
+                <i class="{{ config('other.font-awesome') }} fa-exchange"></i> Buffer
+            </div>
+            <div style="color: #fff; font-size: 11px; font-weight: bold;">
+                <a href="{{ route('users.history.index', ['user' => auth()->user()]) }}" style="color: #fff; text-decoration: none;">
+                    {{ $user->formatted_buffer }}
+                </a>
+            </div>
+        </div>
+        <div class="stat-item" style="background: rgba(255,255,255,0.1); padding: 8px; border-radius: 4px; text-align: center;">
+            <div style="color: #FFD700; font-size: 12px; margin-bottom: 2px;">
+                <i class="{{ config('other.font-awesome') }} fa-coins"></i> Puntos
+            </div>
+            <div style="color: #fff; font-size: 11px; font-weight: bold;">
+                <a href="{{ route('users.earnings.index', ['user' => auth()->user()]) }}" style="color: #fff; text-decoration: none;">
+                    {{ $user->formatted_seedbonus }}
+                </a>
+            </div>
+        </div>
+        <div class="stat-item" style="background: rgba(255,255,255,0.1); padding: 8px; border-radius: 4px; text-align: center;">
+            <div style="color: #00BCD4; font-size: 12px; margin-bottom: 2px;">
+                <i class="{{ config('other.font-awesome') }} fa-sync-alt"></i> Ratio
+            </div>
+            <div style="color: #fff; font-size: 11px; font-weight: bold;">
+                <a href="{{ route('users.history.index', ['user' => auth()->user()]) }}" style="color: #fff; text-decoration: none;">
+                    {{ $user->formatted_ratio }}
+                </a>
+            </div>
+        </div>
+        <div class="stat-item" style="background: rgba(255,255,255,0.1); padding: 8px; border-radius: 4px; text-align: center;">
+            <div style="color: #FFC107; font-size: 12px; margin-bottom: 2px;">
+                <i class="{{ config('other.font-awesome') }} fa-star"></i> Tokens
+            </div>
+            <div style="color: #fff; font-size: 11px; font-weight: bold;">
+                <a href="{{ route('users.show', ['user' => auth()->user()]) }}" style="color: #fff; text-decoration: none;">
+                    {{ $user->fl_tokens }}
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
