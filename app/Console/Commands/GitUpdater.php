@@ -43,7 +43,7 @@ class GitUpdater extends Command
      *
      * @var string
      */
-    protected $signature = 'git:update {--skip-backup : Skip backup and restore steps}';
+    protected $signature = 'git:update {--skip-backup : Skip backup and restore steps} {--yes : Automatically answer yes to all prompts}';
 
     /**
      * The console command description.
@@ -85,6 +85,19 @@ class GitUpdater extends Command
      * @var string
      */
     private string $logFile;
+
+    /**
+     * Helper method to handle confirmations with --yes option.
+     */
+    private function autoConfirm(string $question, bool $default = true): bool
+    {
+        if ($this->option('yes')) {
+            $this->info("Auto-confirmed: {$question}");
+            return true;
+        }
+        
+        return $this->io->confirm($question, $default);
+    }
 
     /**
      * Execute the console command.
@@ -150,7 +163,7 @@ The authors are not liable for any damages arising from the use of this software
      */
     private function confirmUpdate(): bool
     {
-        if (!$this->io->confirm('Would you like to proceed with the update?', true)) {
+        if (!$this->autoConfirm('Would you like to proceed with the update?', true)) {
             $this->warning('Update aborted by user');
             $this->log('Update aborted by user');
 
@@ -182,7 +195,7 @@ Press CTRL + C ANYTIME to abort!
             $this->note('Files that need to be updated:');
             $this->io->listing($updatingFiles);
 
-            if ($this->io->confirm('Start the update process?', true)) {
+            if ($this->autoConfirm('Start the update process?', true)) {
                 $this->log('Starting update process with '.\count($updatingFiles).' files');
 
                 $this->call('down');
@@ -222,7 +235,7 @@ Press CTRL + C ANYTIME to abort!
 
                 $this->header('Database Migrations');
 
-                if ($this->io->confirm('Run new database migrations?', true)) {
+                if ($this->autoConfirm('Run new database migrations?', true)) {
                     $this->runMigrations();
                 }
 
@@ -230,7 +243,7 @@ Press CTRL + C ANYTIME to abort!
 
                 $this->header('Composer Packages');
 
-                if ($this->io->confirm('Install/update Composer packages?', true)) {
+                if ($this->autoConfirm('Install/update Composer packages?', true)) {
                     $this->installComposerPackages();
                 }
 
@@ -240,7 +253,7 @@ Press CTRL + C ANYTIME to abort!
 
                 $this->header('Frontend Assets');
 
-                if ($this->io->confirm('Compile frontend assets?', true)) {
+                if ($this->autoConfirm('Compile frontend assets?', true)) {
                     $this->compileAssets();
                 }
 
@@ -258,7 +271,7 @@ Press CTRL + C ANYTIME to abort!
                 $this->call('up');
                 $this->success('Site is now online');
 
-                if ($this->io->confirm('Remove update backups?', true)) {
+                if ($this->autoConfirm('Remove update backups?', true)) {
                     $this->header('Cleaning Up');
                     $this->execCommand('rm -rf '.storage_path('gitupdate'));
                     $this->success('Backups deleted successfully');
@@ -423,7 +436,7 @@ Press CTRL + C ANYTIME to abort!
         $this->warning('Updating will cause you to LOSE any changes you might have made to these files!');
 
         foreach ($conflicts as $file) {
-            if ($this->io->confirm(\sprintf('Update %s', $file), true)) {
+            if ($this->autoConfirm(\sprintf('Update %s', $file), true)) {
                 $this->execCommand(\sprintf('git checkout origin/master -- %s', $file));
                 $this->success('Updated: '.$file);
                 $this->log('Manually updated file: '.$file);
