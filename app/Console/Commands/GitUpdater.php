@@ -43,7 +43,7 @@ class GitUpdater extends Command
      *
      * @var string
      */
-    protected $signature = 'git:update {--skip_backup : Skip backup and restore steps}';
+    protected $signature = 'git:update {--skip-backup : Skip backup and restore steps}';
 
     /**
      * The console command description.
@@ -190,8 +190,8 @@ Press CTRL + C ANYTIME to abort!
                 $this->execCommand('git add .');
 
 
-                $skipBackup = $this->hasOption('skip_backup') ? $this->option('skip_backup') : false;
-                $this->info('DEBUG: hasOption skip_backup = ' . ($this->hasOption('skip_backup') ? 'true' : 'false'));
+                $skipBackup = $this->hasOption('skip-backup') ? $this->option('skip-backup') : false;
+                $this->info('DEBUG: hasOption skip-backup = ' . ($this->hasOption('skip-backup') ? 'true' : 'false'));
                 $this->info('DEBUG: skipBackup value = ' . ($skipBackup ? 'true' : 'false'));
                 
                 if (!$skipBackup) {
@@ -199,7 +199,7 @@ Press CTRL + C ANYTIME to abort!
                     $this->backupFiles($pathsToBackup);
                 } else {
                     $pathsToBackup = $this->getPathsToBackup(); // still needed for later logic
-                    $this->info('Skipping backup as per --skip_backup option.');
+                    $this->info('Skipping backup as per --skip-backup option.');
                 }
 
                 $this->header('Resetting Repository');
@@ -211,7 +211,7 @@ Press CTRL + C ANYTIME to abort!
                 if (!$skipBackup) {
                     $this->restoreBackupFiles($pathsToBackup);
                 } else {
-                    $this->info('Skipping restore as per --skip_backup option.');
+                    $this->info('Skipping restore as per --skip-backup option.');
                 }
 
                 $conflicts = array_intersect($updatingFiles, $pathsToBackup);
