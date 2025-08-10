@@ -43,7 +43,7 @@ class GitUpdater extends Command
      *
      * @var string
      */
-    protected $signature = 'git:update {--skip-backup : Skip backup and restore steps}';
+    protected $signature = 'git:update {--skip_backup : Skip backup and restore steps}';
 
     /**
      * The console command description.
@@ -190,13 +190,13 @@ Press CTRL + C ANYTIME to abort!
                 $this->execCommand('git add .');
 
 
-                $skipBackup = $this->option('skip-backup');
+                $skipBackup = $this->option('skip_backup');
                 if (!$skipBackup) {
                     $pathsToBackup = $this->getPathsToBackup();
                     $this->backupFiles($pathsToBackup);
                 } else {
                     $pathsToBackup = $this->getPathsToBackup(); // still needed for later logic
-                    $this->info('Skipping backup as per --skip-backup option.');
+                    $this->info('Skipping backup as per --skip_backup option.');
                 }
 
                 $this->header('Resetting Repository');
@@ -208,7 +208,7 @@ Press CTRL + C ANYTIME to abort!
                 if (!$skipBackup) {
                     $this->restoreBackupFiles($pathsToBackup);
                 } else {
-                    $this->info('Skipping restore as per --skip-backup option.');
+                    $this->info('Skipping restore as per --skip_backup option.');
                 }
 
                 $conflicts = array_intersect($updatingFiles, $pathsToBackup);

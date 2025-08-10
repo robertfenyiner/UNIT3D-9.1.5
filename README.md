@@ -1,4 +1,3 @@
-<!-- Cambio temporal para probar git:update --skip-backup -->
 <div align="center">
     <img width="400" alt="unit3d" src="https://github.com/user-attachments/assets/2fa3678d-015c-4438-bcdb-ac6508915551" />
 </div>
