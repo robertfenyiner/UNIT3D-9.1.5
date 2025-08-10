@@ -191,8 +191,6 @@ Press CTRL + C ANYTIME to abort!
 
 
                 $skipBackup = $this->hasOption('skip-backup') ? $this->option('skip-backup') : false;
-                $this->info('DEBUG: hasOption skip-backup = ' . ($this->hasOption('skip-backup') ? 'true' : 'false'));
-                $this->info('DEBUG: skipBackup value = ' . ($skipBackup ? 'true' : 'false'));
                 
                 if (!$skipBackup) {
                     $pathsToBackup = $this->getPathsToBackup();
