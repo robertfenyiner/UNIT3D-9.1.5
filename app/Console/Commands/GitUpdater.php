@@ -43,7 +43,9 @@ class GitUpdater extends Command
      *
      * @var string
      */
-    protected $signature = 'git:update {--skip-backup : Skip backup and restore steps} {--yes : Automatically answer yes to all prompts}';
+    protected $signature = 'git:update
+                            {--skip-backup : Skip backup and restore steps}
+                            {--yes : Automatically answer yes to all prompts}';
 
     /**
      * The console command description.
