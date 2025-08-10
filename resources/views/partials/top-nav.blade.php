@@ -342,260 +342,69 @@
             </li>
         </ul>
     </div>
+    <div class="top-nav__ratio-bar">
+        <div class="top-nav__ratio-bar-stats">
+            <div class="ratio-bar-stat">
+                <a href="{{ route('users.torrents.index', ['user' => auth()->user()]) }}" class="ratio-bar-link">
+                    <i class="{{ config('other.font-awesome') }} fa-arrow-up text-green"></i>
+                    <span class="ratio-bar-label">{{ __('torrent.uploaded') }}</span>
+                    <span class="ratio-bar-value">{{ $user->formatted_uploaded }}</span>
+                </a>
+            </div>
+            <div class="ratio-bar-stat">
+                <a href="{{ route('users.history.index', ['user' => auth()->user(), 'downloaded' => 'include']) }}" class="ratio-bar-link">
+                    <i class="{{ config('other.font-awesome') }} fa-arrow-down text-red"></i>
+                    <span class="ratio-bar-label">{{ __('torrent.downloaded') }}</span>
+                    <span class="ratio-bar-value">{{ $user->formatted_downloaded }}</span>
+                </a>
+            </div>
+            <div class="ratio-bar-stat">
+                <a href="{{ route('users.peers.index', ['user' => auth()->user()]) }}" class="ratio-bar-link">
+                    <i class="{{ config('other.font-awesome') }} fa-upload text-blue"></i>
+                    <span class="ratio-bar-label">{{ __('torrent.seeding') }}</span>
+                    <span class="ratio-bar-value">{{ $peerCount - $leechCount }}</span>
+                </a>
+            </div>
+            <div class="ratio-bar-stat">
+                <a href="{{ route('users.peers.index', ['user' => auth()->user(), 'seeding' => 'exclude']) }}" class="ratio-bar-link">
+                    <i class="{{ config('other.font-awesome') }} fa-download text-orange"></i>
+                    <span class="ratio-bar-label">{{ __('torrent.leeching') }}</span>
+                    <span class="ratio-bar-value">{{ $leechCount }}</span>
+                </a>
+            </div>
+            <div class="ratio-bar-stat">
+                <a href="{{ route('users.history.index', ['user' => auth()->user()]) }}" class="ratio-bar-link">
+                    <i class="{{ config('other.font-awesome') }} fa-exchange text-purple"></i>
+                    <span class="ratio-bar-label">{{ __('common.buffer') }}</span>
+                    <span class="ratio-bar-value">{{ $user->formatted_buffer }}</span>
+                </a>
+            </div>
+            <div class="ratio-bar-stat">
+                <a href="{{ route('users.earnings.index', ['user' => auth()->user()]) }}" class="ratio-bar-link">
+                    <i class="{{ config('other.font-awesome') }} fa-coins text-yellow"></i>
+                    <span class="ratio-bar-label">{{ __('bon.points') }}</span>
+                    <span class="ratio-bar-value">{{ $user->formatted_seedbonus }}</span>
+                </a>
+            </div>
+            <div class="ratio-bar-stat">
+                <a href="{{ route('users.history.index', ['user' => auth()->user()]) }}" class="ratio-bar-link">
+                    <i class="{{ config('other.font-awesome') }} fa-sync-alt text-info"></i>
+                    <span class="ratio-bar-label">{{ __('torrent.ratio') }}</span>
+                    <span class="ratio-bar-value">{{ $user->formatted_ratio }}</span>
+                </a>
+            </div>
+            <div class="ratio-bar-stat">
+                <a href="{{ route('users.show', ['user' => auth()->user()]) }}" class="ratio-bar-link">
+                    <i class="{{ config('other.font-awesome') }} fa-star text-gold"></i>
+                    <span class="ratio-bar-label">{{ __('user.fl-tokens') }}</span>
+                    <span class="ratio-bar-value">{{ $user->fl_tokens }}</span>
+                </a>
+            </div>
+        </div>
+    </div>
     <button
         class="top-nav__toggle {{ \config('other.font-awesome') }}"
         x-bind:class="expanded ? 'fa-times mobile' : 'fa-bars'"
         x-on:click="expanded = !expanded"
     ></button>
 </nav>
-
-<!-- User Statistics Widget - Desktop Only -->
-<div id="user-stats-widget" style="
-    position: fixed;
-    top: 50%;
-    right: 5px;
-    transform: translateY(-50%);
-    background: linear-gradient(145deg, #1a1a1a, #2d2d2d);
-    border: 1px solid #444;
-    border-radius: 8px;
-    padding: 8px;
-    width: 130px;
-    z-index: 9999;
-    box-shadow: 0 4px 16px rgba(0,0,0,0.4);
-    backdrop-filter: blur(6px);
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-">
-    <!-- Header -->
-    <div style="
-        text-align: center;
-        margin-bottom: 8px;
-        color: #ffffff;
-        font-weight: 700;
-        font-size: 10px;
-        border-bottom: 1px solid #444;
-        padding-bottom: 5px;
-        letter-spacing: 0.2px;
-    ">
-        📊 Stats
-    </div>
-    
-    <!-- Stats Grid - Single Column -->
-    <div style="display: flex; flex-direction: column; gap: 4px;">
-        <!-- Subido -->
-        <div style="
-            background: linear-gradient(135deg, rgba(76,175,80,0.15), rgba(76,175,80,0.03));
-            border: 1px solid rgba(76,175,80,0.25);
-            border-radius: 4px;
-            padding: 5px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            transition: transform 0.2s ease;
-        " onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
-            <div style="color: #4CAF50; font-size: 8px; font-weight: 600;">
-                <i class="{{ config('other.font-awesome') }} fa-arrow-up"></i> Subido
-            </div>
-            <div style="color: #fff; font-size: 7px; font-weight: 700;">
-                <a href="{{ route('users.torrents.index', ['user' => auth()->user()]) }}" 
-                   style="color: #fff; text-decoration: none;" 
-                   onmouseover="this.style.color='#4CAF50'" 
-                   onmouseout="this.style.color='#fff'">
-                    {{ $user->formatted_uploaded }}
-                </a>
-            </div>
-        </div>
-        
-        <!-- Descargado -->
-        <div style="
-            background: linear-gradient(135deg, rgba(244,67,54,0.15), rgba(244,67,54,0.03));
-            border: 1px solid rgba(244,67,54,0.25);
-            border-radius: 4px;
-            padding: 5px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            transition: transform 0.2s ease;
-        " onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
-            <div style="color: #f44336; font-size: 8px; font-weight: 600;">
-                <i class="{{ config('other.font-awesome') }} fa-arrow-down"></i> Descargado
-            </div>
-            <div style="color: #fff; font-size: 7px; font-weight: 700;">
-                <a href="{{ route('users.history.index', ['user' => auth()->user(), 'downloaded' => 'include']) }}" 
-                   style="color: #fff; text-decoration: none;"
-                   onmouseover="this.style.color='#f44336'" 
-                   onmouseout="this.style.color='#fff'">
-                    {{ $user->formatted_downloaded }}
-                </a>
-            </div>
-        </div>
-        
-        <!-- Seeding -->
-        <div style="
-            background: linear-gradient(135deg, rgba(33,150,243,0.15), rgba(33,150,243,0.03));
-            border: 1px solid rgba(33,150,243,0.25);
-            border-radius: 4px;
-            padding: 5px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            transition: transform 0.2s ease;
-        " onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
-            <div style="color: #2196F3; font-size: 8px; font-weight: 600;">
-                <i class="{{ config('other.font-awesome') }} fa-upload"></i> Seeding
-            </div>
-            <div style="color: #fff; font-size: 7px; font-weight: 700;">
-                <a href="{{ route('users.peers.index', ['user' => auth()->user()]) }}" 
-                   style="color: #fff; text-decoration: none;"
-                   onmouseover="this.style.color='#2196F3'" 
-                   onmouseout="this.style.color='#fff'">
-                    {{ $peerCount - $leechCount }}
-                </a>
-            </div>
-        </div>
-        
-        <!-- Leeching -->
-        <div style="
-            background: linear-gradient(135deg, rgba(255,152,0,0.15), rgba(255,152,0,0.03));
-            border: 1px solid rgba(255,152,0,0.25);
-            border-radius: 4px;
-            padding: 5px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            transition: transform 0.2s ease;
-        " onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
-            <div style="color: #FF9800; font-size: 8px; font-weight: 600;">
-                <i class="{{ config('other.font-awesome') }} fa-download"></i> Leeching
-            </div>
-            <div style="color: #fff; font-size: 7px; font-weight: 700;">
-                <a href="{{ route('users.peers.index', ['user' => auth()->user(), 'seeding' => 'exclude']) }}" 
-                   style="color: #fff; text-decoration: none;"
-                   onmouseover="this.style.color='#FF9800'" 
-                   onmouseout="this.style.color='#fff'">
-                    {{ $leechCount }}
-                </a>
-            </div>
-        </div>
-        
-        <!-- Buffer -->
-        <div style="
-            background: linear-gradient(135deg, rgba(156,39,176,0.15), rgba(156,39,176,0.03));
-            border: 1px solid rgba(156,39,176,0.25);
-            border-radius: 4px;
-            padding: 5px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            transition: transform 0.2s ease;
-        " onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
-            <div style="color: #9C27B0; font-size: 8px; font-weight: 600;">
-                <i class="{{ config('other.font-awesome') }} fa-exchange"></i> Buffer
-            </div>
-            <div style="color: #fff; font-size: 7px; font-weight: 700;">
-                <a href="{{ route('users.history.index', ['user' => auth()->user()]) }}" 
-                   style="color: #fff; text-decoration: none;"
-                   onmouseover="this.style.color='#9C27B0'" 
-                   onmouseout="this.style.color='#fff'">
-                    {{ $user->formatted_buffer }}
-                </a>
-            </div>
-        </div>
-        
-        <!-- Puntos -->
-        <div style="
-            background: linear-gradient(135deg, rgba(255,215,0,0.15), rgba(255,215,0,0.03));
-            border: 1px solid rgba(255,215,0,0.25);
-            border-radius: 4px;
-            padding: 5px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            transition: transform 0.2s ease;
-        " onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
-            <div style="color: #FFD700; font-size: 8px; font-weight: 600;">
-                <i class="{{ config('other.font-awesome') }} fa-coins"></i> Puntos
-            </div>
-            <div style="color: #fff; font-size: 7px; font-weight: 700;">
-                <a href="{{ route('users.earnings.index', ['user' => auth()->user()]) }}" 
-                   style="color: #fff; text-decoration: none;"
-                   onmouseover="this.style.color='#FFD700'" 
-                   onmouseout="this.style.color='#fff'">
-                    {{ $user->formatted_seedbonus }}
-                </a>
-            </div>
-        </div>
-        
-        <!-- Ratio -->
-        <div style="
-            background: linear-gradient(135deg, rgba(0,188,212,0.15), rgba(0,188,212,0.03));
-            border: 1px solid rgba(0,188,212,0.25);
-            border-radius: 4px;
-            padding: 5px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            transition: transform 0.2s ease;
-        " onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
-            <div style="color: #00BCD4; font-size: 8px; font-weight: 600;">
-                <i class="{{ config('other.font-awesome') }} fa-sync-alt"></i> Ratio
-            </div>
-            <div style="color: #fff; font-size: 7px; font-weight: 700;">
-                <a href="{{ route('users.history.index', ['user' => auth()->user()]) }}" 
-                   style="color: #fff; text-decoration: none;"
-                   onmouseover="this.style.color='#00BCD4'" 
-                   onmouseout="this.style.color='#fff'">
-                    {{ $user->formatted_ratio }}
-                </a>
-            </div>
-        </div>
-        
-        <!-- Tokens -->
-        <div style="
-            background: linear-gradient(135deg, rgba(255,193,7,0.15), rgba(255,193,7,0.03));
-            border: 1px solid rgba(255,193,7,0.25);
-            border-radius: 4px;
-            padding: 5px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            transition: transform 0.2s ease;
-        " onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
-            <div style="color: #FFC107; font-size: 8px; font-weight: 600;">
-                <i class="{{ config('other.font-awesome') }} fa-star"></i> Tokens
-            </div>
-            <div style="color: #fff; font-size: 7px; font-weight: 700;">
-                <a href="{{ route('users.show', ['user' => auth()->user()]) }}" 
-                   style="color: #fff; text-decoration: none;"
-                   onmouseover="this.style.color='#FFC107'" 
-                   onmouseout="this.style.color='#fff'">
-                    {{ $user->fl_tokens }}
-                </a>
-            </div>
-        </div>
-    </div>
-</div>
-
-<style>
-/* Hide widget on mobile and tablet devices */
-@media (max-width: 1024px) {
-    #user-stats-widget {
-        display: none !important;
-    }
-}
-
-/* Additional safety for very large screens */
-@media (min-width: 1400px) {
-    #user-stats-widget {
-        right: 15px !important;
-        width: 140px !important;
-    }
-}
-
-/* Extra positioning for medium screens */
-@media (min-width: 1025px) and (max-width: 1399px) {
-    #user-stats-widget {
-        right: 3px !important;
-        width: 125px !important;
-    }
-}
-</style>
