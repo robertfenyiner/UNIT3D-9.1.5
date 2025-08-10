@@ -190,7 +190,7 @@ Press CTRL + C ANYTIME to abort!
                 $this->execCommand('git add .');
 
 
-                $skipBackup = $this->option('skip_backup');
+                $skipBackup = $this->hasOption('skip_backup') ? $this->option('skip_backup') : false;
                 if (!$skipBackup) {
                     $pathsToBackup = $this->getPathsToBackup();
                     $this->backupFiles($pathsToBackup);
