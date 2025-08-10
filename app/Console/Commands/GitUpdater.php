@@ -110,6 +110,11 @@ class GitUpdater extends Command
         $this->output = new ConsoleOutput();
         $this->io = new SymfonyStyle($this->input, $this->output);
 
+        // DEBUG: Show all available options
+        $this->info('DEBUG: Available options: ' . json_encode(array_keys($this->options())));
+        $this->info('DEBUG: Has skip-backup: ' . ($this->hasOption('skip-backup') ? 'true' : 'false'));
+        $this->info('DEBUG: Has yes: ' . ($this->hasOption('yes') ? 'true' : 'false'));
+        
         $this->logFile = storage_path('logs/git-updater-'.now()->format('Y-m-d').'.log');
         $this->log('Starting GitUpdater');
 
