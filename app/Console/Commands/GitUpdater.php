@@ -106,8 +106,6 @@ class GitUpdater extends Command
      */
     final public function handle(): void
     {
-        $this->input = new ArgvInput();
-        $this->output = new ConsoleOutput();
         $this->io = new SymfonyStyle($this->input, $this->output);
 
         // DEBUG: Show all available options
