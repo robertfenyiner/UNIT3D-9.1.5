@@ -99,4 +99,3 @@ We would like to extend our heartfelt thanks to the following companies, sites a
 ### 🏢 Companies
 <a href="https://scoutapm.com/?utm_source=github&utm_medium=referral&utm_campaign=opensource_referral"><img src="https://i.postimg.cc/g29XCJDh/Logo-rounded-square-495x495-1.png" height="30px;"></a>&nbsp;
 <a href="https://www.jetbrains.com/?from=UNIT3D"><img src="https://i.imgur.com/KgDXZV8.png" height="30px;"></a>&nbsp;
-#prueba
