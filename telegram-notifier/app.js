@@ -77,25 +77,26 @@ function getCategoryEmoji(category) {
 function formatMessage(torrent) {
     const categoryEmoji = getCategoryEmoji(torrent.category);
     
-    let message = `${categoryEmoji} **NUEVO TORRENT APROBADO**\n\n`;
-    message += `📁 **Nombre:** \`${torrent.name}\`\n`;
-    message += `👤 **Uploader:** ${torrent.user}\n`;
-    message += `📂 **Categoría:** ${torrent.category}\n`;
-    message += `💾 **Tamaño:** ${torrent.size}\n\n`;
+    // Usar formato simple sin caracteres problemáticos de Markdown
+    let message = categoryEmoji + ' NUEVO TORRENT APROBADO\n\n';
+    message += '📁 Nombre: ' + torrent.name + '\n';
+    message += '👤 Uploader: ' + torrent.user + '\n';
+    message += '📂 Categoría: ' + torrent.category + '\n';
+    message += '💾 Tamaño: ' + torrent.size + '\n\n';
     
-    // Agregar enlaces
-    message += `🔗 [Ver Torrent](${config.tracker.base_url}/torrents/${torrent.torrent_id})`;
+    // Agregar enlaces sin formato Markdown
+    message += '🔗 Ver Torrent: ' + config.tracker.base_url + '/torrents/' + torrent.torrent_id;
     
     if (config.features.include_imdb_link && torrent.imdb && torrent.imdb > 0) {
-        message += `\n🎭 [IMDB](https://imdb.com/title/tt${String(torrent.imdb).padStart(7, '0')})`;
+        message += '\n🎭 IMDB: https://imdb.com/title/tt' + String(torrent.imdb).padStart(7, '0');
     }
     
     if (config.features.include_tmdb_info && torrent.tmdb_movie_id && torrent.tmdb_movie_id > 0) {
-        message += `\n🎬 [TMDB](https://www.themoviedb.org/movie/${torrent.tmdb_movie_id})`;
+        message += '\n🎬 TMDB: https://www.themoviedb.org/movie/' + torrent.tmdb_movie_id;
     }
     
     // Agregar timestamp
-    message += `\n\n🕒 ${new Date().toLocaleString('es-ES', { timeZone: 'Europe/Madrid' })}`;
+    message += '\n\n🕒 ' + new Date().toLocaleString('es-ES', { timeZone: 'America/Mexico_City' });
     
     return message;
 }
@@ -151,7 +152,7 @@ app.post('/torrent-approved', async (req, res) => {
         
         // Enviar mensaje a Telegram
         await bot.sendMessage(config.telegram.chat_id, message, {
-            parse_mode: config.telegram.parse_mode,
+            parse_mode: null,
             disable_web_page_preview: false
         });
         
@@ -179,10 +180,10 @@ app.post('/torrent-approved', async (req, res) => {
 // Endpoint para probar la conexión con Telegram
 app.post('/test-telegram', async (req, res) => {
     try {
-        const testMessage = '🧪 **MENSAJE DE PRUEBA**\n\nEl bot de Telegram está funcionando correctamente.\n\n🕒 ' + new Date().toLocaleString();
+        const testMessage = '🧪 MENSAJE DE PRUEBA\n\nEl bot de Telegram está funcionando correctamente.\n\n🕒 ' + new Date().toLocaleString();
         
         await bot.sendMessage(config.telegram.chat_id, testMessage, {
-            parse_mode: config.telegram.parse_mode
+            parse_mode: null
         });
         
         logger.info('✅ Mensaje de prueba enviado exitosamente');
