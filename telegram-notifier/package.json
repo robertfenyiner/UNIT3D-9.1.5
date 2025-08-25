@@ -1,0 +1,26 @@
+{
+  "name": "telegram-notifier",
+  "version": "1.0.0",
+  "description": "Microservicio para enviar notificaciones de torrents aprobados a Telegram",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js",
+    "dev": "nodemon app.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": ["telegram", "bot", "notifications", "torrent", "unit3d"],
+  "author": "Tu Nombre",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "node-telegram-bot-api": "^0.64.0",
+    "winston": "^3.11.0",
+    "cors": "^2.8.5"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}

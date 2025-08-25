@@ -1,0 +1,51 @@
+{
+  "_comentarios": {
+    "instrucciones": [
+      "1. Copia este archivo como 'config.json'",
+      "2. Obtén tu bot token de @BotFather en Telegram",
+      "3. Obtén el chat ID de tu canal/grupo",
+      "4. Configura la URL base de tu tracker",
+      "5. Personaliza las características según tus necesidades"
+    ]
+  },
+  "telegram": {
+    "_comentario": "Configuración del bot de Telegram",
+    "bot_token": "1234567890:ABCdefGHIjklMNOpqrsTUVwxyz",
+    "chat_id": "-1001234567890",
+    "parse_mode": "Markdown"
+  },
+  "tracker": {
+    "_comentario": "Configuración del tracker UNIT3D",
+    "base_url": "https://tu-tracker.com",
+    "name": "Mi Tracker Privado"
+  },
+  "server": {
+    "_comentario": "Configuración del servidor del microservicio",
+    "port": 3001,
+    "host": "localhost"
+  },
+  "features": {
+    "_comentario": "Características opcionales del bot",
+    "include_imdb_link": true,
+    "include_tmdb_info": true,
+    "mention_uploader": true,
+    "filter_categories": [
+      "_comentario": "Lista vacía = notificar todas las categorías",
+      "_ejemplo": ["Movies", "TV Shows", "Music"],
+      "_categorias_posibles": [
+        "Movies", "TV", "TV Shows", "Music", "Games", 
+        "Software", "Books", "Apps", "Anime", "Documentary", "XXX"
+      ]
+    ]
+  },
+  "_instrucciones_chat_id": {
+    "para_canal": [
+      "1. Agrega tu bot como administrador al canal",
+      "2. El chat_id será negativo, ej: -1001234567890"
+    ],
+    "para_grupo": [
+      "1. Agrega tu bot al grupo",
+      "2. Usa @userinfobot para obtener el chat_id del grupo"
+    ]
+  }
+}

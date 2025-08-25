@@ -1,0 +1,30 @@
+[Unit]
+Description=Telegram Notifier for UNIT3D
+Documentation=file:///path/to/telegram-notifier/README.md
+After=network.target
+
+[Service]
+Type=simple
+User=www-data
+WorkingDirectory=/path/to/telegram-notifier
+Environment=NODE_ENV=production
+ExecStart=/usr/bin/node app.js
+Restart=on-failure
+RestartSec=10
+KillMode=mixed
+KillSignal=SIGINT
+TimeoutStopSec=5
+SyslogIdentifier=telegram-notifier
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+
+# Security
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+ReadWritePaths=/path/to/telegram-notifier/logs
+
+[Install]
+WantedBy=multi-user.target

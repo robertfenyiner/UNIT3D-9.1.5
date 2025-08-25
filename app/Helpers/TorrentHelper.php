@@ -150,5 +150,22 @@ class TorrentHelper
         cache()->forget('announce-torrents:by-infohash:'.$torrent->info_hash);
 
         Unit3dAnnounce::addTorrent($torrent);
+
+        // Notificar a Telegram Bot
+        try {
+            \Http::timeout(5)->post('http://localhost:3001/torrent-approved', [
+                'torrent_id' => $torrent->id,
+                'name' => $torrent->name,
+                'user' => $torrent->user->username,
+                'category' => $torrent->category->name ?? 'Unknown',
+                'size' => $torrent->getSize(),
+                'imdb' => $torrent->imdb,
+                'tmdb_movie_id' => $torrent->tmdb_movie_id,
+                'tmdb_tv_id' => $torrent->tmdb_tv_id,
+            ]);
+        } catch (\Exception $e) {
+            // Silently continue if notification fails
+            \Log::warning('Telegram notification failed: ' . $e->getMessage());
+        }
     }
 }
