@@ -217,29 +217,42 @@ async function getPosterUrl(torrent) {
             const response = await fetch(`https://api.themoviedb.org/3/movie/${torrent.tmdb_movie_id}?api_key=${config.tmdb.api_key}`, {
                 timeout: 5000
             });
-            
+            logger.info(`[TMDB] Respuesta para película ID ${torrent.tmdb_movie_id}: status ${response.status}`);
             if (response.ok) {
                 const data = await response.json();
+                logger.info(`[TMDB] Datos recibidos para película: ${JSON.stringify(data)}`);
                 if (data.poster_path) {
                     imageUrl = `https://image.tmdb.org/t/p/w500${data.poster_path}`;
+                    logger.info(`[TMDB] URL del póster construida: ${imageUrl}`);
+                } else {
+                    logger.warn(`[TMDB] No se encontró poster_path para película ID ${torrent.tmdb_movie_id}`);
                 }
+            } else {
+                logger.warn(`[TMDB] Respuesta no OK para película ID ${torrent.tmdb_movie_id}`);
             }
         }
-        
+
         // Para series
         if ((torrent.category === 'TV' || torrent.category === 'TV Shows') && torrent.tmdb_tv_id) {
             const response = await fetch(`https://api.themoviedb.org/3/tv/${torrent.tmdb_tv_id}?api_key=${config.tmdb.api_key}`, {
                 timeout: 5000
             });
-            
+            logger.info(`[TMDB] Respuesta para serie ID ${torrent.tmdb_tv_id}: status ${response.status}`);
             if (response.ok) {
                 const data = await response.json();
+                logger.info(`[TMDB] Datos recibidos para serie: ${JSON.stringify(data)}`);
                 if (data.poster_path) {
                     imageUrl = `https://image.tmdb.org/t/p/w500${data.poster_path}`;
+                    logger.info(`[TMDB] URL del póster construida: ${imageUrl}`);
+                } else {
+                    logger.warn(`[TMDB] No se encontró poster_path para serie ID ${torrent.tmdb_tv_id}`);
                 }
+            } else {
+                logger.warn(`[TMDB] Respuesta no OK para serie ID ${torrent.tmdb_tv_id}`);
             }
         }
-        
+
+        logger.info(`[TMDB] Valor final de imageUrl: ${imageUrl}`);
         return imageUrl;
         
     } catch (error) {
