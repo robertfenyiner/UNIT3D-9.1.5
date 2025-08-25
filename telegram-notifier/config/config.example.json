@@ -28,6 +28,7 @@
     "_comentario": "Características opcionales del bot",
     "include_imdb_link": true,
     "include_tmdb_info": true,
+    "include_poster_images": true,
     "mention_uploader": true,
     "filter_categories": [
       "_comentario": "Lista vacía = notificar todas las categorías",
@@ -36,6 +37,16 @@
         "Movies", "TV", "TV Shows", "Music", "Games", 
         "Software", "Books", "Apps", "Anime", "Documentary", "XXX"
       ]
+    ]
+  },
+  "tmdb": {
+    "_comentario": "API de The Movie Database para obtener imágenes de pósters",
+    "api_key": "TU_TMDB_API_KEY_AQUI",
+    "_instrucciones": [
+      "1. Registrarse gratis en https://www.themoviedb.org/",
+      "2. Ir a https://www.themoviedb.org/settings/api",
+      "3. Solicitar API key (aprobación inmediata)",
+      "4. Copiar la 'API Key (v3 auth)' aquí"
     ]
   },
   "_instrucciones_chat_id": {
