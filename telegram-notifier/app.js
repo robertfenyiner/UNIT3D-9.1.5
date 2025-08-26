@@ -731,17 +731,16 @@ app.post('/torrent-approved', async (req, res) => {
         const categoryEmoji = getCategoryEmoji(torrent.category);
         const categoryName = getCategoryName(torrent.category);
         const shortTitle = wrapPlain(torrent.name, 60);
-            const imageEmbed = {
-                title: `${categoryEmoji} NUEVO TORRENT EN ${categoryName}`,
-                color: 0x2ecc71,
-                fields: [
-                    { name: '📁 Título', value: shortTitle, inline: false },
-                    { name: '👤 Uploader', value: String(torrent.user || 'N/A'), inline: true },
-                    { name: '📂 Categoría', value: String(torrent.category || 'N/A'), inline: true },
-                    { name: '💾 Tamaño', value: String(torrent.size || 'N/A'), inline: true }
-                ]
-            };
-            const caption = `<b>${escapeHtml(imageEmbed.title)}</b>\n\n<b>📁 ${escapeHtml(shortTitle)}</b>`;
+                const payloadImage = { embeds: [imageEmbed] };
+                const sendResultImage = await sendDiscordWebhook(webhookUrl, payloadImage, resized, filename);
+                logger.info('✅ Discord: imagen enviada como attachment', sendResultImage);
+
+                // Send second message: fields embed (no attachment)
+                const payloadFields = { embeds: [fieldsEmbed] };
+                const sendResultFields = await sendDiscordWebhook(webhookUrl, payloadFields, null, null);
+                logger.info('✅ Discord: campos enviados en mensaje separado', sendResultFields);
+
+                return res.status(200).json({ success: true, message: 'Notificación Discord enviada (attachment + fields)' });
 
         const details = buildDetailsMessage(torrent);
 
