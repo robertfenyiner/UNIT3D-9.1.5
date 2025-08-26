@@ -167,17 +167,7 @@ function formatMessage(torrent) {
         message += '• TMDB: https://www.themoviedb.org/movie/' + torrent.tmdb_movie_id + '\n';
     }
     
-    // Footer con timestamp y tracker info
-    message += '\n━━━━━━━━━━━━━━━\n';
-    message += '🏷️ ' + config.tracker.name + '\n';
-    message += '🕒 ' + new Date().toLocaleString('es-ES', { 
-        timeZone: 'America/Mexico_City',
-        day: '2-digit',
-        month: '2-digit', 
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-    });
+    // Footer eliminado por petición del usuario
     
     return message;
 }
