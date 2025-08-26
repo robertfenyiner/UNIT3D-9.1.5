@@ -159,6 +159,35 @@ curl -X POST http://localhost:3001/torrent-approved \
   }'
 ```
 
+### Paso 6.1: Verificar Integración con Discord
+
+Si quieres que las notificaciones también se reenvíen a Discord via Webhook, añade `config.discord.webhook_url` en tu `config/config.json` o envía `webhook_url` en el body del endpoint `/discord/torrent-approved`.
+
+Ejemplos de prueba para Discord:
+
+```bash
+# 1. Test básico (usa `config.discord.webhook_url` o envía webhook_url en body)
+curl -X POST http://localhost:3001/discord/test \
+  -H "Content-Type: application/json" \
+  -d '{"webhook_url":"https://discord.com/api/webhooks/ID/TOKEN"}'
+
+# 2. Notificación completa a Discord (usa webhook en config o en body)
+curl -X POST http://localhost:3001/discord/torrent-approved \
+  -H "Content-Type: application/json" \
+  -d '{
+    "torrent_id": 123457,
+    "name": "Test.Movie.2024.1080p.BluRay.x264-TEST",
+    "user": "testuser",
+    "category": "Peliculas",
+    "size": "8.5 GB",
+    "imdb": 1234567,
+    "tmdb_movie_id": 550,
+    "webhook_url": "https://discord.com/api/webhooks/ID/TOKEN"
+  }'
+```
+
+Nota: el endpoint `/torrent-approved` también reenvía automáticamente a Discord si `config.discord.webhook_url` está configurado.
+
 ### Paso 7: Verificar Integración con UNIT3D
 La integración ya debería estar en `app/Helpers/TorrentHelper.php` en la línea 152+:
 ```php
