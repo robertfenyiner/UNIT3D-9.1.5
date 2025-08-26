@@ -769,6 +769,191 @@ app.post('/torrent-approved', async (req, res) => {
     }
 });
 
+// Endpoint para enviar la misma notificación a Discord via Webhook
+app.post('/discord/torrent-approved', async (req, res) => {
+    try {
+        const torrent = req.body;
+
+        // Validar datos requeridos
+        if (!torrent.torrent_id || !torrent.name || !torrent.user) {
+            logger.warn('❌ Datos incompletos en notificación Discord:', torrent);
+            return res.status(400).json({ 
+                error: 'Datos incompletos. Se requieren: torrent_id, name, user' 
+            });
+        }
+
+        // Obtener webhook: preferir config, luego el body
+        const webhookUrl = (config.discord && config.discord.webhook_url) ? config.discord.webhook_url : (torrent.webhook_url || null);
+        if (!webhookUrl) {
+            logger.warn('❌ No hay webhook configurado para Discord');
+            return res.status(400).json({ error: 'No webhook configurado. Añade config.discord.webhook_url o envía webhook_url en el body' });
+        }
+
+        // Filtrado
+        if (!shouldNotify(torrent)) {
+            logger.info(`⚠️ Torrent filtrado - Categoria: ${torrent.category}, Nombre: ${torrent.name}`);
+            return res.status(200).json({ success: true, message: 'Torrent filtrado según configuración' });
+        }
+
+        // Obtener poster si aplica
+        logger.info(`🔍 Discord: intentando obtener póster para torrent ID: ${torrent.torrent_id}`);
+        const posterUrl = await getPosterUrl(torrent);
+        logger.info(`🔍 Discord getPosterUrl: ${posterUrl}`);
+
+        // Construir embed para Discord (plain text)
+        function buildDiscordEmbed(torrent) {
+            const title = `${getCategoryEmoji(torrent.category)} NUEVO TORRENT EN ${getCategoryName(torrent.category)}`;
+            const shortTitle = wrapPlain(torrent.name, 80);
+
+            const fields = [];
+            fields.push({ name: '📁 Título', value: shortTitle, inline: false });
+            fields.push({ name: '👤 Uploader', value: String(torrent.user || 'N/A'), inline: true });
+            fields.push({ name: '📂 Categoría', value: String(torrent.category || 'N/A'), inline: true });
+            fields.push({ name: '💾 Tamaño', value: String(torrent.size || 'N/A'), inline: true });
+
+            if (torrent.name) {
+                const quality = extractQuality(torrent.name);
+                const source = extractSource(torrent.name);
+                const codec = extractCodec(torrent.name);
+                const year = extractYear(torrent.name);
+                if (quality) fields.push({ name: '🎞️ Calidad', value: String(quality), inline: true });
+                if (source) fields.push({ name: '💿 Fuente', value: String(source), inline: true });
+                if (codec) fields.push({ name: '🔧 Códec', value: String(codec), inline: true });
+                if (year) fields.push({ name: '📅 Año', value: String(year), inline: true });
+            }
+
+            // Links en el embed footer o en un field
+            const links = [];
+            links.push(`[Descargar](${config.tracker.base_url}/torrents/${torrent.torrent_id})`);
+            if (config.features.include_imdb_link && torrent.imdb && torrent.imdb > 0) links.push(`[IMDB](https://imdb.com/title/tt${String(torrent.imdb).padStart(7,'0')})`);
+            if (config.features.include_tmdb_info && torrent.tmdb_movie_id && torrent.tmdb_movie_id > 0) links.push(`[TMDB](https://www.themoviedb.org/movie/${torrent.tmdb_movie_id})`);
+
+            fields.push({ name: '🔗 Enlaces', value: links.join(' • ') || 'N/A', inline: false });
+
+            const embed = {
+                title: title,
+                description: undefined,
+                color: 0x2ecc71,
+                fields: fields,
+                timestamp: new Date().toISOString()
+            };
+
+            // image handled separately (attachment or url)
+            return embed;
+        }
+
+        const embed = buildDiscordEmbed(torrent);
+
+        // Si tenemos poster y poster_max_width: descargar y enviar como attachment (multipart)
+        if (posterUrl && config.features && config.features.poster_max_width) {
+            try {
+                const maxWidth = parseInt(config.features.poster_max_width, 10) || 320;
+                const imgBuffer = await downloadImageBuffer(posterUrl);
+                const resized = await resizeImageBuffer(imgBuffer, maxWidth);
+
+                // preparar payload JSON referenciando attachment://filename
+                const filename = `poster_${torrent.torrent_id}.jpg`;
+                embed.image = { url: `attachment://${filename}` };
+                const payload = { embeds: [embed] };
+
+                const sendResult = await sendDiscordWebhook(webhookUrl, payload, resized, filename);
+                logger.info('✅ Discord: notificación enviada con attachment', sendResult);
+                return res.status(200).json({ success: true, message: 'Notificación Discord enviada (attachment)' });
+            } catch (err) {
+                logger.warn('⚠️ Discord: fallo al redimensionar/adjuntar, intentando enviar por URL: ' + err.message);
+                // fallback a enviar embed con image.url = posterUrl
+            }
+        }
+
+        // Enviar embed con posterUrl (o sin imagen si posterUrl null)
+        if (posterUrl) embed.image = { url: posterUrl };
+        const payload = { embeds: [embed] };
+        const sendResult = await sendDiscordWebhook(webhookUrl, payload, null, null);
+        logger.info('✅ Discord: notificación enviada', sendResult);
+        return res.status(200).json({ success: true, message: 'Notificación Discord enviada' });
+
+    } catch (error) {
+        logger.error('❌ Error enviando notificación a Discord: ' + error.message, { error: error.stack });
+        return res.status(500).json({ error: 'Error interno enviando a Discord', message: error.message });
+    }
+});
+
+// Endpoint para probar Discord webhook
+app.post('/discord/test', async (req, res) => {
+    try {
+        const webhookUrl = (config.discord && config.discord.webhook_url) ? config.discord.webhook_url : (req.body && req.body.webhook_url ? req.body.webhook_url : null);
+        if (!webhookUrl) return res.status(400).json({ error: 'No webhook configured. Set config.discord.webhook_url or send webhook_url in body.' });
+
+        const embed = {
+            title: '🧪 MENSAJE DE PRUEBA - Discord',
+            description: 'El servicio de notificaciones está funcionando correctamente.',
+            color: 0x3498db,
+            timestamp: new Date().toISOString()
+        };
+
+        const payload = { embeds: [embed] };
+        const result = await sendDiscordWebhook(webhookUrl, payload, null, null);
+        logger.info('✅ Discord test sent', result);
+        res.status(200).json({ success: true, result });
+    } catch (error) {
+        logger.error('❌ Error sending Discord test: ' + error.message);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Enviar al webhook de Discord. Si fileBuffer y filename están definidos, usamos multipart/form-data con payload_json y el archivo.
+function sendDiscordWebhook(webhookUrl, payloadJson, fileBuffer, filename) {
+    return new Promise((resolve, reject) => {
+        try {
+            const urlObj = new URL(webhookUrl);
+            const options = {
+                hostname: urlObj.hostname,
+                path: urlObj.pathname + urlObj.search,
+                method: 'POST',
+                headers: {}
+            };
+
+            if (fileBuffer && filename) {
+                const boundary = '----UNIT3DBoundary' + Date.now();
+                options.headers['Content-Type'] = 'multipart/form-data; boundary=' + boundary;
+
+                const payloadPart = `--${boundary}\r\nContent-Disposition: form-data; name="payload_json"\r\n\r\n${JSON.stringify(payloadJson)}\r\n`;
+                const fileHeader = `--${boundary}\r\nContent-Disposition: form-data; name="file"; filename="${filename}"\r\nContent-Type: image/jpeg\r\n\r\n`;
+                const endPart = `\r\n--${boundary}--\r\n`;
+
+                const req = https.request(options, (res) => {
+                    let data = '';
+                    res.on('data', (chunk) => data += chunk);
+                    res.on('end', () => resolve({ statusCode: res.statusCode, body: data }));
+                });
+
+                req.on('error', (err) => reject(err));
+
+                req.write(payloadPart);
+                req.write(fileHeader);
+                req.write(fileBuffer);
+                req.write(endPart);
+                req.end();
+            } else {
+                const bodyStr = JSON.stringify(payloadJson);
+                options.headers['Content-Type'] = 'application/json';
+                options.headers['Content-Length'] = Buffer.byteLength(bodyStr);
+
+                const req = https.request(options, (res) => {
+                    let data = '';
+                    res.on('data', (chunk) => data += chunk);
+                    res.on('end', () => resolve({ statusCode: res.statusCode, body: data }));
+                });
+                req.on('error', (err) => reject(err));
+                req.write(bodyStr);
+                req.end();
+            }
+        } catch (err) {
+            reject(err);
+        }
+    });
+}
+
 // Endpoint para probar la conexión con Telegram
 app.post('/test-telegram', async (req, res) => {
     try {

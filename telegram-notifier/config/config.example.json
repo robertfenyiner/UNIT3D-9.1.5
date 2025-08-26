@@ -28,8 +28,8 @@
     "_comentario": "Características opcionales del bot",
     "include_imdb_link": true,
     "include_tmdb_info": true,
-    "include_poster_images": true,
-  "poster_size": "w154",
+  "include_poster_images": true,
+  "poster_size": "w185",
   "poster_max_width": 320,
     "mention_uploader": true,
     "filter_categories": {
@@ -50,6 +50,10 @@
       "3. Solicitar API key (aprobación inmediata)",
       "4. Copiar la 'API Key (v3 auth)' aquí"
     ]
+  },
+  "discord": {
+    "_comentario": "Configuración de webhook para enviar notificaciones a Discord (opcional)",
+    "webhook_url": "https://discord.com/api/webhooks/YOUR_WEBHOOK_ID/YOUR_WEBHOOK_TOKEN"
   },
   "_instrucciones_chat_id": {
     "para_canal": [

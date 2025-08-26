@@ -289,12 +289,18 @@ Puedes ajustar el ancho del póster que se descargará desde TMDB para reducir e
 
 Valores válidos de TMDB (ancho): `w92`, `w154`, `w185`, `w342`, `w500`, `w780`, `original`.
 Recomendado para chats móviles: `w92` o `w154`.
+En este repositorio el ejemplo por defecto usa `poster_size: "w185"` y `poster_max_width: 320` (ver sección de redimensionado abajo).
 
 ### Redimensionado en el servidor (poster_max_width)
 Si quieres garantizar que Telegram reciba una imagen con un ancho máximo fijo (evitando que algunos clientes la muestren ampliada), puedes activar el redimensionado en el servidor.
 
 - Añade `"poster_max_width": 320` dentro de `features` en `config/config.json` para limitar el ancho a 320px (recomendado para móviles).
 - Esta funcionalidad usa la librería `sharp`. Después de actualizar el código, instala dependencias:
+
+Nota: el valor ejemplo en `config/config.example.json` es `320`. Para móviles puedes usar 240–360 px según preferencia (240 es más compacto; 320 es un buen compromiso).
+
+ - Añade `"poster_max_width": 320` dentro de `features` en `config/config.json` para limitar el ancho a 320px (recomendado para móviles).
+ - Esta funcionalidad usa la librería `sharp`. Después de actualizar el código, instala dependencias:
 
 ```bash
 # Desde el directorio del proyecto
