@@ -12,7 +12,7 @@
     "_comentario": "Configuración del bot de Telegram",
     "bot_token": "1234567890:ABCdefGHIjklMNOpqrsTUVwxyz",
     "chat_id": "-1001234567890",
-    "parse_mode": "Markdown"
+  "parse_mode": "HTML"
   },
   "tracker": {
     "_comentario": "Configuración del tracker UNIT3D",
@@ -30,14 +30,14 @@
     "include_tmdb_info": true,
     "include_poster_images": true,
     "mention_uploader": true,
-    "filter_categories": [
+    "filter_categories": {
       "_comentario": "Lista vacía = notificar todas las categorías",
       "_ejemplo": ["Movies", "TV Shows", "Music"],
       "_categorias_posibles": [
         "Movies", "TV", "TV Shows", "Music", "Games", 
         "Software", "Books", "Apps", "Anime", "Documentary", "XXX"
       ]
-    ]
+    }
   },
   "tmdb": {
     "_comentario": "API de The Movie Database para obtener imágenes de pósters",

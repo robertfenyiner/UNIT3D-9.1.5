@@ -583,7 +583,7 @@ app.post('/torrent-approved', async (req, res) => {
         logger.info(`🔍 Resultado getPosterUrl: ${posterUrl}`);
         
         // Enviar mensaje con imagen si está disponible
-        const parseMode = (config.telegram && config.telegram.parse_mode) ? config.telegram.parse_mode : null;
+    const parseMode = (config.telegram && config.telegram.parse_mode) ? config.telegram.parse_mode : 'HTML';
         const disablePreview = (config.features && typeof config.features.disable_web_preview !== 'undefined') ? !!config.features.disable_web_preview : false;
 
         if (posterUrl) {
@@ -637,7 +637,7 @@ app.post('/test-telegram', async (req, res) => {
     try {
         const testMessage = '🧪 MENSAJE DE PRUEBA\n\nEl bot de Telegram está funcionando correctamente.\n\n🕒 ' + new Date().toLocaleString();
         
-        const parseMode = (config.telegram && config.telegram.parse_mode) ? config.telegram.parse_mode : null;
+        const parseMode = (config.telegram && config.telegram.parse_mode) ? config.telegram.parse_mode : 'HTML';
         await bot.sendMessage(config.telegram.chat_id, testMessage, {
             parse_mode: parseMode
         });
