@@ -130,7 +130,7 @@ function formatMessage(torrent) {
     
     // Header con emoji de categoría y nombre de categoría
     message += categoryEmoji + ' NUEVO TORRENT EN ' + categoryName.toUpperCase() + '\n';
-    message += '━━━━━━━━━━━━━━━━━━━━━━━\n\n';
+    message += '━━━━━━━━━━━━━━━\n\n';
     
     // Información principal del torrent
     message += '📁 ' + torrent.name + '\n\n';
@@ -153,7 +153,7 @@ function formatMessage(torrent) {
         if (year) message += '📅 Año: ' + year + '\n';
     }
     
-    message += '\n━━━━━━━━━━━━━━━━━━━━━━━\n';
+    message += '\n━━━━━━━━━━━━━━━\n';
     
     // Enlaces externos
     message += '🔗 ENLACES:\n';
@@ -168,7 +168,7 @@ function formatMessage(torrent) {
     }
     
     // Footer con timestamp y tracker info
-    message += '\n━━━━━━━━━━━━━━━━━━━━━━━\n';
+    message += '\n━━━━━━━━━━━━━━━\n';
     message += '🏷️ ' + config.tracker.name + '\n';
     message += '🕒 ' + new Date().toLocaleString('es-ES', { 
         timeZone: 'America/Mexico_City',
