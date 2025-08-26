@@ -8,7 +8,10 @@
       "Bash(npm run dev:*)",
       "Bash(curl:*)",
       "Bash(cat:*)",
-      "WebFetch(domain:ibb.co)"
+      "WebFetch(domain:ibb.co)",
+      "Bash(journalctl:*)",
+      "Bash(sudo systemctl restart:*)",
+      "Bash(npm start)"
     ],
     "deny": []
   }

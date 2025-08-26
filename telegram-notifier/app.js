@@ -4,6 +4,7 @@ const cors = require('cors');
 const winston = require('winston');
 const fs = require('fs');
 const path = require('path');
+const https = require('https');
 
 // Configurar logging
 const logger = winston.createLogger({
@@ -189,6 +190,36 @@ function extractCodec(name) {
 function extractYear(name) {
     const yearMatch = name.match(/(19|20)\d{2}/);
     return yearMatch ? yearMatch[0] : null;
+}
+
+// Helper function para hacer requests HTTP
+function makeRequest(url) {
+    return new Promise((resolve, reject) => {
+        const request = https.get(url, (response) => {
+            let data = '';
+            
+            response.on('data', (chunk) => {
+                data += chunk;
+            });
+            
+            response.on('end', () => {
+                try {
+                    resolve(JSON.parse(data));
+                } catch (error) {
+                    reject(new Error('Error parsing JSON: ' + error.message));
+                }
+            });
+        });
+        
+        request.on('error', (error) => {
+            reject(error);
+        });
+        
+        request.setTimeout(5000, () => {
+            request.destroy();
+            reject(new Error('Request timeout'));
+        });
+    });
 }
 
 // Función para obtener URL del póster desde TMDB
