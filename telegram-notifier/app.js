@@ -6,6 +6,16 @@ const fs = require('fs');
 const path = require('path');
 const https = require('https');
 
+// Asegurar que exista el directorio de logs antes de inicializar winston
+try {
+    const logsDir = path.resolve(__dirname, 'logs');
+    if (!fs.existsSync(logsDir)) {
+        fs.mkdirSync(logsDir, { recursive: true });
+    }
+} catch (err) {
+    console.error('No se pudo crear logs/:', err.message);
+}
+
 // Configurar logging
 const logger = winston.createLogger({
     level: 'info',
@@ -120,55 +130,69 @@ function getCategoryName(category) {
     return names[category] || category.toUpperCase();
 }
 
-// Función para formatear el mensaje de Telegram con formato avanzado
+// (formatMessage reemplazado más abajo por la versión HTML/wrap para mejorar lectura móvil)
 function formatMessage(torrent) {
+    // Usar HTML para controlar estilo y forzar saltos de línea claros en móvil
     const categoryEmoji = getCategoryEmoji(torrent.category);
     const categoryName = getCategoryName(torrent.category);
-    
-    // Crear mensaje con formato rico
+
+    // Helper: wrap text a una longitud objetivo para mejorar lectura en móviles
+    function wrap(text, maxLen = 40) {
+        if (!text) return '';
+        const words = text.split(/\s+/);
+        let line = '';
+        const lines = [];
+        for (const w of words) {
+            if ((line + ' ' + w).trim().length > maxLen) {
+                lines.push(line.trim());
+                line = w;
+            } else {
+                line = (line + ' ' + w).trim();
+            }
+        }
+        if (line) lines.push(line.trim());
+        return lines.join('<br/>');
+    }
+
+    // Construir mensaje en HTML
     let message = '';
-    
-    // Header con emoji de categoría y nombre de categoría
-    message += categoryEmoji + ' NUEVO TORRENT EN ' + categoryName.toUpperCase() + '\n';
-    message += '━━━━━━━━━━━━━━━\n\n';
-    
-    // Información principal del torrent
-    message += '📁 ' + torrent.name + '\n\n';
-    
-    // Metadata en formato tabla
-    message += '👤 Uploader: ' + torrent.user + '\n';
-    message += '📂 Categoría: ' + torrent.category + '\n';
-    message += '💾 Tamaño: ' + torrent.size + '\n';
-    
-    // Agregar información de calidad y resolución si está disponible
+    message += `<b>${categoryEmoji} NUEVO TORRENT EN ${escapeHtml(categoryName)}</b><br/><hr/>`;
+
+    // Título envuelto para evitar líneas demasiado largas
+    message += `<b>📁 ${wrap(escapeHtml(torrent.name), 36)}</b><br/><br/>`;
+
+    // Metadata en líneas separadas
+    message += `👤 <b>Uploader:</b> ${escapeHtml(torrent.user)}<br/>`;
+    message += `📂 <b>Categoría:</b> ${escapeHtml(torrent.category)}<br/>`;
+    message += `💾 <b>Tamaño:</b> ${escapeHtml(torrent.size)}<br/>`;
+
     if (torrent.name) {
         const quality = extractQuality(torrent.name);
         const source = extractSource(torrent.name);
         const codec = extractCodec(torrent.name);
         const year = extractYear(torrent.name);
-        
-        if (quality) message += '🎥 Calidad: ' + quality + '\n';
-        if (source) message += '💿 Fuente: ' + source + '\n';
-        if (codec) message += '🔧 Códec: ' + codec + '\n';
-        if (year) message += '📅 Año: ' + year + '\n';
+
+        if (quality) message += `�️ <b>Calidad:</b> ${escapeHtml(quality)}<br/>`;
+        if (source) message += `💿 <b>Fuente:</b> ${escapeHtml(source)}<br/>`;
+        if (codec) message += `🔧 <b>Códec:</b> ${escapeHtml(codec)}<br/>`;
+        if (year) message += `📅 <b>Año:</b> ${escapeHtml(year)}<br/>`;
     }
-    
-    message += '\n━━━━━━━━━━━━━━━\n';
-    
-    // Enlaces externos
-    message += '🔗 ENLACES:\n';
-    message += '• Descargar: \n' + config.tracker.base_url + '/torrents/' + torrent.torrent_id + '\n';
-    
+
+    message += `<br/><hr/>`;
+
+    // Enlaces
+    message += `<b>🔗 ENLACES:</b><br/>`;
+    message += `• <b>Descargar:</b> ${escapeHtml(config.tracker.base_url)}/torrents/${escapeHtml(String(torrent.torrent_id))}<br/>`;
+
     if (config.features.include_imdb_link && torrent.imdb && torrent.imdb > 0) {
-        message += '• IMDB: https://imdb.com/title/tt' + String(torrent.imdb).padStart(7, '0') + '\n';
+        message += `• <b>IMDB:</b> https://imdb.com/title/tt${String(torrent.imdb).padStart(7, '0')}<br/>`;
     }
-    
+
     if (config.features.include_tmdb_info && torrent.tmdb_movie_id && torrent.tmdb_movie_id > 0) {
-        message += '• TMDB: https://www.themoviedb.org/movie/' + torrent.tmdb_movie_id + '\n';
+        // Usar TMDB según tipo (movie)
+        message += `• <b>TMDB:</b> https://www.themoviedb.org/movie/${escapeHtml(String(torrent.tmdb_movie_id))}<br/>`;
     }
-    
-    // Footer eliminado por petición del usuario
-    
+
     return message;
 }
 
@@ -183,31 +207,16 @@ function extractQuality(name) {
     return null;
 }
 
-function extractSource(name) {
-    const sources = ['BluRay', 'WEBRip', 'WEB-DL', 'HDTV', 'DVDRip', 'BDRip', 'REMUX'];
-    const nameUpper = name.toUpperCase();
-    for (const source of sources) {
-        if (nameUpper.includes(source.toUpperCase())) {
-            return source;
-        }
-    }
-    return null;
-}
 
-function extractCodec(name) {
-    const codecs = ['x265', 'x264', 'HEVC', 'H.265', 'H.264', 'AV1'];
-    const nameUpper = name.toUpperCase();
-    for (const codec of codecs) {
-        if (nameUpper.includes(codec.toUpperCase())) {
-            return codec;
-        }
-    }
-    return null;
-}
-
-function extractYear(name) {
-    const yearMatch = name.match(/(19|20)\d{2}/);
-    return yearMatch ? yearMatch[0] : null;
+// Helper para escapar caracteres HTML básicos
+function escapeHtml(str) {
+    if (!str && str !== 0) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
 }
 
 // Helper function para hacer requests HTTP
@@ -215,11 +224,11 @@ function makeRequest(url) {
     return new Promise((resolve, reject) => {
         const request = https.get(url, (response) => {
             let data = '';
-            
+
             response.on('data', (chunk) => {
                 data += chunk;
             });
-            
+
             response.on('end', () => {
                 try {
                     resolve(JSON.parse(data));
@@ -228,11 +237,11 @@ function makeRequest(url) {
                 }
             });
         });
-        
+
         request.on('error', (error) => {
             reject(error);
         });
-        
+
         request.setTimeout(5000, () => {
             request.destroy();
             reject(new Error('Request timeout'));
@@ -513,28 +522,31 @@ app.post('/torrent-approved', async (req, res) => {
         logger.info(`🔍 Resultado getPosterUrl: ${posterUrl}`);
         
         // Enviar mensaje con imagen si está disponible
+        const parseMode = (config.telegram && config.telegram.parse_mode) ? config.telegram.parse_mode : null;
+        const disablePreview = (config.features && typeof config.features.disable_web_preview !== 'undefined') ? !!config.features.disable_web_preview : false;
+
         if (posterUrl) {
             logger.info(`📸 Enviando mensaje con imagen: ${posterUrl}`);
             try {
                 await bot.sendPhoto(config.telegram.chat_id, posterUrl, {
                     caption: message,
-                    parse_mode: null
+                    parse_mode: parseMode
                 });
                 logger.info(`✅ Imagen enviada exitosamente`);
             } catch (photoError) {
                 logger.error(`❌ Error enviando imagen: ${photoError.message}`);
                 logger.info(`📝 Fallback: enviando solo texto`);
                 await bot.sendMessage(config.telegram.chat_id, message, {
-                    parse_mode: null,
-                    disable_web_page_preview: false
+                    parse_mode: parseMode,
+                    disable_web_page_preview: disablePreview
                 });
             }
         } else {
             logger.info(`📝 No hay imagen, enviando solo mensaje de texto`);
             // Enviar solo mensaje de texto si no hay imagen
             await bot.sendMessage(config.telegram.chat_id, message, {
-                parse_mode: null,
-                disable_web_page_preview: false
+                parse_mode: parseMode,
+                disable_web_page_preview: disablePreview
             });
         }
         
@@ -564,8 +576,9 @@ app.post('/test-telegram', async (req, res) => {
     try {
         const testMessage = '🧪 MENSAJE DE PRUEBA\n\nEl bot de Telegram está funcionando correctamente.\n\n🕒 ' + new Date().toLocaleString();
         
+        const parseMode = (config.telegram && config.telegram.parse_mode) ? config.telegram.parse_mode : null;
         await bot.sendMessage(config.telegram.chat_id, testMessage, {
-            parse_mode: null
+            parse_mode: parseMode
         });
         
         logger.info('✅ Mensaje de prueba enviado exitosamente');
