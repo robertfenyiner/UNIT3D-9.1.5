@@ -281,6 +281,15 @@ El sistema reconoce todas las categorías de tu tracker:
 - 🖼️ **Sin resultados**: Imagen genérica por categoría (opcional)
 - 📏 **Tamaño**: 185px de ancho (compacto para Telegram)
 
+### Tamaño del póster (poster_size)
+Puedes ajustar el ancho del póster que se descargará desde TMDB para reducir el espacio que ocupa en los clientes de Telegram. Hay dos formas de configurarlo:
+
+- En `config/config.json` dentro de `features.poster_size`.
+- O mediante la variable de ejemplo en `.env.example` (si tu despliegue usa variables de entorno).
+
+Valores válidos de TMDB (ancho): `w92`, `w154`, `w185`, `w342`, `w500`, `w780`, `original`.
+Recomendado para chats móviles: `w92` o `w154`.
+
 ### Fallback Inteligente
 ```json
 {

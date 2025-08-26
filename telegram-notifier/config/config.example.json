@@ -29,6 +29,7 @@
     "include_imdb_link": true,
     "include_tmdb_info": true,
     "include_poster_images": true,
+  "poster_size": "w154",
     "mention_uploader": true,
     "filter_categories": {
       "_comentario": "Lista vacía = notificar todas las categorías",
