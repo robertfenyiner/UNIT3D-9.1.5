@@ -730,17 +730,7 @@ app.post('/torrent-approved', async (req, res) => {
         // Construir caption corto (para la foto) y mensaje detallado (se envía aparte)
         const categoryEmoji = getCategoryEmoji(torrent.category);
         const categoryName = getCategoryName(torrent.category);
-        const shortTitle = wrapPlain(torrent.name, 60);
-                const payloadImage = { embeds: [imageEmbed] };
-                const sendResultImage = await sendDiscordWebhook(webhookUrl, payloadImage, resized, filename);
-                logger.info('✅ Discord: imagen enviada como attachment', sendResultImage);
-
-                // Send second message: fields embed (no attachment)
-                const payloadFields = { embeds: [fieldsEmbed] };
-                const sendResultFields = await sendDiscordWebhook(webhookUrl, payloadFields, null, null);
-                logger.info('✅ Discord: campos enviados en mensaje separado', sendResultFields);
-
-                return res.status(200).json({ success: true, message: 'Notificación Discord enviada (attachment + fields)' });
+    const shortTitle = wrapPlain(torrent.name, 60);
 
         const details = buildDetailsMessage(torrent);
 
