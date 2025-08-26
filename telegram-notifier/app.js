@@ -410,7 +410,8 @@ async function searchTMDBByTitle(torrent) {
         if (searchData.results && searchData.results.length > 0) {
             const firstResult = searchData.results[0];
             if (firstResult.poster_path) {
-                const imageUrl = `https://image.tmdb.org/t/p/w185${firstResult.poster_path}`;
+                const size = (config.features && config.features.poster_size) ? config.features.poster_size : 'w154';
+                const imageUrl = `https://image.tmdb.org/t/p/${size}${firstResult.poster_path}`;
                 logger.info(`✅ Imagen encontrada por búsqueda: ${imageUrl}`);
                 return imageUrl;
             }
@@ -533,7 +534,8 @@ async function getPosterUrl(torrent) {
                 logger.info(`🎬 Datos recibidos de TMDB: ${JSON.stringify(data, null, 2)}`);
                 
                 if (data.poster_path) {
-                    imageUrl = `https://image.tmdb.org/t/p/w185${data.poster_path}`;
+                    const size = (config.features && config.features.poster_size) ? config.features.poster_size : 'w154';
+                    imageUrl = `https://image.tmdb.org/t/p/${size}${data.poster_path}`;
                     logger.info(`✅ URL del póster construida: ${imageUrl}`);
                 } else {
                     logger.warn(`⚠️ No se encontró poster_path para película ID ${torrent.tmdb_movie_id}`);
@@ -559,8 +561,9 @@ async function getPosterUrl(torrent) {
                 logger.info(`📺 Datos recibidos de TMDB: ${JSON.stringify(data, null, 2)}`);
                 
                 if (data.poster_path) {
-                    imageUrl = `https://image.tmdb.org/t/p/w185${data.poster_path}`;
-                    logger.info(`✅ URL del póster construida: ${imageUrl}`);
+                        const size = (config.features && config.features.poster_size) ? config.features.poster_size : 'w154';
+                        imageUrl = `https://image.tmdb.org/t/p/${size}${data.poster_path}`;
+                        logger.info(`✅ URL del póster construida: ${imageUrl}`);
                 } else {
                     logger.warn(`⚠️ No se encontró poster_path para serie ID ${torrent.tmdb_tv_id}`);
                 }
