@@ -207,6 +207,57 @@ function extractQuality(name) {
     return null;
 }
 
+// Wrap simple para títulos en el caption (no HTML tags inside wrap)
+function wrapPlain(text, maxLen = 60) {
+    if (!text) return '';
+    const words = String(text).split(/\s+/);
+    let line = '';
+    const lines = [];
+    for (const w of words) {
+        if ((line + ' ' + w).trim().length > maxLen) {
+            lines.push(line.trim());
+            line = w;
+        } else {
+            line = (line + ' ' + w).trim();
+        }
+    }
+    if (line) lines.push(line.trim());
+    return lines.join(' ');
+}
+
+// Construir el mensaje detallado en HTML sin <br/> ni <hr/> (usar saltos de línea \n)
+function buildDetailsMessage(torrent) {
+    let msg = '';
+    msg += `👤 <b>Uploader:</b> ${escapeHtml(torrent.user)}\n`;
+    msg += `📂 <b>Categoría:</b> ${escapeHtml(torrent.category)}\n`;
+    msg += `💾 <b>Tamaño:</b> ${escapeHtml(torrent.size)}\n`;
+
+    if (torrent.name) {
+        const quality = extractQuality(torrent.name);
+        const source = extractSource(torrent.name);
+        const codec = extractCodec(torrent.name);
+        const year = extractYear(torrent.name);
+
+        if (quality) msg += `🎞️ <b>Calidad:</b> ${escapeHtml(quality)}\n`;
+        if (source) msg += `💿 <b>Fuente:</b> ${escapeHtml(source)}\n`;
+        if (codec) msg += `🔧 <b>Códec:</b> ${escapeHtml(codec)}\n`;
+        if (year) msg += `📅 <b>Año:</b> ${escapeHtml(year)}\n`;
+    }
+
+    msg += `\n🔗 <b>ENLACES:</b>\n`;
+    msg += `• <b>Descargar:</b> ${escapeHtml(config.tracker.base_url)}/torrents/${escapeHtml(String(torrent.torrent_id))}\n`;
+
+    if (config.features.include_imdb_link && torrent.imdb && torrent.imdb > 0) {
+        msg += `• <b>IMDB:</b> https://imdb.com/title/tt${String(torrent.imdb).padStart(7, '0')}\n`;
+    }
+
+    if (config.features.include_tmdb_info && torrent.tmdb_movie_id && torrent.tmdb_movie_id > 0) {
+        msg += `• <b>TMDB:</b> https://www.themoviedb.org/movie/${escapeHtml(String(torrent.tmdb_movie_id))}\n`;
+    }
+
+    return msg;
+}
+
 function extractSource(name) {
     const sources = ['BluRay', 'WEBRip', 'WEB-DL', 'HDTV', 'DVDRip', 'BDRip', 'REMUX'];
     if (!name) return null;
@@ -574,30 +625,40 @@ app.post('/torrent-approved', async (req, res) => {
             });
         }
         
-        // Formatear mensaje
-        const message = formatMessage(torrent);
-        
         // Obtener URL de imagen del póster si está disponible
         logger.info(`🔍 Intentando obtener póster para torrent ID: ${torrent.torrent_id}`);
         const posterUrl = await getPosterUrl(torrent);
         logger.info(`🔍 Resultado getPosterUrl: ${posterUrl}`);
-        
-        // Enviar mensaje con imagen si está disponible
-    const parseMode = (config.telegram && config.telegram.parse_mode) ? config.telegram.parse_mode : 'HTML';
+
+        // Preparar parse_mode y preview
+        const parseMode = (config.telegram && config.telegram.parse_mode) ? config.telegram.parse_mode : 'HTML';
         const disablePreview = (config.features && typeof config.features.disable_web_preview !== 'undefined') ? !!config.features.disable_web_preview : false;
 
+        // Construir caption corto (para la foto) y mensaje detallado (se envía aparte)
+        const categoryEmoji = getCategoryEmoji(torrent.category);
+        const categoryName = getCategoryName(torrent.category);
+        const shortTitle = wrapPlain(torrent.name, 60);
+        const caption = `<b>${escapeHtml(categoryEmoji + ' NUEVO TORRENT EN ' + categoryName)}</b>\n\n<b>📁 ${escapeHtml(shortTitle)}</b>`;
+
+        const details = buildDetailsMessage(torrent);
+
         if (posterUrl) {
-            logger.info(`📸 Enviando mensaje con imagen: ${posterUrl}`);
+            logger.info(`📸 Enviando foto con caption corto: ${posterUrl}`);
             try {
                 await bot.sendPhoto(config.telegram.chat_id, posterUrl, {
-                    caption: message,
+                    caption: caption,
                     parse_mode: parseMode
                 });
-                logger.info(`✅ Imagen enviada exitosamente`);
+                logger.info(`✅ Foto enviada, ahora enviando mensaje de detalle`);
+                // Enviar detalle como mensaje HTML separado
+                await bot.sendMessage(config.telegram.chat_id, details, {
+                    parse_mode: parseMode,
+                    disable_web_page_preview: disablePreview
+                });
             } catch (photoError) {
-                logger.error(`❌ Error enviando imagen: ${photoError.message}`);
-                logger.info(`📝 Fallback: enviando solo texto`);
-                await bot.sendMessage(config.telegram.chat_id, message, {
+                logger.error(`❌ Error enviando foto: ${photoError.message}`);
+                logger.info(`📝 Enviando detalle como fallback de texto`);
+                await bot.sendMessage(config.telegram.chat_id, details, {
                     parse_mode: parseMode,
                     disable_web_page_preview: disablePreview
                 });
@@ -605,7 +666,7 @@ app.post('/torrent-approved', async (req, res) => {
         } else {
             logger.info(`📝 No hay imagen, enviando solo mensaje de texto`);
             // Enviar solo mensaje de texto si no hay imagen
-            await bot.sendMessage(config.telegram.chat_id, message, {
+            await bot.sendMessage(config.telegram.chat_id, details, {
                 parse_mode: parseMode,
                 disable_web_page_preview: disablePreview
             });
