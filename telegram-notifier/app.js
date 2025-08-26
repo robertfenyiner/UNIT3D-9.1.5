@@ -5,6 +5,7 @@ const winston = require('winston');
 const fs = require('fs');
 const path = require('path');
 const https = require('https');
+const sharp = require('sharp');
 
 // Asegurar que exista el directorio de logs antes de inicializar winston
 try {
@@ -601,6 +602,36 @@ async function getPosterUrl(torrent) {
     }
 }
 
+// Descargar una imagen como Buffer
+function downloadImageBuffer(url) {
+    return new Promise((resolve, reject) => {
+        try {
+            https.get(url, (res) => {
+                const chunks = [];
+                res.on('data', (chunk) => chunks.push(chunk));
+                res.on('end', () => resolve(Buffer.concat(chunks)));
+                res.on('error', (err) => reject(err));
+            }).on('error', (err) => reject(err));
+        } catch (err) {
+            reject(err);
+        }
+    });
+}
+
+// Redimensionar buffer con sharp (ancho fijo, mantener aspect ratio)
+async function resizeImageBuffer(buffer, width) {
+    try {
+        const resized = await sharp(buffer)
+            .resize({ width: width, withoutEnlargement: true })
+            .jpeg({ quality: 85 })
+            .toBuffer();
+        return resized;
+    } catch (err) {
+        logger.warn(`⚠️ Error redimensionando imagen: ${err.message}`);
+        throw err;
+    }
+}
+
 // Función para verificar si debe notificarse según filtros
 function shouldNotify(torrent) {
     // Filtrar por categorías si está configurado
@@ -672,10 +703,33 @@ app.post('/torrent-approved', async (req, res) => {
                 const MAX_CAPTION = 1000; // seguro por debajo de límite de Telegram (~1024)
                 const finalCaption = singleCaption.length > MAX_CAPTION ? singleCaption.slice(0, MAX_CAPTION - 3) + '...' : singleCaption;
 
-                await bot.sendPhoto(config.telegram.chat_id, posterUrl, {
-                    caption: finalCaption,
-                    parse_mode: parseMode
-                });
+                // Si está configurado poster_max_width, intentamos descargar y redimensionar la imagen
+                if (config.features && config.features.poster_max_width) {
+                    try {
+                        const maxWidth = parseInt(config.features.poster_max_width, 10) || 320;
+                        const imgBuffer = await downloadImageBuffer(posterUrl);
+                        const resized = await resizeImageBuffer(imgBuffer, maxWidth);
+
+                        await bot.sendPhoto(config.telegram.chat_id, resized, {
+                            caption: finalCaption,
+                            parse_mode: parseMode
+                        });
+                        logger.info(`✅ Foto (buffer) enviada exitosamente (redimensionada a ${maxWidth}px)`);
+                    } catch (resizeError) {
+                        logger.warn(`⚠️ Falló redimensionado/envío buffer: ${resizeError.message} — intentando enviar como URL`);
+                        // Fallback a enviar por URL
+                        await bot.sendPhoto(config.telegram.chat_id, posterUrl, {
+                            caption: finalCaption,
+                            parse_mode: parseMode
+                        });
+                    }
+                } else {
+                    // Enviar por URL si no se solicita redimensionado
+                    await bot.sendPhoto(config.telegram.chat_id, posterUrl, {
+                        caption: finalCaption,
+                        parse_mode: parseMode
+                    });
+                }
                 logger.info(`✅ Foto + caption enviada exitosamente`);
             } catch (photoError) {
                 logger.error(`❌ Error enviando foto con caption: ${photoError.message}`);

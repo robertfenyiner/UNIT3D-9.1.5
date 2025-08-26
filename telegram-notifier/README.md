@@ -290,6 +290,20 @@ Puedes ajustar el ancho del póster que se descargará desde TMDB para reducir e
 Valores válidos de TMDB (ancho): `w92`, `w154`, `w185`, `w342`, `w500`, `w780`, `original`.
 Recomendado para chats móviles: `w92` o `w154`.
 
+### Redimensionado en el servidor (poster_max_width)
+Si quieres garantizar que Telegram reciba una imagen con un ancho máximo fijo (evitando que algunos clientes la muestren ampliada), puedes activar el redimensionado en el servidor.
+
+- Añade `"poster_max_width": 320` dentro de `features` en `config/config.json` para limitar el ancho a 320px (recomendado para móviles).
+- Esta funcionalidad usa la librería `sharp`. Después de actualizar el código, instala dependencias:
+
+```bash
+# Desde el directorio del proyecto
+npm install sharp
+npm install
+```
+
+Si `poster_max_width` no está definido, el bot seguirá mandando la URL del póster desde TMDB (comportamiento previo).
+
 ### Fallback Inteligente
 ```json
 {

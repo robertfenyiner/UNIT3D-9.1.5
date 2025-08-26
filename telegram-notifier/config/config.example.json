@@ -30,6 +30,7 @@
     "include_tmdb_info": true,
     "include_poster_images": true,
   "poster_size": "w154",
+  "poster_max_width": 320,
     "mention_uploader": true,
     "filter_categories": {
       "_comentario": "Lista vacía = notificar todas las categorías",
