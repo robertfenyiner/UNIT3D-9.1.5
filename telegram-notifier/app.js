@@ -245,41 +245,33 @@ async function getPosterUrl(torrent) {
         
         // Para películas
         if (torrent.category === 'Movies' && torrent.tmdb_movie_id) {
-            const response = await fetch(`https://api.themoviedb.org/3/movie/${torrent.tmdb_movie_id}?api_key=${config.tmdb.api_key}`, {
-                timeout: 5000
-            });
-            logger.info(`[TMDB] Respuesta para película ID ${torrent.tmdb_movie_id}: status ${response.status}`);
-            if (response.ok) {
-                const data = await response.json();
-                logger.info(`[TMDB] Datos recibidos para película: ${JSON.stringify(data)}`);
-                if (data.poster_path) {
-                    imageUrl = `https://image.tmdb.org/t/p/w500${data.poster_path}`;
-                    logger.info(`[TMDB] URL del póster construida: ${imageUrl}`);
-                } else {
-                    logger.warn(`[TMDB] No se encontró poster_path para película ID ${torrent.tmdb_movie_id}`);
-                }
+            logger.info(`🎬 Buscando póster para película TMDB ID: ${torrent.tmdb_movie_id}`);
+            const url = `https://api.themoviedb.org/3/movie/${torrent.tmdb_movie_id}?api_key=${config.tmdb.api_key}`;
+            
+            const data = await makeRequest(url);
+            logger.info(`🎬 Datos recibidos de TMDB: ${JSON.stringify(data, null, 2)}`);
+            
+            if (data.poster_path) {
+                imageUrl = `https://image.tmdb.org/t/p/w500${data.poster_path}`;
+                logger.info(`✅ URL del póster construida: ${imageUrl}`);
             } else {
-                logger.warn(`[TMDB] Respuesta no OK para película ID ${torrent.tmdb_movie_id}`);
+                logger.warn(`⚠️ No se encontró poster_path para película ID ${torrent.tmdb_movie_id}`);
             }
         }
 
         // Para series
         if ((torrent.category === 'TV' || torrent.category === 'TV Shows') && torrent.tmdb_tv_id) {
-            const response = await fetch(`https://api.themoviedb.org/3/tv/${torrent.tmdb_tv_id}?api_key=${config.tmdb.api_key}`, {
-                timeout: 5000
-            });
-            logger.info(`[TMDB] Respuesta para serie ID ${torrent.tmdb_tv_id}: status ${response.status}`);
-            if (response.ok) {
-                const data = await response.json();
-                logger.info(`[TMDB] Datos recibidos para serie: ${JSON.stringify(data)}`);
-                if (data.poster_path) {
-                    imageUrl = `https://image.tmdb.org/t/p/w500${data.poster_path}`;
-                    logger.info(`[TMDB] URL del póster construida: ${imageUrl}`);
-                } else {
-                    logger.warn(`[TMDB] No se encontró poster_path para serie ID ${torrent.tmdb_tv_id}`);
-                }
+            logger.info(`📺 Buscando póster para serie TMDB ID: ${torrent.tmdb_tv_id}`);
+            const url = `https://api.themoviedb.org/3/tv/${torrent.tmdb_tv_id}?api_key=${config.tmdb.api_key}`;
+            
+            const data = await makeRequest(url);
+            logger.info(`📺 Datos recibidos de TMDB: ${JSON.stringify(data, null, 2)}`);
+            
+            if (data.poster_path) {
+                imageUrl = `https://image.tmdb.org/t/p/w500${data.poster_path}`;
+                logger.info(`✅ URL del póster construida: ${imageUrl}`);
             } else {
-                logger.warn(`[TMDB] Respuesta no OK para serie ID ${torrent.tmdb_tv_id}`);
+                logger.warn(`⚠️ No se encontró poster_path para serie ID ${torrent.tmdb_tv_id}`);
             }
         }
 
@@ -342,15 +334,29 @@ app.post('/torrent-approved', async (req, res) => {
         const message = formatMessage(torrent);
         
         // Obtener URL de imagen del póster si está disponible
+        logger.info(`🔍 Intentando obtener póster para torrent ID: ${torrent.torrent_id}`);
         const posterUrl = await getPosterUrl(torrent);
+        logger.info(`🔍 Resultado getPosterUrl: ${posterUrl}`);
         
         // Enviar mensaje con imagen si está disponible
         if (posterUrl) {
-            await bot.sendPhoto(config.telegram.chat_id, posterUrl, {
-                caption: message,
-                parse_mode: null
-            });
+            logger.info(`📸 Enviando mensaje con imagen: ${posterUrl}`);
+            try {
+                await bot.sendPhoto(config.telegram.chat_id, posterUrl, {
+                    caption: message,
+                    parse_mode: null
+                });
+                logger.info(`✅ Imagen enviada exitosamente`);
+            } catch (photoError) {
+                logger.error(`❌ Error enviando imagen: ${photoError.message}`);
+                logger.info(`📝 Fallback: enviando solo texto`);
+                await bot.sendMessage(config.telegram.chat_id, message, {
+                    parse_mode: null,
+                    disable_web_page_preview: false
+                });
+            }
         } else {
+            logger.info(`📝 No hay imagen, enviando solo mensaje de texto`);
             // Enviar solo mensaje de texto si no hay imagen
             await bot.sendMessage(config.telegram.chat_id, message, {
                 parse_mode: null,
