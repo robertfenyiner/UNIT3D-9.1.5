@@ -11,7 +11,11 @@
       "WebFetch(domain:ibb.co)",
       "Bash(journalctl:*)",
       "Bash(sudo systemctl restart:*)",
-      "Bash(npm start)"
+      "Bash(npm start)",
+      "Bash(systemctl restart:*)",
+      "Bash(taskkill:*)",
+      "Bash(powershell:*)",
+      "Bash(start /B node:*)"
     ],
     "deny": []
   }

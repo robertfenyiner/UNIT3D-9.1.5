@@ -222,12 +222,102 @@ function makeRequest(url) {
     });
 }
 
+// Función para buscar en TMDB por título cuando no hay ID
+async function searchTMDBByTitle(torrent) {
+    try {
+        // Extraer título limpio del nombre del torrent
+        const cleanTitle = cleanTorrentTitle(torrent.name);
+        if (!cleanTitle) {
+            logger.warn(`❌ No se pudo extraer título limpio de: ${torrent.name}`);
+            return null;
+        }
+        
+        logger.info(`🔍 Buscando en TMDB por título: "${cleanTitle}"`);
+        
+        let searchUrl;
+        if (torrent.category === 'Movies') {
+            searchUrl = `https://api.themoviedb.org/3/search/movie?api_key=${config.tmdb.api_key}&query=${encodeURIComponent(cleanTitle)}`;
+        } else if (torrent.category === 'TV' || torrent.category === 'TV Shows') {
+            searchUrl = `https://api.themoviedb.org/3/search/tv?api_key=${config.tmdb.api_key}&query=${encodeURIComponent(cleanTitle)}`;
+        } else {
+            return null;
+        }
+        
+        const searchData = await makeRequest(searchUrl);
+        logger.info(`🔍 Resultados de búsqueda TMDB: ${searchData.results?.length || 0} encontrados`);
+        
+        if (searchData.results && searchData.results.length > 0) {
+            const firstResult = searchData.results[0];
+            if (firstResult.poster_path) {
+                const imageUrl = `https://image.tmdb.org/t/p/w500${firstResult.poster_path}`;
+                logger.info(`✅ Imagen encontrada por búsqueda: ${imageUrl}`);
+                return imageUrl;
+            }
+        }
+        
+        return null;
+        
+    } catch (error) {
+        logger.warn(`⚠️ Error en búsqueda por título: ${error.message}`);
+        return null;
+    }
+}
+
+// Función para limpiar el título del torrent
+function cleanTorrentTitle(torrentName) {
+    try {
+        // Remover extensiones y información técnica común
+        let title = torrentName
+            .replace(/\.(mkv|mp4|avi|mov|wmv|flv|webm)$/i, '') // extensiones
+            .replace(/\b(720p|1080p|2160p|4K|UHD|BluRay|WEBRip|WEB-DL|HDTV|DVDRip|BDRip|REMUX)\b/gi, '') // calidades
+            .replace(/\b(x264|x265|HEVC|H\.264|H\.265|AV1)\b/gi, '') // codecs
+            .replace(/\b(AAC|DTS|AC3|TrueHD|Atmos)\b/gi, '') // audio
+            .replace(/\.-\w+$/g, '') // grupos de release
+            .replace(/\[.*?\]/g, '') // corchetes
+            .replace(/\(.*?\)/g, '') // paréntesis
+            .replace(/-+/g, ' ') // guiones múltiples
+            .replace(/\.+/g, ' ') // puntos múltiples
+            .replace(/\s+/g, ' ') // espacios múltiples
+            .trim();
+        
+        // Extraer solo hasta el año si está presente
+        const yearMatch = title.match(/^(.+?)\s+(19|20)\d{2}/);
+        if (yearMatch) {
+            title = yearMatch[1].trim();
+        }
+        
+        return title;
+        
+    } catch (error) {
+        logger.warn(`Error limpiando título: ${error.message}`);
+        return null;
+    }
+}
+
+// Función para obtener imagen genérica por categoría
+function getGenericCategoryImage(category) {
+    // URLs de imágenes genéricas usando una fuente más confiable
+    const genericImages = {
+        'Movies': 'https://picsum.photos/500/750',
+        'TV': 'https://picsum.photos/500/750', 
+        'TV Shows': 'https://picsum.photos/500/750',
+        'Music': 'https://picsum.photos/500/750',
+        'Games': 'https://picsum.photos/500/750',
+        'Software': 'https://picsum.photos/500/750',
+        'Books': 'https://picsum.photos/500/750',
+        'Anime': 'https://picsum.photos/500/750'
+    };
+    
+    return genericImages[category] || 'https://picsum.photos/500/750';
+}
+
 // Función para obtener URL del póster desde TMDB
 async function getPosterUrl(torrent) {
     try {
         // Solo intentar obtener póster para películas y series
         const supportedCategories = ['Movies', 'TV', 'TV Shows'];
         if (!supportedCategories.includes(torrent.category)) {
+            logger.info(`🚫 Categoría no soportada para imágenes: ${torrent.category}`);
             return null;
         }
         
@@ -235,43 +325,86 @@ async function getPosterUrl(torrent) {
         
         // Verificar si las imágenes están habilitadas
         if (!config.features.include_poster_images) {
+            logger.info(`🚫 Imágenes deshabilitadas en configuración`);
             return null;
         }
         
         // Verificar si tenemos API key de TMDB
         if (!config.tmdb || !config.tmdb.api_key || config.tmdb.api_key === 'TU_TMDB_API_KEY_AQUI') {
+            logger.warn(`🚫 API key de TMDB no configurada`);
             return null;
         }
         
+        // Logging detallado de datos de entrada
+        logger.info(`🔍 ANÁLISIS DE TORRENT:
+        - ID: ${torrent.torrent_id}
+        - Nombre: ${torrent.name}
+        - Categoría: ${torrent.category}
+        - TMDB Movie ID: ${torrent.tmdb_movie_id || 'NULL/UNDEFINED'}
+        - TMDB TV ID: ${torrent.tmdb_tv_id || 'NULL/UNDEFINED'}
+        - IMDB: ${torrent.imdb || 'NULL/UNDEFINED'}`);
+        
         // Para películas
-        if (torrent.category === 'Movies' && torrent.tmdb_movie_id) {
-            logger.info(`🎬 Buscando póster para película TMDB ID: ${torrent.tmdb_movie_id}`);
-            const url = `https://api.themoviedb.org/3/movie/${torrent.tmdb_movie_id}?api_key=${config.tmdb.api_key}`;
-            
-            const data = await makeRequest(url);
-            logger.info(`🎬 Datos recibidos de TMDB: ${JSON.stringify(data, null, 2)}`);
-            
-            if (data.poster_path) {
-                imageUrl = `https://image.tmdb.org/t/p/w500${data.poster_path}`;
-                logger.info(`✅ URL del póster construida: ${imageUrl}`);
+        if (torrent.category === 'Movies') {
+            if (torrent.tmdb_movie_id && torrent.tmdb_movie_id > 0) {
+                logger.info(`🎬 Buscando póster para película TMDB ID: ${torrent.tmdb_movie_id}`);
+                const url = `https://api.themoviedb.org/3/movie/${torrent.tmdb_movie_id}?api_key=${config.tmdb.api_key}`;
+                
+                const data = await makeRequest(url);
+                logger.info(`🎬 Datos recibidos de TMDB: ${JSON.stringify(data, null, 2)}`);
+                
+                if (data.poster_path) {
+                    imageUrl = `https://image.tmdb.org/t/p/w500${data.poster_path}`;
+                    logger.info(`✅ URL del póster construida: ${imageUrl}`);
+                } else {
+                    logger.warn(`⚠️ No se encontró poster_path para película ID ${torrent.tmdb_movie_id}`);
+                }
             } else {
-                logger.warn(`⚠️ No se encontró poster_path para película ID ${torrent.tmdb_movie_id}`);
+                logger.warn(`❌ PELÍCULA SIN TMDB_MOVIE_ID:
+                - Torrent ID: ${torrent.torrent_id}
+                - Nombre: ${torrent.name}
+                - Valor tmdb_movie_id: ${torrent.tmdb_movie_id}
+                - Razón: El torrent no tiene metadata de TMDB asignada
+                - Solución: El uploader debe agregar el TMDB ID durante la subida`);
             }
         }
 
         // Para series
-        if ((torrent.category === 'TV' || torrent.category === 'TV Shows') && torrent.tmdb_tv_id) {
-            logger.info(`📺 Buscando póster para serie TMDB ID: ${torrent.tmdb_tv_id}`);
-            const url = `https://api.themoviedb.org/3/tv/${torrent.tmdb_tv_id}?api_key=${config.tmdb.api_key}`;
-            
-            const data = await makeRequest(url);
-            logger.info(`📺 Datos recibidos de TMDB: ${JSON.stringify(data, null, 2)}`);
-            
-            if (data.poster_path) {
-                imageUrl = `https://image.tmdb.org/t/p/w500${data.poster_path}`;
-                logger.info(`✅ URL del póster construida: ${imageUrl}`);
+        if (torrent.category === 'TV' || torrent.category === 'TV Shows') {
+            if (torrent.tmdb_tv_id && torrent.tmdb_tv_id > 0) {
+                logger.info(`📺 Buscando póster para serie TMDB ID: ${torrent.tmdb_tv_id}`);
+                const url = `https://api.themoviedb.org/3/tv/${torrent.tmdb_tv_id}?api_key=${config.tmdb.api_key}`;
+                
+                const data = await makeRequest(url);
+                logger.info(`📺 Datos recibidos de TMDB: ${JSON.stringify(data, null, 2)}`);
+                
+                if (data.poster_path) {
+                    imageUrl = `https://image.tmdb.org/t/p/w500${data.poster_path}`;
+                    logger.info(`✅ URL del póster construida: ${imageUrl}`);
+                } else {
+                    logger.warn(`⚠️ No se encontró poster_path para serie ID ${torrent.tmdb_tv_id}`);
+                }
             } else {
-                logger.warn(`⚠️ No se encontró poster_path para serie ID ${torrent.tmdb_tv_id}`);
+                logger.warn(`❌ SERIE SIN TMDB_TV_ID:
+                - Torrent ID: ${torrent.torrent_id}
+                - Nombre: ${torrent.name}
+                - Valor tmdb_tv_id: ${torrent.tmdb_tv_id}
+                - Razón: El torrent no tiene metadata de TMDB asignada
+                - Solución: El uploader debe agregar el TMDB ID durante la subida`);
+            }
+        }
+
+        // Fallback: Si no tenemos imagen y está habilitado el fallback
+        if (!imageUrl && config.features.fallback_to_search) {
+            logger.info(`🔍 Intentando fallback: búsqueda por título`);
+            imageUrl = await searchTMDBByTitle(torrent);
+        }
+        
+        // Fallback final: imagen genérica por categoría
+        if (!imageUrl && config.features.fallback_generic_image) {
+            imageUrl = getGenericCategoryImage(torrent.category);
+            if (imageUrl) {
+                logger.info(`🖼️ Usando imagen genérica para categoría ${torrent.category}: ${imageUrl}`);
             }
         }
 
@@ -279,7 +412,7 @@ async function getPosterUrl(torrent) {
         return imageUrl;
         
     } catch (error) {
-        logger.warn(`⚠️ No se pudo obtener imagen para torrent ${torrent.torrent_id}: ${error.message}`);
+        logger.error(`⚠️ Error obteniendo imagen para torrent ${torrent.torrent_id}: ${error.message}`);
         return null;
     }
 }
