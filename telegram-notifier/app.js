@@ -280,7 +280,7 @@ async function searchTMDBByTitle(torrent) {
         if (searchData.results && searchData.results.length > 0) {
             const firstResult = searchData.results[0];
             if (firstResult.poster_path) {
-                const imageUrl = `https://image.tmdb.org/t/p/w500${firstResult.poster_path}`;
+                const imageUrl = `https://image.tmdb.org/t/p/w300${firstResult.poster_path}`;
                 logger.info(`✅ Imagen encontrada por búsqueda: ${imageUrl}`);
                 return imageUrl;
             }
@@ -403,7 +403,7 @@ async function getPosterUrl(torrent) {
                 logger.info(`🎬 Datos recibidos de TMDB: ${JSON.stringify(data, null, 2)}`);
                 
                 if (data.poster_path) {
-                    imageUrl = `https://image.tmdb.org/t/p/w500${data.poster_path}`;
+                    imageUrl = `https://image.tmdb.org/t/p/w300${data.poster_path}`;
                     logger.info(`✅ URL del póster construida: ${imageUrl}`);
                 } else {
                     logger.warn(`⚠️ No se encontró poster_path para película ID ${torrent.tmdb_movie_id}`);
@@ -429,7 +429,7 @@ async function getPosterUrl(torrent) {
                 logger.info(`📺 Datos recibidos de TMDB: ${JSON.stringify(data, null, 2)}`);
                 
                 if (data.poster_path) {
-                    imageUrl = `https://image.tmdb.org/t/p/w500${data.poster_path}`;
+                    imageUrl = `https://image.tmdb.org/t/p/w300${data.poster_path}`;
                     logger.info(`✅ URL del póster construida: ${imageUrl}`);
                 } else {
                     logger.warn(`⚠️ No se encontró poster_path para serie ID ${torrent.tmdb_tv_id}`);
