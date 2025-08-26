@@ -258,6 +258,25 @@ function buildDetailsMessage(torrent) {
     return msg;
 }
 
+// Construir caption único combinando header + detalles (HTML, usar \n para saltos)
+function buildSingleCaption(torrent) {
+    const categoryEmoji = getCategoryEmoji(torrent.category);
+    const categoryName = getCategoryName(torrent.category);
+    const shortTitle = wrapPlain(torrent.name, 60);
+
+    let caption = '';
+    caption += `<b>${escapeHtml(categoryEmoji + ' NUEVO TORRENT EN ' + categoryName)}</b>\n`;
+    caption += `\n<b>📁 ${escapeHtml(shortTitle)}</b>\n\n`;
+
+    // Agregar detalles en líneas
+    caption += buildDetailsMessage(torrent);
+
+    // Footer opcional (pequeño branding)
+    caption += `\n<b>${escapeHtml(config.tracker.name || config.tracker.base_url)}</b>`;
+
+    return caption;
+}
+
 function extractSource(name) {
     const sources = ['BluRay', 'WEBRip', 'WEB-DL', 'HDTV', 'DVDRip', 'BDRip', 'REMUX'];
     if (!name) return null;
@@ -643,21 +662,21 @@ app.post('/torrent-approved', async (req, res) => {
         const details = buildDetailsMessage(torrent);
 
         if (posterUrl) {
-            logger.info(`📸 Enviando foto con caption corto: ${posterUrl}`);
+            logger.info(`📸 Enviando foto con caption (todo en un solo mensaje): ${posterUrl}`);
             try {
+                // Construir caption completo (header + detalles) y truncar si es necesario
+                const singleCaption = buildSingleCaption(torrent);
+                const MAX_CAPTION = 1000; // seguro por debajo de límite de Telegram (~1024)
+                const finalCaption = singleCaption.length > MAX_CAPTION ? singleCaption.slice(0, MAX_CAPTION - 3) + '...' : singleCaption;
+
                 await bot.sendPhoto(config.telegram.chat_id, posterUrl, {
-                    caption: caption,
+                    caption: finalCaption,
                     parse_mode: parseMode
                 });
-                logger.info(`✅ Foto enviada, ahora enviando mensaje de detalle`);
-                // Enviar detalle como mensaje HTML separado
-                await bot.sendMessage(config.telegram.chat_id, details, {
-                    parse_mode: parseMode,
-                    disable_web_page_preview: disablePreview
-                });
+                logger.info(`✅ Foto + caption enviada exitosamente`);
             } catch (photoError) {
-                logger.error(`❌ Error enviando foto: ${photoError.message}`);
-                logger.info(`📝 Enviando detalle como fallback de texto`);
+                logger.error(`❌ Error enviando foto con caption: ${photoError.message}`);
+                logger.info(`📝 Fallback: enviando solo detalle como texto`);
                 await bot.sendMessage(config.telegram.chat_id, details, {
                     parse_mode: parseMode,
                     disable_web_page_preview: disablePreview
