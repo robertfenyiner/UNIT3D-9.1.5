@@ -59,25 +59,31 @@ app.use((req, res, next) => {
 // Función para obtener emoji por categoría
 function getCategoryEmoji(category) {
     const emojis = {
-        'Movies': '🎬',
         'Peliculas': '🎬',
+        'TV Series': '📺',
+        'Anime': '🎌',
+        'Asiáticas & Turcas': '🏮',
+        'Telenovelas': '📺',
+        'Musica': '🎵',
+        'Conciertos': '🎤',
+        'Eventos Deportivos': '⚽',
+        'Playlist_Collection': '🎵',
+        'Categoría PROHIBIDA': '🚫',
+        'XXX': '🔞',
+        'E-Books': '📚',
+        'Audiolibros': '🎧',
+        'Juegos': '🎮',
+        'Cursos': '🎓',
+        'Revistas & Periódicos': '📰',
+        'Comics & Manga': '📚',
+        // Soporte legacy para nombres en inglés
+        'Movies': '🎬',
         'TV': '📺',
         'TV Shows': '📺',
         'Series': '📺',
-        'Series de TV': '📺',
         'Music': '🎵',
-        'Música': '🎵',
         'Games': '🎮',
-        'Juegos': '🎮',
-        'Software': '💿',
-        'Books': '📚',
-        'Libros': '📚',
-        'Apps': '📱',
-        'Aplicaciones': '📱',
-        'Anime': '🎌',
-        'Documentary': '🎭',
-        'Documentales': '🎭',
-        'XXX': '🔞'
+        'Books': '📚'
     };
     return emojis[category] || '📦';
 }
@@ -85,25 +91,31 @@ function getCategoryEmoji(category) {
 // Función para obtener nombre legible de categoría
 function getCategoryName(category) {
     const names = {
-        'Movies': 'PELÍCULAS',
         'Peliculas': 'PELÍCULAS',
+        'TV Series': 'SERIES DE TV',
+        'Anime': 'ANIME',
+        'Asiáticas & Turcas': 'ASIÁTICAS & TURCAS',
+        'Telenovelas': 'TELENOVELAS',
+        'Musica': 'MÚSICA',
+        'Conciertos': 'CONCIERTOS',
+        'Eventos Deportivos': 'EVENTOS DEPORTIVOS',
+        'Playlist_Collection': 'COLECCIÓN PLAYLIST',
+        'Categoría PROHIBIDA': 'CATEGORÍA PROHIBIDA',
+        'XXX': 'XXX',
+        'E-Books': 'E-BOOKS',
+        'Audiolibros': 'AUDIOLIBROS',
+        'Juegos': 'JUEGOS',
+        'Cursos': 'CURSOS',
+        'Revistas & Periódicos': 'REVISTAS & PERIÓDICOS',
+        'Comics & Manga': 'COMICS & MANGA',
+        // Soporte legacy para nombres en inglés
+        'Movies': 'PELÍCULAS',
         'TV': 'SERIES',
         'TV Shows': 'SERIES',
         'Series': 'SERIES',
-        'Series de TV': 'SERIES',
         'Music': 'MÚSICA',
-        'Música': 'MÚSICA',
         'Games': 'JUEGOS',
-        'Juegos': 'JUEGOS',
-        'Software': 'SOFTWARE',
-        'Books': 'LIBROS',
-        'Libros': 'LIBROS',
-        'Apps': 'APLICACIONES',
-        'Aplicaciones': 'APLICACIONES',
-        'Anime': 'ANIME',
-        'Documentary': 'DOCUMENTALES',
-        'Documentales': 'DOCUMENTALES',
-        'XXX': 'XXX'
+        'Books': 'LIBROS'
     };
     return names[category] || category.toUpperCase();
 }
@@ -118,7 +130,7 @@ function formatMessage(torrent) {
     
     // Header con emoji de categoría y nombre de categoría
     message += categoryEmoji + ' NUEVO TORRENT EN ' + categoryName.toUpperCase() + '\n';
-    message += '━━━━━━━━━━━━━━━━━━━━━━━\n\n\n\n\n';
+    message += '━━━━━━━━━━━━━━━━━━━━━━━\n\n';
     
     // Información principal del torrent
     message += '📁 ' + torrent.name + '\n\n';
@@ -251,9 +263,12 @@ async function searchTMDBByTitle(torrent) {
         logger.info(`🔍 Buscando en TMDB por título: "${cleanTitle}"`);
         
         let searchUrl;
-        if (torrent.category === 'Movies' || torrent.category === 'Peliculas') {
+        const movieCategories = ['Movies', 'Peliculas'];
+        const tvCategories = ['TV', 'TV Shows', 'Series', 'Series de TV', 'TV Series', 'Anime', 'Asiáticas & Turcas', 'Telenovelas'];
+        
+        if (movieCategories.includes(torrent.category)) {
             searchUrl = `https://api.themoviedb.org/3/search/movie?api_key=${config.tmdb.api_key}&query=${encodeURIComponent(cleanTitle)}`;
-        } else if (torrent.category === 'TV' || torrent.category === 'TV Shows' || torrent.category === 'Series' || torrent.category === 'Series de TV') {
+        } else if (tvCategories.includes(torrent.category)) {
             searchUrl = `https://api.themoviedb.org/3/search/tv?api_key=${config.tmdb.api_key}&query=${encodeURIComponent(cleanTitle)}`;
         } else {
             return null;
@@ -312,22 +327,31 @@ function cleanTorrentTitle(torrentName) {
 
 // Función para obtener imagen genérica por categoría
 function getGenericCategoryImage(category) {
-    // URLs de imágenes genéricas usando una fuente más confiable
+    // URLs de imágenes genéricas para todas las categorías de tu tracker
     const genericImages = {
-        'Movies': 'https://picsum.photos/500/750',
         'Peliculas': 'https://picsum.photos/500/750',
+        'TV Series': 'https://picsum.photos/500/750',
+        'Anime': 'https://picsum.photos/500/750',
+        'Asiáticas & Turcas': 'https://picsum.photos/500/750',
+        'Telenovelas': 'https://picsum.photos/500/750',
+        'Musica': 'https://picsum.photos/500/750',
+        'Conciertos': 'https://picsum.photos/500/750',
+        'Eventos Deportivos': 'https://picsum.photos/500/750',
+        'Playlist_Collection': 'https://picsum.photos/500/750',
+        'XXX': 'https://picsum.photos/500/750',
+        'E-Books': 'https://picsum.photos/500/750',
+        'Audiolibros': 'https://picsum.photos/500/750',
+        'Juegos': 'https://picsum.photos/500/750',
+        'Cursos': 'https://picsum.photos/500/750',
+        'Revistas & Periódicos': 'https://picsum.photos/500/750',
+        'Comics & Manga': 'https://picsum.photos/500/750',
+        // Soporte legacy
+        'Movies': 'https://picsum.photos/500/750',
         'TV': 'https://picsum.photos/500/750',
         'TV Shows': 'https://picsum.photos/500/750',
-        'Series': 'https://picsum.photos/500/750',
-        'Series de TV': 'https://picsum.photos/500/750',
         'Music': 'https://picsum.photos/500/750',
-        'Música': 'https://picsum.photos/500/750',
         'Games': 'https://picsum.photos/500/750',
-        'Juegos': 'https://picsum.photos/500/750',
-        'Software': 'https://picsum.photos/500/750',
-        'Books': 'https://picsum.photos/500/750',
-        'Libros': 'https://picsum.photos/500/750',
-        'Anime': 'https://picsum.photos/500/750'
+        'Books': 'https://picsum.photos/500/750'
     };
     
     return genericImages[category] || 'https://picsum.photos/500/750';
@@ -336,8 +360,11 @@ function getGenericCategoryImage(category) {
 // Función para obtener URL del póster desde TMDB
 async function getPosterUrl(torrent) {
     try {
-        // Solo intentar obtener póster para películas y series
-        const supportedCategories = ['Movies', 'TV', 'TV Shows', 'Peliculas', 'Series', 'Series de TV'];
+        // Solo intentar obtener póster para películas y series (incluyendo todas las categorías de tu tracker)
+        const supportedCategories = [
+            'Movies', 'TV', 'TV Shows', 'Peliculas', 'Series', 'Series de TV',
+            'TV Series', 'Anime', 'Asiáticas & Turcas', 'Telenovelas'
+        ];
         if (!supportedCategories.includes(torrent.category)) {
             logger.info(`🚫 Categoría no soportada para imágenes: ${torrent.category}`);
             return null;
@@ -391,8 +418,9 @@ async function getPosterUrl(torrent) {
             }
         }
 
-        // Para series
-        if (torrent.category === 'TV' || torrent.category === 'TV Shows' || torrent.category === 'Series' || torrent.category === 'Series de TV') {
+        // Para series (incluyendo todas las variantes de tu tracker)
+        const seriesCategories = ['TV', 'TV Shows', 'Series', 'Series de TV', 'TV Series', 'Anime', 'Asiáticas & Turcas', 'Telenovelas'];
+        if (seriesCategories.includes(torrent.category)) {
             if (torrent.tmdb_tv_id && torrent.tmdb_tv_id > 0) {
                 logger.info(`📺 Buscando póster para serie TMDB ID: ${torrent.tmdb_tv_id}`);
                 const url = `https://api.themoviedb.org/3/tv/${torrent.tmdb_tv_id}?api_key=${config.tmdb.api_key}`;
@@ -407,9 +435,10 @@ async function getPosterUrl(torrent) {
                     logger.warn(`⚠️ No se encontró poster_path para serie ID ${torrent.tmdb_tv_id}`);
                 }
             } else {
-                logger.warn(`❌ SERIE SIN TMDB_TV_ID:
+                logger.warn(`❌ SERIE/TV SIN TMDB_TV_ID:
                 - Torrent ID: ${torrent.torrent_id}
                 - Nombre: ${torrent.name}
+                - Categoría: ${torrent.category}
                 - Valor tmdb_tv_id: ${torrent.tmdb_tv_id}
                 - Razón: El torrent no tiene metadata de TMDB asignada
                 - Solución: El uploader debe agregar el TMDB ID durante la subida`);
