@@ -731,7 +731,17 @@ app.post('/torrent-approved', async (req, res) => {
         const categoryEmoji = getCategoryEmoji(torrent.category);
         const categoryName = getCategoryName(torrent.category);
         const shortTitle = wrapPlain(torrent.name, 60);
-        const caption = `<b>${escapeHtml(categoryEmoji + ' NUEVO TORRENT EN ' + categoryName)}</b>\n\n<b>📁 ${escapeHtml(shortTitle)}</b>`;
+            const imageEmbed = {
+                title: `${categoryEmoji} NUEVO TORRENT EN ${categoryName}`,
+                color: 0x2ecc71,
+                fields: [
+                    { name: '📁 Título', value: shortTitle, inline: false },
+                    { name: '👤 Uploader', value: String(torrent.user || 'N/A'), inline: true },
+                    { name: '📂 Categoría', value: String(torrent.category || 'N/A'), inline: true },
+                    { name: '💾 Tamaño', value: String(torrent.size || 'N/A'), inline: true }
+                ]
+            };
+            const caption = `<b>${escapeHtml(imageEmbed.title)}</b>\n\n<b>📁 ${escapeHtml(shortTitle)}</b>`;
 
         const details = buildDetailsMessage(torrent);
 
