@@ -207,6 +207,67 @@ function extractQuality(name) {
     return null;
 }
 
+function extractSource(name) {
+    const sources = ['BluRay', 'WEBRip', 'WEB-DL', 'HDTV', 'DVDRip', 'BDRip', 'REMUX'];
+    if (!name) return null;
+    const nameUpper = name.toUpperCase();
+    for (const source of sources) {
+        if (nameUpper.includes(source.toUpperCase())) {
+            return source;
+        }
+    }
+    return null;
+}
+
+function extractCodec(name) {
+    const codecs = ['x265', 'x264', 'HEVC', 'H.265', 'H.264', 'AV1'];
+    if (!name) return null;
+    const nameUpper = name.toUpperCase();
+    for (const codec of codecs) {
+        if (nameUpper.includes(codec.toUpperCase())) {
+            return codec;
+        }
+    }
+    return null;
+}
+
+function extractYear(name) {
+    if (!name) return null;
+    const yearMatch = name.match(/(19|20)\d{2}/);
+    return yearMatch ? yearMatch[0] : null;
+}
+
+// Función para limpiar el título del torrent
+function cleanTorrentTitle(torrentName) {
+    try {
+        if (!torrentName) return null;
+        let title = torrentName
+            .replace(/\.(mkv|mp4|avi|mov|wmv|flv|webm)$/i, '') // extensiones
+            .replace(/\b(720p|1080p|2160p|4K|UHD|BluRay|WEBRip|WEB-DL|HDTV|DVDRip|BDRip|REMUX)\b/gi, '') // calidades
+            .replace(/\b(x264|x265|HEVC|H\.264|H\.265|AV1)\b/gi, '') // codecs
+            .replace(/\b(AAC|DTS|AC3|TrueHD|Atmos)\b/gi, '') // audio
+            .replace(/\.-\w+$/g, '') // grupos de release
+            .replace(/\[.*?\]/g, '') // corchetes
+            .replace(/\(.*?\)/g, '') // paréntesis
+            .replace(/-+/g, ' ') // guiones múltiples
+            .replace(/\.+/g, ' ') // puntos múltiples
+            .replace(/\s+/g, ' ') // espacios múltiples
+            .trim();
+
+        // Extraer solo hasta el año si está presente
+        const yearMatch = title.match(/^(.+?)\s+(19|20)\d{2}/);
+        if (yearMatch) {
+            title = yearMatch[1].trim();
+        }
+
+        return title;
+
+    } catch (error) {
+        logger.warn(`Error limpiando título: ${error.message}`);
+        return null;
+    }
+}
+
 
 // Helper para escapar caracteres HTML básicos
 function escapeHtml(str) {
