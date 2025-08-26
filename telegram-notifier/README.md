@@ -1,78 +1,143 @@
 # Telegram Notifier para UNIT3D
 
-Microservicio que envía notificaciones automáticas a Telegram cuando se aprueban torrents en UNIT3D.
+Microservicio que envía notificaciones automáticas a Telegram cuando se aprueban torrents en UNIT3D, con soporte para pósters de TMDB, categorías en español, y formato visual avanzado.
 
-## 🚀 Instalación Rápida
+## 🎯 Características
 
-### Opción A: Instalación Automática (Recomendada)
+- ✅ **Notificaciones automáticas** cuando se aprueban torrents
+- ✅ **Pósters de películas/series** desde TMDB API
+- ✅ **Categorías en español** completas de UNIT3D
+- ✅ **Fallback inteligente** para torrents sin metadata
+- ✅ **Formato visual avanzado** con emojis y separadores
+- ✅ **Servicio permanente** con systemd
+- ✅ **Logs detallados** para debugging
+- ✅ **API endpoints** para testing y administración
+
+## 🚀 Instalación Completa (Paso a Paso)
+
+### Paso 1: Preparación del Sistema
 ```bash
-# 1. Navegar al directorio
-cd /var/www/html/telegram-notifier
+# En tu servidor como root o con sudo
+cd /var/www/html
+git clone <tu-repositorio> telegram-notifier
+cd telegram-notifier
 
-# 2. Configurar con tus datos reales
-node scripts/fix-config.js
+# Instalar Node.js si no está instalado
+curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
+sudo apt-get install -y nodejs
 
-# 3. Desplegar automáticamente
-sudo bash scripts/deploy.sh
-
-# 4. Probar funcionamiento
-bash scripts/test-complete.sh
+# Verificar instalación
+node --version
+npm --version
 ```
 
-### Opción B: Instalación Manual
+### Paso 2: Instalación de Dependencias
 ```bash
-# 1. Instalar dependencias
+# Instalar dependencias del proyecto
 npm install
 
-# 2. Configurar
-cp config/config.example.json config/config.json
-nano config/config.json  # Agregar tu bot_token y chat_id
-
-# 3. Iniciar en desarrollo
-npm run dev
+# Dar permisos a scripts
+chmod +x scripts/*.sh
 ```
 
-## 📱 Configuración de Telegram
+### Paso 3: Configuración de Telegram
 
-### 1. Crear Bot de Telegram
+#### 3.1 Crear Bot de Telegram
 1. Habla con [@BotFather](https://t.me/BotFather) en Telegram
 2. Ejecuta `/newbot` y sigue las instrucciones
 3. Guarda el **Bot Token** (formato: `123456789:ABCdefGHIjklMNOpqrsTUVwxyz`)
 
-### 2. Obtener Chat ID
+#### 3.2 Obtener Chat ID
 - **Canal:** Agrega el bot como administrador, el ID será negativo (ej: `-1002354465967`)
 - **Grupo:** Agrega el bot al grupo y usa [@userinfobot](https://t.me/userinfobot)
-- **Chat privado:** ID positivo del usuario
 
-### 3. Configuración Mínima
-Edita `config/config.json`:
+#### 3.3 Obtener API Key de TMDB (Opcional pero recomendado)
+1. Ve a [https://www.themoviedb.org/settings/api](https://www.themoviedb.org/settings/api)
+2. Registra una cuenta gratuita
+3. Solicita una API key
+4. Guarda la API key para pósters automáticos
+
+### Paso 4: Configuración del Servicio
+```bash
+# Crear archivo de configuración
+cp config/config.example.json config/config.json
+
+# Editar con tus datos reales
+nano config/config.json
+```
+
+Configuración mínima en `config/config.json`:
 ```json
 {
   "telegram": {
-    "bot_token": "8447822656:AAG2OTaTBtfTcVsLLH7Wqivm1N8B82tiDaM",
-    "chat_id": "-1002354465967"
+    "bot_token": "TU_BOT_TOKEN_AQUI",
+    "chat_id": "TU_CHAT_ID_AQUI",
+    "parse_mode": "Markdown"
   },
   "tracker": {
-    "base_url": "https://lat-team.xyz"
+    "base_url": "https://tu-tracker.com",
+    "name": "TU-TRACKER"
+  },
+  "server": {
+    "port": 3001,
+    "host": "localhost"
+  },
+  "features": {
+    "include_imdb_link": true,
+    "include_tmdb_info": true,
+    "include_poster_images": true,
+    "mention_uploader": true,
+    "filter_categories": [],
+    "fallback_to_search": true,
+    "fallback_generic_image": false
+  },
+  "tmdb": {
+    "api_key": "TU_TMDB_API_KEY_AQUI"
   }
 }
 ```
 
-## 🎯 Integración con UNIT3D
-
-El sistema ya está integrado automáticamente. Cuando apruebes un torrent en tu panel de staff, el código en `app/Helpers/TorrentHelper.php` enviará automáticamente una notificación al microservicio.
-
-**Ubicación de la integración:** `TorrentHelper.php` líneas 155-170
-
-## 🧪 Pruebas y Verificación
-
-### Suite Completa de Pruebas
+### Paso 5: Configurar Servicio Permanente (systemd)
 ```bash
-# Ejecutar todas las pruebas automáticamente
-bash scripts/test-complete.sh
+# Crear archivo de servicio systemd
+sudo nano /etc/systemd/system/telegram-notifier.service
 ```
 
-### Pruebas Individuales
+Contenido del archivo:
+```ini
+[Unit]
+Description=Telegram Notifier for UNIT3D
+After=network.target
+
+[Service]
+Type=simple
+User=www-data
+WorkingDirectory=/var/www/html/telegram-notifier
+ExecStart=/usr/bin/node app.js
+Restart=always
+RestartSec=10
+Environment=NODE_ENV=production
+
+# Logging
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=telegram-notifier
+
+[Install]
+WantedBy=multi-user.target
+```
+
+```bash
+# Habilitar y iniciar el servicio
+sudo systemctl daemon-reload
+sudo systemctl enable telegram-notifier
+sudo systemctl start telegram-notifier
+
+# Verificar estado
+sudo systemctl status telegram-notifier
+```
+
+### Paso 6: Verificar Funcionamiento
 ```bash
 # 1. Health check
 curl http://localhost:3001/health
@@ -80,326 +145,253 @@ curl http://localhost:3001/health
 # 2. Mensaje de prueba a Telegram
 curl -X POST http://localhost:3001/test-telegram
 
-# 3. Simular torrent aprobado básico
+# 3. Simular notificación de torrent
 curl -X POST http://localhost:3001/torrent-approved \
   -H "Content-Type: application/json" \
   -d '{
     "torrent_id": 123456,
     "name": "Test.Movie.2024.1080p.BluRay.x264-TEST",
     "user": "testuser",
-    "category": "Movies",
-    "size": "8.5 GB"
-  }'
-
-# 4. Simular torrent con metadata completa
-curl -X POST http://localhost:3001/torrent-approved \
-  -H "Content-Type: application/json" \
-  -d '{
-    "torrent_id": 789012,
-    "name": "Avatar.The.Way.of.Water.2022.2160p.UHD.BluRay.x265",
-    "user": "uploader_pro",
-    "category": "Movies", 
-    "size": "25.4 GB",
-    "imdb": 1630029,
-    "tmdb_movie_id": 76600
-  }'
-
-# 5. Probar diferentes categorías
-curl -X POST http://localhost:3001/torrent-approved \
-  -H "Content-Type: application/json" \
-  -d '{
-    "torrent_id": 345678,
-    "name": "The.Last.of.Us.S01E01.2160p.WEB.H265",
-    "user": "tv_uploader",
-    "category": "TV",
-    "size": "4.2 GB"
+    "category": "Peliculas",
+    "size": "8.5 GB",
+    "imdb": 1234567,
+    "tmdb_movie_id": 550
   }'
 ```
 
-## 🔧 API Endpoints
-
-| Endpoint | Método | Descripción | Ejemplo |
-|----------|--------|-------------|---------|
-| `/health` | GET | Estado del servicio | Verificar que esté corriendo |
-| `/torrent-approved` | POST | Notificación de torrent aprobado | Llamado por UNIT3D automáticamente |
-| `/test-telegram` | POST | Mensaje de prueba | Verificar conexión con Telegram |
-| `/config/reload` | POST | Recargar configuración | Sin reiniciar el servicio |
-| `/stats` | GET | Estadísticas del servicio | Uptime, memoria, configuración |
-
-### Formato de Notificación de Torrent
-```json
-{
-  "torrent_id": 123456,
-  "name": "Movie.Name.2024.1080p.BluRay.x264",
-  "user": "uploader_username",
-  "category": "Movies",
-  "size": "8.5 GB",
-  "imdb": 1234567,
-  "tmdb_movie_id": 98765,
-  "tmdb_tv_id": null
+### Paso 7: Verificar Integración con UNIT3D
+La integración ya debería estar en `app/Helpers/TorrentHelper.php` en la línea 152+:
+```php
+try {
+    \Http::timeout(5)->post('http://localhost:3001/torrent-approved', [
+        'torrent_id' => $torrent->id,
+        'name' => $torrent->name,
+        'user' => $torrent->user->username,
+        'category' => $torrent->category->name ?? 'Unknown',
+        'size' => $torrent->getSize(),
+        'imdb' => $torrent->imdb,
+        'tmdb_movie_id' => $torrent->tmdb_movie_id,
+        'tmdb_tv_id' => $torrent->tmdb_tv_id,
+    ]);
+} catch (\Exception $e) {
+    \Log::warning('Telegram notification failed: ' . $e->getMessage());
 }
 ```
 
-## 📋 Gestión del Servicio (Producción)
+## 🔧 Comandos de Mantenimiento
 
-### Comandos de systemd
+### Después de Hacer Cambios en el Código
 ```bash
-# Ver estado
-systemctl status telegram-notifier
+# 1. Ir al directorio del proyecto
+cd /var/www/html/telegram-notifier
 
-# Iniciar/Parar/Reiniciar
-sudo systemctl start telegram-notifier
-sudo systemctl stop telegram-notifier
+# 2. Reiniciar el servicio para aplicar cambios
 sudo systemctl restart telegram-notifier
 
-# Logs en tiempo real
-journalctl -u telegram-notifier -f
+# 3. Verificar que esté funcionando
+sudo systemctl status telegram-notifier
 
-# Logs históricos
-journalctl -u telegram-notifier -n 50
-
-# Habilitar inicio automático
-sudo systemctl enable telegram-notifier
+# 4. Ver logs en tiempo real
+sudo journalctl -u telegram-notifier -f
 ```
 
-### Scripts Útiles
+### Comandos Útiles de Desarrollo
 ```bash
-# Configurar servicio systemd
-sudo ./scripts/setup-service.sh
+# Parar el servicio temporalmente
+sudo systemctl stop telegram-notifier
 
-# Validar configuración
-node scripts/configure.js
+# Ejecutar manualmente para debugging (modo desarrollo)
+node app.js
 
-# Reparar archivo config.json
-node scripts/fix-config.js
+# Recargar configuración sin reiniciar
+curl -X POST http://localhost:3001/config/reload
 
-# Deployment completo
-sudo bash scripts/deploy.sh
+# Ver logs recientes
+sudo journalctl -u telegram-notifier -n 50
 
-# Suite de pruebas
-bash scripts/test-complete.sh
+# Ver estadísticas del servicio
+curl -s http://localhost:3001/stats
 ```
 
-## 📁 Estructura del Proyecto
+### Gestión de Logs
+```bash
+# Logs en tiempo real
+sudo journalctl -u telegram-notifier -f
 
-```
-telegram-notifier/
-├── 📄 app.js                    # Aplicación principal Node.js
-├── 📄 package.json             # Dependencias y scripts npm
-├── 📄 README.md                # Esta documentación
-├── 📄 QUICK_START.md           # Guía rápida de instalación
-├── 📄 DEPLOY_INSTRUCTIONS.md   # Instrucciones específicas de servidor
-├── 📄 .gitignore              # Archivos a ignorar en git
-├── 📄 .env.example            # Variables de entorno de ejemplo
-│
-├── 📁 config/
-│   ├── config.json            # ⚠️ Configuración actual (no versionar)
-│   └── config.example.json    # Plantilla de configuración
-│
-├── 📁 scripts/
-│   ├── install.sh             # Instalación inicial
-│   ├── deploy.sh              # Deployment completo a producción
-│   ├── setup-service.sh       # Configurar servicio systemd
-│   ├── start.sh               # Iniciar en dev/prod
-│   ├── test-complete.sh       # ⭐ Suite completa de pruebas
-│   ├── configure.js           # Validar configuración
-│   ├── fix-config.js          # Reparar config.json
-│   ├── validate-json.js       # Diagnosticar JSON
-│   └── telegram-notifier.service # Template de systemd
-│
-├── 📁 logs/                    # Logs del servicio (auto-creado)
-│   ├── combined.log           # Todos los logs
-│   └── error.log              # Solo errores
-│
-├── 📁 services/               # Para extensiones futuras
-└── 📁 routes/                 # Para módulos de rutas adicionales
+# Logs históricos con filtro
+sudo journalctl -u telegram-notifier --since "1 hour ago"
+
+# Logs locales de la aplicación
+tail -f /var/www/html/telegram-notifier/logs/combined.log
+
+# Limpiar logs antiguos
+sudo journalctl --vacuum-time=7d
 ```
 
-## 💬 Formato de Mensajes en Telegram
-
-Los mensajes aparecerán en tu canal así:
+## 📱 Formato de Mensaje Final
 
 ```
-🎬 NUEVO TORRENT APROBADO
+🎬 NUEVO TORRENT EN PELÍCULAS
+━━━━━━━━━━━━━━━
 
-📁 Nombre: Avatar.The.Way.of.Water.2022.2160p.UHD.BluRay.x265
+📁 Avatar The Way of Water 2022 2160p UHD BluRay x265
+
 👤 Uploader: uploader_pro
-📂 Categoría: Movies
+📂 Categoría: Peliculas
 💾 Tamaño: 25.4 GB
+🎥 Calidad: 2160p
+💿 Fuente: BluRay
+🔧 Códec: x265
+📅 Año: 2022
 
-🔗 Ver Torrent
-🎭 IMDB
-🎬 TMDB
-
-🕒 25/8/2025, 15:57:13
+━━━━━━━━━━━━━━━
+🔗 ENLACES:
+• Descargar: 
+https://lat-team.xyz/torrents/123456
+• IMDB: https://imdb.com/title/tt1630029
+• TMDB: https://www.themoviedb.org/movie/76600
 ```
+*+ Póster de la película automáticamente*
 
-### Emojis por Categoría
-- 🎬 Movies
-- 📺 TV / TV Shows  
-- 🎵 Music
-- 🎮 Games
-- 💿 Software
-- 📚 Books
-- 📱 Apps
-- 🎌 Anime
-- 🎭 Documentary
-- 🔞 XXX
-- 📦 Otros
+## 🗂️ Categorías Soportadas
 
-## ⚙️ Configuración Avanzada
+El sistema reconoce todas las categorías de tu tracker:
 
-### Filtros por Categoría
-En `config/config.json`:
+- 🎬 **Peliculas** → API de TMDB Movies
+- 📺 **TV Series** → API de TMDB TV
+- 🎌 **Anime** → API de TMDB TV
+- 🏮 **Asiáticas & Turcas** → API de TMDB TV  
+- 📺 **Telenovelas** → API de TMDB TV
+- 🎵 **Musica**
+- 🎤 **Conciertos**
+- ⚽ **Eventos Deportivos**
+- 🔞 **XXX**
+- 📚 **E-Books**
+- 🎧 **Audiolibros**
+- 🎮 **Juegos**
+- 🎓 **Cursos**
+- 📰 **Revistas & Periódicos**
+- 📚 **Comics & Manga**
+
+## 🎭 Funcionalidades TMDB
+
+### Pósters Automáticos
+- ✅ **Con TMDB ID**: Póster directo desde TMDB
+- 🔍 **Sin TMDB ID**: Búsqueda automática por título
+- 🖼️ **Sin resultados**: Imagen genérica por categoría (opcional)
+- 📏 **Tamaño**: 185px de ancho (compacto para Telegram)
+
+### Fallback Inteligente
 ```json
 {
   "features": {
-    "filter_categories": ["Movies", "TV Shows"],  // Solo estas categorías
-    "filter_categories": [],                      // Todas las categorías
-    "include_imdb_link": true,
-    "include_tmdb_info": true,
-    "mention_uploader": true
+    "fallback_to_search": true,      // Buscar por título si no hay TMDB ID
+    "fallback_generic_image": false  // Imagen genérica si no encuentra nada
   }
 }
 ```
 
-### Variables de Entorno (Alternativa)
-Puedes usar `.env` en lugar de `config.json`:
-```bash
-TELEGRAM_BOT_TOKEN=8447822656:AAG2OTaTBtfTcVsLLH7Wqivm1N8B82tiDaM
-TELEGRAM_CHAT_ID=-1002354465967
-TRACKER_BASE_URL=https://lat-team.xyz
-SERVER_PORT=3001
-```
-
-## 🐛 Solución de Problemas
+## 🐛 Solución de Problemas Comunes
 
 ### El servicio no inicia
 ```bash
 # Verificar logs
-journalctl -u telegram-notifier -n 20
+sudo journalctl -u telegram-notifier -n 20
 
-# Probar manualmente
-cd /var/www/html/telegram-notifier
-npm start
+# Verificar archivo de configuración
+node -e "console.log(JSON.parse(require('fs').readFileSync('config/config.json')))"
 
-# Verificar configuración
-node scripts/configure.js
-
-# Verificar puerto
-netstat -tlnp | grep 3001
+# Verificar puerto ocupado
+sudo netstat -tlnp | grep 3001
 ```
 
-### Bot no envía mensajes
+### Las imágenes no aparecen
 ```bash
-# Verificar configuración
-node scripts/configure.js
+# Verificar logs detallados
+sudo journalctl -u telegram-notifier -f
 
-# Probar conexión manualmente
-curl -X POST http://localhost:3001/test-telegram
+# Verificar API key de TMDB
+curl "https://api.themoviedb.org/3/configuration?api_key=TU_API_KEY"
 
-# Verificar que el bot esté en el canal
-# Verificar que el chat_id sea correcto (negativo para canales)
+# Probar con torrent que tenga TMDB ID
 ```
 
-### Notificaciones no llegan desde UNIT3D
-1. Verificar que UNIT3D pueda conectar a localhost:3001
-2. Revisar logs de Laravel: `storage/logs/laravel.log`
-3. Verificar que el código esté en `TorrentHelper.php`
-4. Probar manualmente la aprobación de un torrent
-
-### Problemas de permisos
+### No llegan notificaciones desde UNIT3D
 ```bash
-sudo chown -R www-data:www-data /var/www/html/telegram-notifier
-sudo chmod +x /var/www/html/telegram-notifier/scripts/*.sh
+# Verificar integración en TorrentHelper.php
+grep -n "telegram" /var/www/html/app/Helpers/TorrentHelper.php
+
+# Verificar logs de Laravel
+tail -f /var/www/html/storage/logs/laravel.log
+
+# Probar conexión local
+curl http://localhost:3001/health
 ```
 
-## 📊 Monitoreo y Logs
+## 🔒 Seguridad y Rendimiento
 
-### Logs del Sistema
+- ✅ Servicio solo acepta conexiones desde localhost
+- ✅ Timeout de 5 segundos en requests HTTP  
+- ✅ Rate limiting automático para API de TMDB
+- ✅ Validación de datos de entrada
+- ✅ Logs sin información sensible
+- ✅ Manejo robusto de errores
+- ✅ Reinicio automático en caso de fallos
+
+## 📊 Monitoreo
+
+### Verificar Estado del Servicio
 ```bash
-# Logs en tiempo real
-journalctl -u telegram-notifier -f
-
-# Logs históricos
-journalctl -u telegram-notifier --since "1 hour ago"
-
-# Logs con filtro
-journalctl -u telegram-notifier | grep ERROR
-```
-
-### Logs de la Aplicación
-```bash
-# Ver logs locales
-tail -f logs/combined.log
-tail -f logs/error.log
-
-# Logs con timestamp
-cat logs/combined.log | grep "$(date +%Y-%m-%d)"
-```
-
-### Métricas
-```bash
-# Estadísticas del servicio
-curl -s http://localhost:3001/stats | python3 -m json.tool
+# Estado general
+sudo systemctl status telegram-notifier
 
 # Uso de memoria
 ps aux | grep "node app.js"
 
-# Conexiones de red
-netstat -an | grep 3001
+# Estadísticas detalladas
+curl -s http://localhost:3001/stats | python3 -m json.tool
 ```
 
-## 🔒 Seguridad
+### Alertas Automáticas
+El servicio registra errores en syslog. Puedes configurar alertas:
+```bash
+# Monitorear errores críticos
+sudo journalctl -u telegram-notifier -p err -f
+```
 
-- ✅ Solo acepta conexiones desde localhost por defecto
-- ✅ No almacena tokens sensibles en logs
-- ✅ Timeout de 5 segundos en requests HTTP
-- ✅ Validación de datos entrantes
-- ✅ Manejo seguro de errores
-- ✅ Logs con niveles de verbosidad
+## 🚀 Después de Reinicio del Servidor
 
-## 🚀 Extensibilidad
+El servicio está configurado para iniciarse automáticamente, pero puedes verificar:
+```bash
+# Verificar que esté corriendo después del reinicio
+sudo systemctl status telegram-notifier
 
-### Agregar más plataformas
-El diseño modular permite agregar fácilmente:
-- Discord notifications
-- Slack integration  
-- Email notifications
-- Webhook notifications
+# Si no está corriendo, iniciarlo
+sudo systemctl start telegram-notifier
 
-### Personalizar mensajes
-Editar la función `formatMessage()` en `app.js` para cambiar:
-- Formato de los mensajes
-- Campos mostrados
-- Estilo de los emojis
-- Enlaces adicionales
+# Ver logs del inicio
+sudo journalctl -u telegram-notifier --since "10 minutes ago"
+```
 
-## ✅ Lista de Verificación de Funcionamiento
+## ✅ Lista de Verificación Completa
 
-- [ ] Node.js 14+ instalado
-- [ ] Bot de Telegram creado y configurado
-- [ ] Chat ID obtenido correctamente
-- [ ] Configuración en `config/config.json` válida
-- [ ] Servicio systemd corriendo
-- [ ] Puerto 3001 accesible
+- [ ] Node.js 16+ instalado
+- [ ] Dependencias npm instaladas
+- [ ] Bot de Telegram creado
+- [ ] Chat ID obtenido correctamente  
+- [ ] TMDB API key configurada (opcional)
+- [ ] `config/config.json` configurado
+- [ ] Servicio systemd creado y habilitado
+- [ ] Servicio corriendo en puerto 3001
 - [ ] Health check responde OK
-- [ ] Mensaje de prueba enviado exitosamente
-- [ ] Simulación de torrent funciona
-- [ ] Código agregado en `TorrentHelper.php`
-- [ ] Logs del servicio sin errores
+- [ ] Mensaje de prueba enviado a Telegram
+- [ ] Integración en `TorrentHelper.php` presente
 - [ ] Torrent real aprobado genera notificación
-
-## 📞 Soporte
-
-Si tienes problemas:
-
-1. **Ejecuta las pruebas:** `bash scripts/test-complete.sh`
-2. **Revisa logs:** `journalctl -u telegram-notifier -f`
-3. **Verifica configuración:** `node scripts/configure.js`
-4. **Consulta documentación:** `README.md`, `QUICK_START.md`
-5. **Validar integración:** Aprobar torrent real en UNIT3D
+- [ ] Pósters aparecen para torrents con TMDB
+- [ ] Logs sin errores críticos
 
 ---
 
-**🎉 ¡Disfruta tus notificaciones automáticas de Telegram!**
+**🎉 ¡Tu notificador de Telegram está listo y funcionando!**
+
+Para soporte, revisar logs con: `sudo journalctl -u telegram-notifier -f`
