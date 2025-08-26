@@ -643,6 +643,46 @@ function shouldNotify(torrent) {
     return true;
 }
 
+// Construir embed reutilizable para Discord (mismo formato que /discord/torrent-approved)
+function buildDiscordEmbed(torrent) {
+    const title = `${getCategoryEmoji(torrent.category)} NUEVO TORRENT EN ${getCategoryName(torrent.category)}`;
+    const shortTitle = wrapPlain(torrent.name, 80);
+
+    const fields = [];
+    fields.push({ name: '📁 Título', value: shortTitle, inline: false });
+    fields.push({ name: '👤 Uploader', value: String(torrent.user || 'N/A'), inline: true });
+    fields.push({ name: '📂 Categoría', value: String(torrent.category || 'N/A'), inline: true });
+    fields.push({ name: '💾 Tamaño', value: String(torrent.size || 'N/A'), inline: true });
+
+    if (torrent.name) {
+        const quality = extractQuality(torrent.name);
+        const source = extractSource(torrent.name);
+        const codec = extractCodec(torrent.name);
+        const year = extractYear(torrent.name);
+        if (quality) fields.push({ name: '🎞️ Calidad', value: String(quality), inline: true });
+        if (source) fields.push({ name: '💿 Fuente', value: String(source), inline: true });
+        if (codec) fields.push({ name: '🔧 Códec', value: String(codec), inline: true });
+        if (year) fields.push({ name: '📅 Año', value: String(year), inline: true });
+    }
+
+    const links = [];
+    links.push(`[Descargar](${config.tracker.base_url}/torrents/${torrent.torrent_id})`);
+    if (config.features.include_imdb_link && torrent.imdb && torrent.imdb > 0) links.push(`[IMDB](https://imdb.com/title/tt${String(torrent.imdb).padStart(7,'0')})`);
+    if (config.features.include_tmdb_info && torrent.tmdb_movie_id && torrent.tmdb_movie_id > 0) links.push(`[TMDB](https://www.themoviedb.org/movie/${torrent.tmdb_movie_id})`);
+
+    fields.push({ name: '🔗 Enlaces', value: links.join(' • ') || 'N/A', inline: false });
+
+    const embed = {
+        title: title,
+        description: undefined,
+        color: 0x2ecc71,
+        fields: fields,
+        timestamp: new Date().toISOString()
+    };
+
+    return embed;
+}
+
 // ENDPOINTS
 
 // Health check
@@ -755,6 +795,43 @@ app.post('/torrent-approved', async (req, res) => {
             message: 'Notificación enviada correctamente',
             torrent_id: torrent.torrent_id
         });
+        
+        // --- Forward to Discord if configured ---
+        try {
+            const discordWebhook = (config.discord && config.discord.webhook_url) ? config.discord.webhook_url : (torrent.webhook_url || null);
+            if (discordWebhook) {
+                logger.info(`🔁 Enviando notificación también a Discord: ${discordWebhook}`);
+                const embed = buildDiscordEmbed(torrent);
+
+                // attempt attachment if we have posterUrl and resizing configured
+                if (posterUrl && config.features && config.features.poster_max_width) {
+                    try {
+                        const maxWidth = parseInt(config.features.poster_max_width, 10) || 320;
+                        const imgBuffer = await downloadImageBuffer(posterUrl);
+                        const resized = await resizeImageBuffer(imgBuffer, maxWidth);
+                        const filename = `poster_${torrent.torrent_id}.jpg`;
+                        embed.image = { url: `attachment://${filename}` };
+                        const payload = { embeds: [embed] };
+                        const sendResult = await sendDiscordWebhook(discordWebhook, payload, resized, filename);
+                        logger.info('✅ Discord: notificación enviada con attachment', sendResult);
+                    } catch (dErr) {
+                        logger.warn('⚠️ Discord: fallo al adjuntar imagen, enviando embed con URL: ' + dErr.message);
+                        embed.image = posterUrl ? { url: posterUrl } : undefined;
+                        const payload = { embeds: [embed] };
+                        const sendResult = await sendDiscordWebhook(discordWebhook, payload, null, null);
+                        logger.info('✅ Discord: notificación enviada (fallback)', sendResult);
+                    }
+                } else {
+                    // send embed without attachment
+                    embed.image = posterUrl ? { url: posterUrl } : undefined;
+                    const payload = { embeds: [embed] };
+                    const sendResult = await sendDiscordWebhook(discordWebhook, payload, null, null);
+                    logger.info('✅ Discord: notificación enviada', sendResult);
+                }
+            }
+        } catch (err) {
+            logger.error('❌ Error forwarding to Discord: ' + err.message, { error: err.stack });
+        }
         
     } catch (error) {
         logger.error(`❌ Error enviando notificación: ${error.message}`, { 
