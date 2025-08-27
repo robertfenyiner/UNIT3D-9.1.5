@@ -62,13 +62,26 @@ TEMP_SCRIPT="/tmp/install-complete-modified.sh"
 cp "$SCRIPT_DIR/install-complete.sh" "$TEMP_SCRIPT"
 
 # Reemplazar la lógica de copia de archivos en el script temporal
-sed -i 's|# Copiar archivos del proyecto (asumiendo que están en el directorio actual)|# Copiar archivos del proyecto|g' "$TEMP_SCRIPT"
-sed -i 's|if \[ -f "package.json" \] && \[ -f "app.js" \]; then|if [ -f "'"$PROJECT_DIR"'/package.json" ] && [ -f "'"$PROJECT_DIR"'/app.js" ]; then|g' "$TEMP_SCRIPT"
-sed -i 's|    # Copiar todos los archivos necesarios|    # Copiar todos los archivos necesarios|g' "$TEMP_SCRIPT"
-sed -i 's|    sudo cp -r . /var/www/html/image-service/|    sudo cp -r "'"$PROJECT_DIR"'"/* /var/www/html/image-service/|g' "$TEMP_SCRIPT"
-sed -i 's|else|elif [ -f "'"$PROJECT_DIR"'/package.json" ] && [ -f "'"$PROJECT_DIR"'/app.js" ]; then|g' "$TEMP_SCRIPT"
-sed -i 's|    print_error "No se encontraron los archivos del proyecto (package.json, app.js)"|    print_error "No se encontraron los archivos del proyecto|g' "$TEMP_SCRIPT"
-sed -i 's|    echo "Asegúrate de ejecutar este script desde el directorio del proyecto image-service"|    echo "Los archivos del proyecto están en: '"$PROJECT_DIR"'"|g' "$TEMP_SCRIPT"
+# Primero, reemplazar el comentario
+sed -i 's|# Copiar archivos del proyecto.*|# Copiar archivos del proyecto|g' "$TEMP_SCRIPT"
+
+# Reemplazar la condición del primer if
+sed -i 's|if \[ -f "package\.json" \] \&\& \[ -f "app\.js" \]; then|if [ -f "'"$PROJECT_DIR"'/package.json" ] \&\& [ -f "'"$PROJECT_DIR"'/app.js" ]; then|g' "$TEMP_SCRIPT"
+
+# Reemplazar SOURCE_DIR en el primer bloque
+sed -i 's|SOURCE_DIR="\$(pwd)"|SOURCE_DIR="'"$PROJECT_DIR"'"|g' "$TEMP_SCRIPT"
+
+# Reemplazar el elif existente para que use PROJECT_DIR también
+sed -i 's|elif \[ -f "\.\./package\.json" \] \&\& \[ -f "\.\./app\.js" \]; then|elif [ -f "'"$PROJECT_DIR"'/package.json" ] \&\& [ -f "'"$PROJECT_DIR"'/app.js" ]; then|g' "$TEMP_SCRIPT"
+
+# Reemplazar SOURCE_DIR en el elif bloque
+sed -i 's|SOURCE_DIR="\$(dirname \$(pwd))"|SOURCE_DIR="'"$PROJECT_DIR"'"|g' "$TEMP_SCRIPT"
+
+# Eliminar el else y su bloque, ya que ahora siempre usamos PROJECT_DIR
+sed -i '/else/,/fi/d' "$TEMP_SCRIPT"
+
+# Ajustar el cp command
+sed -i 's|sudo cp -r "\$SOURCE_DIR"/\* /var/www/html/image-service/|sudo cp -r "'"$PROJECT_DIR"'"/* /var/www/html/image-service/|g' "$TEMP_SCRIPT"
 
 print_step "1" "Ejecutando instalación completa..."
 
