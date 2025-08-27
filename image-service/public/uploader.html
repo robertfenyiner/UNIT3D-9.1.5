@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>UNIT3D Image Uploader</title>
+    <title>Lat-team image uploader</title>
     <style>
         * {
             margin: 0;
@@ -37,8 +37,21 @@
 
         .header h1 {
             color: #333;
-            font-size: 2.5em;
-            margin-bottom: 10px;
+            font-size: 2.2em;
+            margin-bottom: 6px;
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .header .logo img {
+            width: 56px;
+            height: 56px;
+            object-fit: contain;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+            background: white;
+            padding: 6px;
         }
 
         .header p {
@@ -272,7 +285,10 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>🖼️ UNIT3D Image Uploader</h1>
+            <h1>
+                <span class="logo"><img src="https://lat-team.com/img/logo.png" alt="Lat-team logo"></span>
+                Lat-team image uploader
+            </h1>
             <p>Sube tus imágenes para usarlas en descripciones de torrents</p>
         </div>
 

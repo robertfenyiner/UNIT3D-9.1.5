@@ -2,7 +2,7 @@ const express = require('express');
 const fs = require('fs');
 const path = require('path');
 const { uploadLimiter } = require('../middleware/rateLimit');
-const { upload, handleMulterError, validateUpload, cleanupTemp } = require('../middleware/upload');
+const { upload, single, handleMulterError, validateUpload, cleanupTemp } = require('../middleware/upload');
 const imageProcessor = require('../services/imageProcessor');
 const config = require('../config/config.json');
 const logger = require('../services/logger');
@@ -16,170 +16,190 @@ router.use(uploadLimiter);
  * POST /upload
  * Subir una o múltiples imágenes
  */
-router.post('/', 
+// Reusable handler to process files present in req.files
+async function processUploadFiles(req, res) {
+    try {
+        const startTime = Date.now();
+        const results = [];
+        const errors = [];
+
+        // Procesar cada archivo
+        for (const file of req.files) {
+            try {
+                // Leer archivo temporal
+                const fileBuffer = await fs.promises.readFile(file.path);
+
+                // Validar imagen
+                const validation = await imageProcessor.validateImage(fileBuffer, file.originalname);
+                if (!validation.valid) {
+                    errors.push({
+                        file: file.originalname,
+                        error: validation.error
+                    });
+                    continue;
+                }
+
+                // Procesar imagen
+                const processed = await imageProcessor.processImage(fileBuffer, file.originalname);
+
+                // Generar URLs públicas
+                const baseUrl = config.storage.publicUrl;
+                const imageUrl = `${baseUrl}/${processed.processed.fileName}`;
+                const thumbnailUrl = processed.thumbnail ?
+                    `${baseUrl}/thumbs/${processed.thumbnail.fileName}` : null;
+
+                // Preparar resultado
+                const result = {
+                    success: true,
+                    file: {
+                        original: file.originalname,
+                        filename: processed.processed.fileName,
+                        size: processed.processed.size,
+                        width: processed.processed.width,
+                        height: processed.processed.height,
+                        format: processed.processed.format
+                    },
+                    urls: {
+                        image: imageUrl,
+                        thumbnail: thumbnailUrl,
+                        // URLs para BBCode
+                        bbcode: `[img]${imageUrl}[/img]`,
+                        bbcodeThumb: thumbnailUrl ? `[url=${imageUrl}][img]${thumbnailUrl}[/img][/url]` : null
+                    },
+                    stats: {
+                        originalSize: processed.original.size,
+                        finalSize: processed.processed.size,
+                        compression: processed.processed.compression,
+                        processingTime: processed.processing.timeMs
+                    }
+                };
+
+                results.push(result);
+
+            } catch (error) {
+                logger.logError('Error processing file', error, {
+                    filename: file.originalname,
+                    mimetype: file.mimetype,
+                    size: file.size
+                });
+
+                errors.push({
+                    file: file.originalname,
+                    error: error.message
+                });
+            } finally {
+                // Limpiar archivo temporal
+                if (fs.existsSync(file.path)) {
+                    await fs.promises.unlink(file.path);
+                }
+            }
+        }
+
+        const totalTime = Date.now() - startTime;
+
+        // Preparar respuesta
+        const response = {
+            success: results.length > 0,
+            message: `Procesados ${results.length} de ${req.files.length} archivos`,
+            totalFiles: req.files.length,
+            successfulUploads: results.length,
+            errors: errors.length,
+            data: results,
+            processingTime: totalTime
+        };
+
+        if (errors.length > 0) {
+            response.errors = errors;
+        }
+
+        // Log del resultado
+        logger.logUpload('Upload completed', {
+            totalFiles: req.files.length,
+            successful: results.length,
+            errors: errors.length,
+            totalTime: totalTime + 'ms',
+            ip: req.ip
+        });
+
+        // Retornar respuesta compatible con imgbb
+        if (results.length === 1 && errors.length === 0) {
+            // Para compatibilidad con imgbb, formato simplificado para una imagen
+            const result = results[0];
+            return res.json({
+                success: true,
+                data: {
+                    id: path.parse(result.file.filename).name,
+                    title: result.file.original,
+                    url_viewer: result.urls.image,
+                    url: result.urls.image,
+                    display_url: result.urls.image,
+                    width: result.file.width,
+                    height: result.file.height,
+                    size: result.file.size,
+                    time: Math.floor(Date.now() / 1000),
+                    expiration: 0, // Sin expiración
+                    image: {
+                        filename: result.file.filename,
+                        name: result.file.original,
+                        mime: `image/${result.file.format}`,
+                        extension: result.file.format,
+                        url: result.urls.image
+                    },
+                    thumb: result.urls.thumbnail ? {
+                        filename: result.urls.thumbnail.split('/').pop(),
+                        name: result.file.original + '_thumb',
+                        mime: 'image/jpeg',
+                        extension: 'jpg',
+                        url: result.urls.thumbnail
+                    } : null,
+                    // Campos adicionales para compatibilidad
+                    bbcode_full: result.urls.bbcode,
+                    bbcode_embed: result.urls.bbcode,
+                    bbcode_thumbnail: result.urls.bbcodeThumb || result.urls.bbcode
+                }
+            });
+        }
+
+        // Para múltiples archivos
+        res.json(response);
+
+    } catch (error) {
+        logger.logError('Upload endpoint error', error, {
+            ip: req.ip,
+            filesCount: req.files ? req.files.length : 0
+        });
+
+        res.status(500).json({
+            success: false,
+            error: 'Internal server error',
+            message: 'Error interno procesando la subida'
+        });
+    }
+}
+
+router.post('/',
     cleanupTemp,
     upload,
     handleMulterError,
     validateUpload,
-    async (req, res) => {
-        try {
-            const startTime = Date.now();
-            const results = [];
-            const errors = [];
-            
-            // Procesar cada archivo
-            for (const file of req.files) {
-                try {
-                    // Leer archivo temporal
-                    const fileBuffer = await fs.promises.readFile(file.path);
-                    
-                    // Validar imagen
-                    const validation = await imageProcessor.validateImage(fileBuffer, file.originalname);
-                    if (!validation.valid) {
-                        errors.push({
-                            file: file.originalname,
-                            error: validation.error
-                        });
-                        continue;
-                    }
-                    
-                    // Procesar imagen
-                    const processed = await imageProcessor.processImage(fileBuffer, file.originalname);
-                    
-                    // Generar URLs públicas
-                    const baseUrl = config.storage.publicUrl;
-                    const imageUrl = `${baseUrl}/${processed.processed.fileName}`;
-                    const thumbnailUrl = processed.thumbnail ? 
-                        `${baseUrl}/thumbs/${processed.thumbnail.fileName}` : null;
-                    
-                    // Preparar resultado
-                    const result = {
-                        success: true,
-                        file: {
-                            original: file.originalname,
-                            filename: processed.processed.fileName,
-                            size: processed.processed.size,
-                            width: processed.processed.width,
-                            height: processed.processed.height,
-                            format: processed.processed.format
-                        },
-                        urls: {
-                            image: imageUrl,
-                            thumbnail: thumbnailUrl,
-                            // URLs para BBCode
-                            bbcode: `[img]${imageUrl}[/img]`,
-                            bbcodeThumb: thumbnailUrl ? `[url=${imageUrl}][img]${thumbnailUrl}[/img][/url]` : null
-                        },
-                        stats: {
-                            originalSize: processed.original.size,
-                            finalSize: processed.processed.size,
-                            compression: processed.processed.compression,
-                            processingTime: processed.processing.timeMs
-                        }
-                    };
-                    
-                    results.push(result);
-                    
-                } catch (error) {
-                    logger.logError('Error processing file', error, {
-                        filename: file.originalname,
-                        mimetype: file.mimetype,
-                        size: file.size
-                    });
-                    
-                    errors.push({
-                        file: file.originalname,
-                        error: error.message
-                    });
-                } finally {
-                    // Limpiar archivo temporal
-                    if (fs.existsSync(file.path)) {
-                        await fs.promises.unlink(file.path);
-                    }
-                }
-            }
-            
-            const totalTime = Date.now() - startTime;
-            
-            // Preparar respuesta
-            const response = {
-                success: results.length > 0,
-                message: `Procesados ${results.length} de ${req.files.length} archivos`,
-                totalFiles: req.files.length,
-                successfulUploads: results.length,
-                errors: errors.length,
-                data: results,
-                processingTime: totalTime
-            };
-            
-            if (errors.length > 0) {
-                response.errors = errors;
-            }
-            
-            // Log del resultado
-            logger.logUpload('Upload completed', {
-                totalFiles: req.files.length,
-                successful: results.length,
-                errors: errors.length,
-                totalTime: totalTime + 'ms',
-                ip: req.ip
-            });
-            
-            // Retornar respuesta compatible con imgbb
-            if (results.length === 1 && errors.length === 0) {
-                // Para compatibilidad con imgbb, formato simplificado para una imagen
-                const result = results[0];
-                return res.json({
-                    success: true,
-                    data: {
-                        id: path.parse(result.file.filename).name,
-                        title: result.file.original,
-                        url_viewer: result.urls.image,
-                        url: result.urls.image,
-                        display_url: result.urls.image,
-                        width: result.file.width,
-                        height: result.file.height,
-                        size: result.file.size,
-                        time: Math.floor(Date.now() / 1000),
-                        expiration: 0, // Sin expiración
-                        image: {
-                            filename: result.file.filename,
-                            name: result.file.original,
-                            mime: `image/${result.file.format}`,
-                            extension: result.file.format,
-                            url: result.urls.image
-                        },
-                        thumb: result.urls.thumbnail ? {
-                            filename: result.urls.thumbnail.split('/').pop(),
-                            name: result.file.original + '_thumb',
-                            mime: 'image/jpeg',
-                            extension: 'jpg',
-                            url: result.urls.thumbnail
-                        } : null,
-                        // Campos adicionales para compatibilidad
-                        bbcode_full: result.urls.bbcode,
-                        bbcode_embed: result.urls.bbcode,
-                        bbcode_thumbnail: result.urls.bbcodeThumb || result.urls.bbcode
-                    }
-                });
-            }
-            
-            // Para múltiples archivos
-            res.json(response);
-            
-        } catch (error) {
-            logger.logError('Upload endpoint error', error, {
-                ip: req.ip,
-                filesCount: req.files ? req.files.length : 0
-            });
-            
-            res.status(500).json({
-                success: false,
-                error: 'Internal server error',
-                message: 'Error interno procesando la subida'
-            });
+    processUploadFiles
+);
+
+// POST /upload/single - compatibilidad con clientes que envían field 'image' (single file)
+router.post('/single',
+    cleanupTemp,
+    single,
+    handleMulterError,
+    // map single file into req.files to reuse the same processing logic
+    (req, res, next) => {
+        if (!req.file) {
+            return res.status(400).json({ success: false, error: 'No file uploaded', message: 'Se requiere un archivo en el campo image' });
         }
-    }
+        req.files = [req.file];
+        next();
+    },
+    validateUpload,
+    processUploadFiles
 );
 
 /**

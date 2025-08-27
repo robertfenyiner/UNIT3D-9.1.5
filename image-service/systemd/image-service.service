@@ -1,0 +1,16 @@
+[Unit]
+Description=UNIT3D Image Service
+After=network.target rclone-onedrive.service
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/html/image-service
+Environment=NODE_ENV=production
+ExecStart=/usr/bin/node /var/www/html/image-service/app.js
+Restart=on-failure
+RestartSec=5s
+
+[Install]
+WantedBy=multi-user.target
