@@ -195,4 +195,166 @@ Si quieres, actualizo el repositorio añadiendo ejemplos de `systemd` unit files
 ---
 
 **Estado:** documentación actualizada para reflejar configuración y pasos usados en el despliegue.
+
+## 🚀 Guía Rápida de Configuración con OneDrive
+
+### Paso 1: Ejecutar la configuración completa
+```bash
+cd /var/www/html/image-service
+sudo bash scripts/setup-complete.sh
+```
+
+### Paso 2: Verificar que todo funciona
+```bash
+sudo bash scripts/check-service.sh
+```
+
+### Paso 3: Probar la subida de imágenes
+```bash
+# Subir una imagen de prueba
+curl -X POST -F "images=@/ruta/a/tu/imagen.jpg" http://216.9.226.186:3002/upload
+
+# Verificar health check
+curl http://216.9.226.186:3002/health
+```
+
+### Paso 4: Configurar monitoreo automático (opcional)
+```bash
+# Agregar al crontab para monitoreo cada 5 minutos
+echo "*/5 * * * * /var/www/html/image-service/scripts/monitor-rclone.sh" | sudo crontab -
+```
+
+## 🔧 Solución de Problemas Comunes
+
+### Problema: "Mount point no está montado"
+```bash
+# Reiniciar el servicio de rclone
+sudo systemctl restart rclone-onedrive.service
+
+# Verificar logs
+sudo journalctl -u rclone-onedrive.service -f
+```
+
+### Problema: "Error conectando con OneDrive"
+```bash
+# Verificar configuración de rclone
+rclone config show onedrive-images
+
+# Probar conexión
+rclone lsd onedrive-images:
+
+# Reconfigurar si es necesario
+rclone config
+```
+
+### Problema: "Error de permisos"
+```bash
+# Verificar permisos
+ls -ld /var/www/html/storage/images/
+
+# Corregir permisos
+sudo chown -R www-data:www-data /var/www/html/storage
+sudo chmod -R 755 /var/www/html/storage
+```
+
+### Problema: Servicio web no responde
+```bash
+# Verificar estado del servicio
+sudo systemctl status image-service.service
+
+# Ver logs
+sudo journalctl -u image-service.service -f
+
+# Reiniciar servicio
+sudo systemctl restart image-service.service
+```
+
+## 📦 Scripts Disponibles
+
+- `setup-complete.sh` - Configuración completa de rclone y servicios
+- `check-service.sh` - Verificación del estado del sistema
+- `monitor-rclone.sh` - Monitoreo automático del mount
+- `backup-rclone.sh` - Backup y restauración de configuración
+- `setup-rclone.sh` - Configuración básica de rclone (legacy)
+
+## 🔐 Configuración de Seguridad
+
+Asegúrate de que:
+
+1. **FUSE está configurado**:
+   ```bash
+   sudo grep "user_allow_other" /etc/fuse.conf
+   ```
+
+2. **Permisos correctos**:
+   ```bash
+   sudo chown -R www-data:www-data /var/www/html/storage
+   sudo chown -R www-data:www-data /var/www/html/image-service/logs
+   ```
+
+3. **Configuración de rclone**:
+   ```bash
+   sudo ls -la /etc/rclone/rclone.conf
+   # Debe ser root:www-data 640
+   ```
+
+## 📊 Monitoreo y Logs
+
+### Logs importantes:
+- `/var/log/rclone-images.log` - Logs de rclone mount
+- `/var/www/html/image-service/logs/image-service.log` - Logs del servicio web
+- `sudo journalctl -u rclone-onedrive.service` - Logs del servicio systemd
+- `sudo journalctl -u image-service.service` - Logs del servicio web
+
+### Comandos de monitoreo:
+```bash
+# Ver estado de servicios
+sudo systemctl status rclone-onedrive.service image-service.service
+
+# Ver logs en tiempo real
+sudo journalctl -u image-service.service -f
+
+# Ver uso de espacio
+df -h /var/www/html/storage/images/
+
+# Probar conectividad
+rclone lsd onedrive-images:
+```
+
+## 🔄 Backup y Recuperación
+
+### Crear backup:
+```bash
+sudo bash scripts/backup-rclone.sh backup
+```
+
+### Listar backups:
+```bash
+sudo bash scripts/backup-rclone.sh list
+```
+
+### Restaurar backup:
+```bash
+sudo bash scripts/backup-rclone.sh restore 20231201_143022
+```
+
+## 🌐 URLs y Endpoints
+
+- **Servicio web**: http://216.9.226.186:3002
+- **Health check**: http://216.9.226.186:3002/health
+- **Subida de imágenes**: http://216.9.226.186:3002/upload
+- **Interfaz web**: http://216.9.226.186:3002/
+
+## 📞 Soporte
+
+Si encuentras problemas:
+
+1. Ejecuta `sudo bash scripts/check-service.sh` para diagnóstico
+2. Revisa los logs mencionados arriba
+3. Verifica la conectividad de red con OneDrive
+4. Asegúrate de que los permisos sean correctos
+
+---
+
+**Estado**: Configuración completa y robusta para producción con OneDrive
 ```
