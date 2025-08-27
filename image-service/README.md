@@ -196,58 +196,161 @@ Si quieres, actualizo el repositorio añadiendo ejemplos de `systemd` unit files
 
 **Estado:** documentación actualizada para reflejar configuración y pasos usados en el despliegue.
 
-## 🚀 Guía Rápida de Configuración con OneDrive
+## 🚀 Instalación Completa (Recomendado)
 
-### Preparación previa (Importante)
-Antes de ejecutar el setup, asegúrate de tener tu configuración de rclone lista:
-
-#### Opción 1: Configurar rclone en tu máquina local y subir por FTP
+### Opción 1: Instalación automatizada (Más fácil)
 ```bash
-# En tu máquina local:
+cd /var/www/html/image-service
+sudo bash scripts/install-complete.sh
+```
+
+Este script hace todo automáticamente:
+- ✅ Verifica configuración de rclone existente
+- ✅ Instala Node.js y dependencias
+- ✅ Configura permisos y directorios
+- ✅ Crea servicios systemd
+- ✅ Inicia servicios y verifica funcionamiento
+
+### Verificación de prerrequisitos (Opcional pero recomendado)
+Antes de instalar, verifica que tu sistema esté listo:
+```bash
+cd /var/www/html/image-service
+sudo bash scripts/check-prerequisites.sh
+```
+
+### Opción 2: Instalación paso a paso manual
+
+#### Paso 1: Preparar el entorno
+```bash
+# Actualizar sistema
+sudo apt update && sudo apt upgrade -y
+
+# Instalar Node.js 18.x LTS
+curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
+sudo apt-get install -y nodejs
+
+# Verificar instalación
+node --version
+npm --version
+```
+
+#### Paso 2: Configurar rclone (si no está hecho)
+```bash
+# Configurar OneDrive con nombre "imagenes"
 rclone config
-# Sigue las instrucciones para configurar OneDrive con nombre "imagenes"
-
-# Copia el archivo generado (~/.config/rclone/rclone.conf) al servidor:
-# Sube por FTP a /etc/rclone/rclone.conf
+# Nombre: imagenes
+# Tipo: Microsoft OneDrive (opción 26)
+# Seguir instrucciones de autenticación
 ```
 
-#### Opción 2: Configurar directamente en el servidor
-```bash
-# En el servidor:
-sudo rclone config
-# Sigue las instrucciones para configurar OneDrive
-```
-
-### Verificación previa
+#### Paso 3: Instalar dependencias del proyecto
 ```bash
 cd /var/www/html/image-service
-sudo bash scripts/prepare-rclone.sh
+npm install
 ```
 
-### Configuración completa
+#### Paso 4: Preparar directorios y permisos
 ```bash
-sudo bash scripts/setup-complete.sh
+# Crear directorios
+sudo mkdir -p /var/www/html/storage/images/thumbs
+sudo mkdir -p /var/www/html/image-service/storage/temp
+sudo mkdir -p /var/www/html/image-service/logs
+
+# Establecer permisos
+sudo chown -R www-data:www-data /var/www/html/storage
+sudo chown -R www-data:www-data /var/www/html/image-service/storage
+sudo chown -R www-data:www-data /var/www/html/image-service/logs
+sudo chmod -R 755 /var/www/html/storage
+sudo chmod -R 755 /var/www/html/image-service/storage
+sudo chmod -R 755 /var/www/html/image-service/logs
 ```
 
-### Verificar que todo funciona
+#### Paso 5: Configurar FUSE
 ```bash
-sudo bash scripts/check-service.sh
+# Agregar user_allow_other a FUSE
+echo "user_allow_other" | sudo tee -a /etc/fuse.conf
 ```
 
-### Probar la subida de imágenes
+#### Paso 6: Crear servicios systemd
 ```bash
-# Subir una imagen de prueba
-curl -X POST -F "images=@/ruta/a/tu/imagen.jpg" http://216.9.226.186:3002/upload
+# Servicio para rclone mount
+sudo tee /etc/systemd/system/rclone-onedrive.service > /dev/null <<EOF
+[Unit]
+Description=Rclone mount for OneDrive (UNIT3D Images)
+After=network-online.target
+Wants=network-online.target
 
-# Verificar health check
-curl http://216.9.226.186:3002/health
+[Service]
+Type=simple
+User=root
+Group=root
+ExecStart=/usr/bin/rclone mount imagenes:UNIT3D-Images /var/www/html/storage/images 
+    --config=/etc/rclone/rclone.conf 
+    --allow-other 
+    --vfs-cache-mode writes 
+    --vfs-write-back 5s 
+    --uid=33 
+    --gid=33 
+    --log-file /var/log/rclone-images.log 
+    --log-level INFO
+ExecStop=/bin/fusermount -uz /var/www/html/storage/images
+Restart=on-failure
+RestartSec=10s
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+# Servicio para image-service
+sudo tee /etc/systemd/system/image-service.service > /dev/null <<EOF
+[Unit]
+Description=UNIT3D Image Service
+After=network.target rclone-onedrive.service
+Requires=rclone-onedrive.service
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/html/image-service
+ExecStart=/usr/bin/node app.js
+Restart=on-failure
+RestartSec=5s
+Environment=NODE_ENV=production
+
+[Install]
+WantedBy=multi-user.target
+EOF
 ```
 
-### Recuperación de problemas
-Si algo sale mal durante la configuración, usa el script de recuperación:
+#### Paso 7: Iniciar servicios
 ```bash
-cd /var/www/html/image-service
-sudo bash scripts/recover-service.sh
+# Recargar systemd
+sudo systemctl daemon-reload
+
+# Habilitar servicios
+sudo systemctl enable rclone-onedrive.service
+sudo systemctl enable image-service.service
+
+# Iniciar servicios
+sudo systemctl start rclone-onedrive.service
+sleep 5
+sudo systemctl start image-service.service
+```
+
+#### Paso 8: Verificar instalación
+```bash
+# Ver estado de servicios
+sudo systemctl status rclone-onedrive.service image-service.service
+
+# Verificar mount
+mount | grep rclone
+
+# Probar servicio web
+curl http://localhost:3002/health
+
+# Probar subida de imagen
+curl -X POST -F "images=@/path/to/image.jpg" http://localhost:3002/upload
 ```
 
 ## 🔧 Solución de Problemas Comunes
@@ -297,6 +400,8 @@ sudo systemctl restart image-service.service
 
 ## 📦 Scripts Disponibles
 
+- `install-complete.sh` - **Instalación completa automatizada (Recomendado)**
+- `check-prerequisites.sh` - Verifica que el sistema esté listo para la instalación
 - `prepare-rclone.sh` - Verifica y prepara la configuración de rclone antes del setup
 - `setup-complete.sh` - Configuración completa de rclone y servicios (requiere rclone.conf listo)
 - `recover-service.sh` - Recuperación rápida cuando hay problemas
