@@ -436,7 +436,16 @@
                     progressFill.style.width = '0%';
                 }, 1000);
 
-                displayResults(result);
+                // Normalize server responses:
+                // - For single-file uploads the server may return an "imgbb-style" response
+                //   where result.data is an object (contains result.data.image).
+                // - For multi-file uploads the server returns result.data as an array.
+                if (result && result.success && result.data && !Array.isArray(result.data) && result.data.image) {
+                    // handle imgbb-style single response
+                    displaySingleResult(result);
+                } else {
+                    displayResults(result);
+                }
 
             } catch (error) {
                 progressContainer.style.display = 'none';
