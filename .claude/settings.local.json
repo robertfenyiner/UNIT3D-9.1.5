@@ -15,7 +15,9 @@
       "Bash(systemctl restart:*)",
       "Bash(taskkill:*)",
       "Bash(powershell:*)",
-      "Bash(start /B node:*)"
+      "Bash(start /B node:*)",
+      "Bash(timeout:*)",
+      "Bash(npm install:*)"
     ],
     "deny": []
   }
