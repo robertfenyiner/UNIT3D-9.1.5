@@ -198,30 +198,49 @@ Si quieres, actualizo el repositorio añadiendo ejemplos de `systemd` unit files
 
 ## 🚀 Guía Rápida de Configuración con OneDrive
 
-### Paso 1: Ejecutar la configuración completa
+### Preparación previa (Importante)
+Antes de ejecutar el setup, asegúrate de tener tu configuración de rclone lista:
+
+#### Opción 1: Configurar rclone en tu máquina local y subir por FTP
+```bash
+# En tu máquina local:
+rclone config
+# Sigue las instrucciones para configurar OneDrive con nombre "imagenes"
+
+# Copia el archivo generado (~/.config/rclone/rclone.conf) al servidor:
+# Sube por FTP a /etc/rclone/rclone.conf
+```
+
+#### Opción 2: Configurar directamente en el servidor
+```bash
+# En el servidor:
+sudo rclone config
+# Sigue las instrucciones para configurar OneDrive
+```
+
+### Verificación previa
 ```bash
 cd /var/www/html/image-service
+sudo bash scripts/prepare-rclone.sh
+```
+
+### Configuración completa
+```bash
 sudo bash scripts/setup-complete.sh
 ```
 
-### Paso 2: Verificar que todo funciona
+### Verificar que todo funciona
 ```bash
 sudo bash scripts/check-service.sh
 ```
 
-### Paso 3: Probar la subida de imágenes
+### Probar la subida de imágenes
 ```bash
 # Subir una imagen de prueba
 curl -X POST -F "images=@/ruta/a/tu/imagen.jpg" http://216.9.226.186:3002/upload
 
 # Verificar health check
 curl http://216.9.226.186:3002/health
-```
-
-### Paso 4: Configurar monitoreo automático (opcional)
-```bash
-# Agregar al crontab para monitoreo cada 5 minutos
-echo "*/5 * * * * /var/www/html/image-service/scripts/monitor-rclone.sh" | sudo crontab -
 ```
 
 ## 🔧 Solución de Problemas Comunes
@@ -238,10 +257,10 @@ sudo journalctl -u rclone-onedrive.service -f
 ### Problema: "Error conectando con OneDrive"
 ```bash
 # Verificar configuración de rclone
-rclone config show onedrive-images
+rclone config show imagenes
 
 # Probar conexión
-rclone lsd onedrive-images:
+rclone lsd imagenes:
 
 # Reconfigurar si es necesario
 rclone config
@@ -271,7 +290,8 @@ sudo systemctl restart image-service.service
 
 ## 📦 Scripts Disponibles
 
-- `setup-complete.sh` - Configuración completa de rclone y servicios
+- `prepare-rclone.sh` - Verifica y prepara la configuración de rclone antes del setup
+- `setup-complete.sh` - Configuración completa de rclone y servicios (requiere rclone.conf listo)
 - `check-service.sh` - Verificación del estado del sistema
 - `monitor-rclone.sh` - Monitoreo automático del mount
 - `backup-rclone.sh` - Backup y restauración de configuración
@@ -318,7 +338,7 @@ sudo journalctl -u image-service.service -f
 df -h /var/www/html/storage/images/
 
 # Probar conectividad
-rclone lsd onedrive-images:
+rclone lsd imagenes:
 ```
 
 ## 🔄 Backup y Recuperación

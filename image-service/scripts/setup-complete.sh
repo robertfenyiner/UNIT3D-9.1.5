@@ -1,7 +1,26 @@
 #!/bin/bash
 
 # Script maestro para configurar completamente rclone con OneDrive
-# para el servicio de imágenes de UNIT3D
+## Verificar que la configuración contiene onedrive-images
+if ! grep -q "\[imagenes\]" /etc/rclone/rclone.conf; then
+    echo "❌ No se encontró la configuración 'imagenes' en rclone.conf"
+    echo "   Asegúrate de que tu configuración incluya:"
+    echo "   [imagenes]"
+    echo "   type = onedrive"
+    echo "   ..."
+    exit 1
+fi
+
+# Probar configuración
+if ! rclone listremotes | grep -q "imagenes:"; then
+    echo "❌ Error: rclone no puede leer la configuración imagenes"
+    echo "   Verifica que el archivo /etc/rclone/rclone.conf tenga permisos correctos"
+    rclone config show imagenes
+    exit 1
+fi
+
+echo "✅ Configuración de rclone verificada correctamente"e imágenes de UNIT3D
+# Asume que rclone.conf ya está configurado y disponible
 
 set -e
 
@@ -15,36 +34,88 @@ command_exists() {
     command -v "$1" >/dev/null 2>&1
 }
 
-# 1. Instalar rclone si no está instalado
+# 0. Limpiar servicios rclone existentes para evitar conflictos
+echo "🧹 Eliminando servicios rclone existentes..."
+
+# Detener y eliminar servicios relacionados con rclone
+SERVICES_TO_REMOVE=(
+    "rclone-onedrive.service"
+    "rclone-onedrive-images.service"
+    "rclone-images.service"
+    "onedrive-mount.service"
+    "rclone-mount.service"
+)
+
+for service in "${SERVICES_TO_REMOVE[@]}"; do
+    if sudo systemctl is-active --quiet "$service" 2>/dev/null; then
+        echo "  🛑 Deteniendo $service..."
+        sudo systemctl stop "$service" || true
+    fi
+
+    if sudo systemctl is-enabled --quiet "$service" 2>/dev/null; then
+        echo "  � Deshabilitando $service..."
+        sudo systemctl disable "$service" || true
+    fi
+
+    if [ -f "/etc/systemd/system/$service" ]; then
+        echo "  🗑️ Eliminando archivo de servicio $service..."
+        sudo rm -f "/etc/systemd/system/$service"
+    fi
+done
+
+# Desmontar cualquier mount existente
+echo "  🔌 Desmontando mounts existentes..."
+sudo umount /var/www/html/storage/images 2>/dev/null || true
+sudo fusermount -uz /var/www/html/storage/images 2>/dev/null || true
+
+# Recargar systemd después de eliminar servicios
+sudo systemctl daemon-reload
+
+echo "✅ Limpieza de servicios rclone completada"
+
+# 1. Verificar instalación de rclone
 if ! command_exists rclone; then
-    echo "📦 Instalando rclone..."
-    curl https://rclone.org/install.sh | sudo bash
-    echo "✅ rclone instalado"
+    echo "❌ rclone no está instalado. Instálalo primero:"
+    echo "   curl https://rclone.org/install.sh | sudo bash"
+    exit 1
 else
-    echo "✅ rclone ya está instalado"
+    echo "✅ rclone está instalado"
 fi
 
-# 2. Configurar rclone si no está configurado
-if ! rclone listremotes | grep -q "onedrive-images:"; then
-    echo ""
-    echo "⚙️ Configurando OneDrive..."
-    echo "Sigue estas instrucciones:"
-    echo "1. Nombre: onedrive-images"
-    echo "2. Tipo: Microsoft OneDrive (opción 26)"
-    echo "3. client_id: (presiona Enter)"
-    echo "4. client_secret: (presiona Enter)"
-    echo "5. region: global"
-    echo "6. Edit advanced config: No"
-    echo "7. Use auto config: Yes"
-    echo "8. Type of connection: onedrive"
-    echo "9. Choose drive: 0"
-    echo "10. Confirm: Yes"
-    echo ""
-    read -p "Presiona Enter para continuar..."
-    rclone config
-else
-    echo "✅ Configuración 'onedrive-images' ya existe"
+# 2. Verificar configuración de rclone existente
+echo "🔍 Verificando configuración de rclone..."
+
+# Verificar que existe el archivo de configuración
+if [ ! -f "/etc/rclone/rclone.conf" ]; then
+    echo "❌ No se encontró /etc/rclone/rclone.conf"
+    echo "   Asegúrate de que el archivo rclone.conf esté en /etc/rclone/rclone.conf"
+    echo "   Puedes copiarlo desde tu configuración local:"
+    echo "   sudo mkdir -p /etc/rclone"
+    echo "   sudo cp /ruta/a/tu/rclone.conf /etc/rclone/rclone.conf"
+    echo "   sudo chown root:root /etc/rclone/rclone.conf"
+    echo "   sudo chmod 600 /etc/rclone/rclone.conf"
+    exit 1
 fi
+
+# Verificar que la configuración contiene onedrive-images
+if ! grep -q "\[onedrive-images\]" /etc/rclone/rclone.conf; then
+    echo "❌ No se encontró la configuración 'onedrive-images' en rclone.conf"
+    echo "   Asegúrate de que tu configuración incluya:"
+    echo "   [onedrive-images]"
+    echo "   type = onedrive"
+    echo "   ..."
+    exit 1
+fi
+
+# Probar configuración
+if ! rclone listremotes | grep -q "onedrive-images:"; then
+    echo "❌ Error: rclone no puede leer la configuración onedrive-images"
+    echo "   Verifica que el archivo /etc/rclone/rclone.conf tenga permisos correctos"
+    ls -la /etc/rclone/rclone.conf
+    exit 1
+fi
+
+echo "✅ Configuración de rclone verificada correctamente"
 
 # 3. Crear directorios necesarios
 echo ""
@@ -74,16 +145,16 @@ fi
 
 # 6. Crear directorio en OneDrive
 echo "📂 Creando directorio en OneDrive..."
-rclone mkdir onedrive-images:/UNIT3D-Images || echo "El directorio ya existe o se creó"
+rclone mkdir imagenes:/UNIT3D-Images || echo "El directorio ya existe o se creó"
 
 # 7. Probar conexión con OneDrive
 echo "🧪 Probando conexión..."
-if rclone lsd onedrive-images: >/dev/null 2>&1; then
+if rclone lsd imagenes: >/dev/null 2>&1; then
     echo "✅ Conexión con OneDrive exitosa"
 else
     echo "❌ Error conectando con OneDrive"
     echo "Verifica tu configuración de rclone:"
-    rclone config show onedrive-images
+    rclone config show imagenes
     exit 1
 fi
 
@@ -101,7 +172,7 @@ Wants=network-online.target
 Type=simple
 User=root
 Group=root
-ExecStart=/usr/bin/rclone mount onedrive-images:UNIT3D-Images /var/www/html/storage/images \\
+ExecStart=/usr/bin/rclone mount imagenes:UNIT3D-Images /var/www/html/storage/images \\
     --config=/etc/rclone/rclone.conf \\
     --allow-other \\
     --vfs-cache-mode writes \\
@@ -195,7 +266,7 @@ echo ""
 echo "🎉 ¡Configuración completada!"
 echo ""
 echo "📋 Resumen:"
-echo "- Remote rclone: onedrive-images"
+echo "- Remote rclone: imagenes"
 echo "- Mount point: /var/www/html/storage/images"
 echo "- Servicio web: http://localhost:3002"
 echo "- Logs rclone: /var/log/rclone-images.log"
@@ -206,5 +277,10 @@ echo "- Ver logs: sudo journalctl -u image-service.service -f"
 echo "- Reiniciar servicios: sudo systemctl restart rclone-onedrive.service image-service.service"
 echo "- Ver estado: sudo systemctl status rclone-onedrive.service image-service.service"
 echo ""
-echo "✨ El servicio está listo para recibir imágenes y almacenarlas en OneDrive"</content>
+echo "✨ El servicio está listo para recibir imágenes y almacenarlas en OneDrive"
+echo ""
+echo "🌐 URLs del servicio:"
+echo "- Web: http://216.9.226.186:3002/"
+echo "- Health check: http://216.9.226.186:3002/health"
+echo "- Upload: http://216.9.226.186:3002/upload"</content>
 <parameter name="filePath">d:\Onedrive Robert Personal\OneDrive\Documents\GitHub\UNIT3D-9.1.5\image-service\scripts\setup-complete.sh
