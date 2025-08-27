@@ -310,6 +310,9 @@
             <button class="btn" id="uploadBtn" onclick="uploadFiles()" disabled>
                 ⬆️ Subir Imágenes
             </button>
+            <button class="btn" id="clearBtn" onclick="clearResults()">
+                🧹 Limpiar
+            </button>
         </div>
 
         <div class="url-from">
@@ -325,7 +328,7 @@
             <div id="progressText">Procesando...</div>
         </div>
 
-        <div class="results" id="results"></div>
+    <div class="results" id="results"></div>
     </div>
 
     <script>
@@ -580,13 +583,29 @@
                     </div>
                 `;
             }
+            // Normalize URLs to current origin so links work when accessing via IP
+            function normalizeUrl(u) {
+                try {
+                    const parsed = new URL(u);
+                    return window.location.origin + parsed.pathname;
+                } catch (e) {
+                    return u;
+                }
+            }
+
+            const imageUrl = normalizeUrl(item.urls.image || '');
+            const thumbUrl = item.urls.thumbnail ? normalizeUrl(item.urls.thumbnail) : null;
+
+            // Normalize bbcode strings by replacing original urls with normalized ones
+            const bbcode = item.urls.bbcode ? item.urls.bbcode.replace(item.urls.image, imageUrl) : '';
+            const bbcodeThumb = item.urls.bbcodeThumb ? item.urls.bbcodeThumb.replace(item.urls.thumbnail || item.urls.image, thumbUrl || imageUrl) : '';
 
             return `
                 <div class="result-item success">
                     <div class="result-preview">
-                        <img src="${item.urls.thumbnail || item.urls.image}" 
+                        <img src="${thumbUrl || imageUrl}" 
                              alt="${item.file.original}" 
-                             onerror="this.src='${item.urls.image}'">
+                             onerror="this.src='${imageUrl}'">
                         <div class="result-info">
                             <h3>✅ ${item.file.original}</h3>
                             <p><strong>Tamaño:</strong> ${formatBytes(item.file.size)}</p>
@@ -599,31 +618,91 @@
                         <div class="url-group">
                             <label>🔗 URL Directa:</label>
                             <div class="url-input">
-                                <input type="text" value="${item.urls.image}" readonly>
-                                <button class="copy-btn" onclick="copyToClipboard(this, '${item.urls.image}')">Copiar</button>
+                                <input type="text" value="${imageUrl}" readonly>
+                                <button class="copy-btn" onclick="copyInput(this)">Copiar</button>
                             </div>
                         </div>
                         
                         <div class="url-group">
                             <label>📝 BBCode:</label>
                             <div class="url-input">
-                                <input type="text" value="${item.urls.bbcode}" readonly>
-                                <button class="copy-btn" onclick="copyToClipboard(this, '${item.urls.bbcode}')">Copiar</button>
+                                <input type="text" value="${bbcode}" readonly>
+                                <button class="copy-btn" onclick="copyInput(this)">Copiar</button>
                             </div>
                         </div>
                         
-                        ${item.urls.bbcodeThumb ? `
+                        ${bbcodeThumb ? `
                             <div class="url-group">
                                 <label>🖼️ BBCode con Thumbnail:</label>
                                 <div class="url-input">
-                                    <input type="text" value="${item.urls.bbcodeThumb}" readonly>
-                                    <button class="copy-btn" onclick="copyToClipboard(this, '${item.urls.bbcodeThumb}')">Copiar</button>
+                                    <input type="text" value="${bbcodeThumb}" readonly>
+                                    <button class="copy-btn" onclick="copyInput(this)">Copiar</button>
                                 </div>
                             </div>
                         ` : ''}
                     </div>
                 </div>
             `;
+        }
+
+        // Copy helper that reads the adjacent input value and copies it robustly
+        function copyInput(button) {
+            try {
+                const input = button.parentElement.querySelector('input');
+                const text = input ? input.value : '';
+                if (!text) return;
+
+                // Try navigator.clipboard first (may require secure context)
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(text).then(() => {
+                        const originalText = button.textContent;
+                        button.textContent = '✅ Copiado';
+                        button.classList.add('copied');
+                        setTimeout(() => {
+                            button.textContent = originalText;
+                            button.classList.remove('copied');
+                        }, 2000);
+                    }).catch(() => {
+                        // fallback
+                        const ta = document.createElement('textarea');
+                        ta.value = text;
+                        document.body.appendChild(ta);
+                        ta.select();
+                        document.execCommand('copy');
+                        document.body.removeChild(ta);
+                        button.textContent = '✅ Copiado';
+                        button.classList.add('copied');
+                        setTimeout(() => {
+                            button.textContent = 'Copiar';
+                            button.classList.remove('copied');
+                        }, 2000);
+                    });
+                } else {
+                    const ta = document.createElement('textarea');
+                    ta.value = text;
+                    document.body.appendChild(ta);
+                    ta.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(ta);
+                    button.textContent = '✅ Copiado';
+                    button.classList.add('copied');
+                    setTimeout(() => {
+                        button.textContent = 'Copiar';
+                        button.classList.remove('copied');
+                    }, 2000);
+                }
+            } catch (err) {
+                console.error('Copy failed', err);
+            }
+        }
+
+        function clearResults() {
+            selectedFiles = [];
+            fileInput.value = '';
+            results.innerHTML = '';
+            progressContainer.style.display = 'none';
+            progressFill.style.width = '0%';
+            updateUploadButton();
         }
 
         function copyToClipboard(button, text) {
