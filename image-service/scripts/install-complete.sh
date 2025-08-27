@@ -12,9 +12,64 @@ echo ""
 echo "⚠️  Este script incluye limpieza completa de instalaciones previas"
 echo ""
 
-# Función para verificar si un comando existe
-command_exists() {
-    command -v "$1" >/dev/null 2>&1
+# Función para eliminar directorios de forma segura
+safe_remove_directory() {
+    local dir="$1"
+    
+    if [ ! -e "$dir" ]; then
+        return 0
+    fi
+    
+    echo "    🗑️ Eliminando $dir..."
+    
+    # Matar procesos que puedan estar usando el directorio
+    if command_exists fuser; then
+        sudo fuser -k "$dir" 2>/dev/null || true
+        sleep 1
+    fi
+    
+    # Si es el directorio storage, verificar si está montado
+    if [[ "$dir" == "/var/www/html/storage" ]]; then
+        if mountpoint -q "$dir/images" 2>/dev/null; then
+            echo "    🔌 Desmontando $dir/images..."
+            sudo umount "$dir/images" 2>/dev/null || true
+            sudo fusermount -uz "$dir/images" 2>/dev/null || true
+            sleep 2
+        fi
+    fi
+    
+    # Intentar eliminación normal
+    if sudo rm -rf "$dir" 2>/dev/null; then
+        echo "    ✅ $dir eliminado correctamente"
+        return 0
+    fi
+    
+    # Método alternativo si la eliminación normal falla
+    echo "    ⚠️  Eliminación normal falló, intentando método alternativo..."
+    
+    # Cambiar permisos y volver a intentar
+    sudo chmod -R 777 "$dir" 2>/dev/null || true
+    sudo find "$dir" -type f -exec chmod 666 {} \; 2>/dev/null || true
+    
+    # Intentar nuevamente
+    if sudo rm -rf "$dir" 2>/dev/null; then
+        echo "    ✅ $dir eliminado con método alternativo"
+        return 0
+    fi
+    
+    # Último intento: eliminar archivos uno por uno
+    echo "    🔄 Intentando eliminación archivo por archivo..."
+    sudo find "$dir" -type f -delete 2>/dev/null || true
+    sudo find "$dir" -type d -empty -delete 2>/dev/null || true
+    
+    # Verificar si el directorio quedó vacío
+    if [ -z "$(sudo ls -A "$dir" 2>/dev/null)" ]; then
+        sudo rmdir "$dir" 2>/dev/null && echo "    ✅ $dir eliminado completamente" && return 0
+    fi
+    
+    echo "    ℹ️  Algunos archivos en $dir no se pudieron eliminar"
+    echo "    💡 Puedes eliminarlos manualmente después si es necesario: sudo rm -rf $dir"
+    return 1
 }
 
 # Función de colores para output
@@ -105,12 +160,27 @@ cleanup_previous_installation() {
         "/etc/rclone"
     )
     
+    local cleanup_errors=0
     for dir in "${DIRECTORIES_TO_REMOVE[@]}"; do
-        if [ -e "$dir" ]; then
-            echo "    🗑️ Eliminando $dir..."
-            sudo rm -rf "$dir"
+        if ! safe_remove_directory "$dir"; then
+            ((cleanup_errors++))
         fi
     done
+    
+    if [ $cleanup_errors -gt 0 ]; then
+        echo ""
+        print_warning "Hubo $cleanup_errors errores durante la limpieza"
+        echo "Esto puede afectar la instalación. Se recomienda limpiar manualmente los directorios problemáticos."
+        echo ""
+        read -p "¿Deseas continuar con la instalación de todos modos? [S/n]: " -n 1 -r
+        echo
+        if [[ ! $REPLY =~ ^[Ss]$ ]]; then
+            print_error "Instalación cancelada por el usuario"
+            exit 1
+        fi
+        print_warning "Continuando con la instalación a pesar de los errores de limpieza..."
+        echo ""
+    fi
     
     # 4. Limpiar configuración de rclone (opcional)
     if [ -f "/etc/rclone/rclone.conf" ]; then

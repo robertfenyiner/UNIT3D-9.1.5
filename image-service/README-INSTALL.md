@@ -210,6 +210,17 @@ sudo chown -R www-data:www-data /var/www/html/storage
 sudo chown -R www-data:www-data /var/www/html/image-service
 ```
 
+### Problemas de eliminación durante la instalación
+Si encuentras errores como "Directory not empty" durante la instalación:
+
+```bash
+# Ejecutar limpieza manual
+sudo bash scripts/cleanup-manual.sh
+
+# Después ejecutar la instalación nuevamente
+sudo bash scripts/install-complete.sh
+```
+
 ## Backup y Recuperación
 
 ### Backup automático
