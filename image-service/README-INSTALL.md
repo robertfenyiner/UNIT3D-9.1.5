@@ -40,11 +40,15 @@ Durante la configuración:
 Esta opción incluye limpieza completa de instalaciones previas y configuración desde cero:
 
 ```bash
-# Clonar o copiar los archivos del proyecto
+# Opción A: Desde el directorio del proyecto (recomendado)
 cd /path/to/your/image-service
-
-# Ejecutar la instalación completa
+chmod +x scripts/install-complete.sh
 sudo bash scripts/install-complete.sh
+
+# Opción B: Instalador portable (desde cualquier ubicación)
+cd /path/to/your/image-service/scripts
+chmod +x install-portable.sh
+sudo bash install-portable.sh
 ```
 
 ### Opción 2: Instalación Manual
@@ -220,6 +224,17 @@ sudo bash scripts/cleanup-manual.sh
 # Después ejecutar la instalación nuevamente
 sudo bash scripts/install-complete.sh
 ```
+
+### Error: "command_exists: command not found"
+Este error ocurre cuando el script se ejecuta desde una ubicación incorrecta. Usa el instalador portable:
+
+```bash
+# Desde el directorio scripts del proyecto
+sudo bash scripts/install-portable.sh
+```
+
+### Error: "No se encontraron los archivos del proyecto"
+Asegúrate de ejecutar el script desde el directorio correcto o usa el instalador portable que detecta automáticamente la ubicación de los archivos.
 
 ## Backup y Recuperación
 

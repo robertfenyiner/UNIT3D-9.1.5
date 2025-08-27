@@ -12,6 +12,11 @@ echo ""
 echo "⚠️  Este script incluye limpieza completa de instalaciones previas"
 echo ""
 
+# Función para verificar si un comando existe
+command_exists() {
+    command -v "$1" >/dev/null 2>&1
+}
+
 # Función para eliminar directorios de forma segura
 safe_remove_directory() {
     local dir="$1"
@@ -267,17 +272,47 @@ else
     print_success "Directorio del proyecto ya existe"
 fi
 
-# Copiar archivos del proyecto (asumiendo que están en el directorio actual)
+# Copiar archivos del proyecto
+echo "  📋 Copiando archivos del proyecto..."
+
+# Determinar la ubicación de los archivos fuente
 if [ -f "package.json" ] && [ -f "app.js" ]; then
-    echo "  📋 Copiando archivos del proyecto..."
-    # Copiar todos los archivos necesarios
-    sudo cp -r . /var/www/html/image-service/
-    print_success "Archivos del proyecto copiados"
+    # Los archivos están en el directorio actual
+    SOURCE_DIR="$(pwd)"
+    echo "    � Usando archivos desde: $SOURCE_DIR"
+elif [ -f "../package.json" ] && [ -f "../app.js" ]; then
+    # Los archivos están en el directorio padre
+    SOURCE_DIR="$(dirname $(pwd))"
+    echo "    📂 Usando archivos desde: $SOURCE_DIR"
 else
-    print_error "No se encontraron los archivos del proyecto (package.json, app.js)"
-    echo "Asegúrate de ejecutar este script desde el directorio del proyecto image-service"
+    # No se encontraron archivos, pedir ubicación al usuario
+    echo "    ❓ No se encontraron archivos del proyecto automáticamente"
+    read -p "    Ingresa la ruta completa al directorio con los archivos del proyecto: " SOURCE_DIR
+    if [ ! -d "$SOURCE_DIR" ] || [ ! -f "$SOURCE_DIR/package.json" ] || [ ! -f "$SOURCE_DIR/app.js" ]; then
+        print_error "Directorio inválido o archivos no encontrados en: $SOURCE_DIR"
+        exit 1
+    fi
+fi
+
+# Copiar archivos
+if sudo cp -r "$SOURCE_DIR"/* /var/www/html/image-service/ 2>/dev/null; then
+    print_success "Archivos del proyecto copiados desde $SOURCE_DIR"
+else
+    print_error "Error copiando archivos desde $SOURCE_DIR"
     exit 1
 fi
+
+# Verificar que los archivos se copiaron correctamente
+echo "  🔍 Verificando copia de archivos..."
+REQUIRED_FILES=("package.json" "app.js" "config/config.json")
+for file in "${REQUIRED_FILES[@]}"; do
+    if [ -f "/var/www/html/image-service/$file" ]; then
+        print_success "Archivo $file encontrado"
+    else
+        print_error "Archivo $file no encontrado después de la copia"
+        exit 1
+    fi
+done
 
 print_success "Entorno preparado"
 
