@@ -1,11 +1,11 @@
 #!/bin/bash
 
-# Script de recuperación rápida para el servicio UNIT3D Image Service
+# Script de recuperación rápida para el servicio Lat-team Image Service
 # Ejecutar cuando hay problemas después de la configuración
 
 set -e
 
-echo "🔧 Recuperación rápida del servicio UNIT3D Image Service"
+echo "🔧 Recuperación rápida del servicio Lat-team Image Service"
 echo "Servidor: $(hostname -f)"
 echo "Fecha: $(date)"
 echo ""
@@ -35,7 +35,7 @@ sudo fusermount -uz /var/www/html/storage/images 2>/dev/null || true
 echo "📋 Recreando servicio systemd..."
 sudo tee /etc/systemd/system/rclone-onedrive.service > /dev/null <<EOF
 [Unit]
-Description=Rclone mount for OneDrive (UNIT3D Images)
+Description=Rclone mount for OneDrive (Lat-team Images)
 After=network-online.target
 Wants=network-online.target
 
@@ -43,7 +43,7 @@ Wants=network-online.target
 Type=simple
 User=root
 Group=root
-ExecStart=/usr/bin/rclone mount imagenes:UNIT3D-Images /var/www/html/storage/images \\
+ExecStart=/usr/bin/rclone mount imagenes:Lat-team-Images /var/www/html/storage/images \\
     --config=/etc/rclone/rclone.conf \\
     --allow-other \\
     --vfs-cache-mode writes \\
@@ -66,7 +66,7 @@ sudo systemctl daemon-reload
 
 # 6. Crear directorio en OneDrive
 echo "📂 Creando directorio en OneDrive..."
-rclone mkdir imagenes:/UNIT3D-Images || echo "El directorio ya existe"
+rclone mkdir imagenes:/Lat-team-Images || echo "El directorio ya existe"
 
 # 7. Iniciar servicio
 echo "▶️ Iniciando servicio..."

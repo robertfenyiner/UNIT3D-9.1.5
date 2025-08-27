@@ -3,7 +3,7 @@
 # Script de verificación rápida del estado del servicio image-service
 # Ejecutar después del setup para verificar que todo funciona correctamente
 
-echo "🔍 Verificación rápida del servicio UNIT3D Image Service"
+echo "🔍 Verificación rápida del servicio Lat-team Image Service"
 echo "Servidor: $(hostname -f)"
 echo "Fecha: $(date)"
 echo ""

@@ -1,8 +1,8 @@
 #!/bin/bash
 
-# Script de verificación de prerrequisitos para UNIT3D Image Service
+# Script de verificación de prerrequisitos para Lat-team Image Service
 
-echo "🔍 Verificación de prerrequisitos para UNIT3D Image Service"
+echo "🔍 Verificación de prerrequisitos para Lat-team Image Service"
 echo "Servidor: $(hostname -f)"
 echo "Fecha: $(date)"
 echo ""

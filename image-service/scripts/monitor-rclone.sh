@@ -5,7 +5,7 @@
 
 LOG_FILE="/var/log/rclone-monitor.log"
 MOUNT_POINT="/var/www/html/storage/images"
-REMOTE="imagenes:UNIT3D-Images"
+REMOTE="imagenes:Lat-team-Images"
 
 # Función de logging
 log() {

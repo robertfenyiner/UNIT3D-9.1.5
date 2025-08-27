@@ -37,12 +37,12 @@ if ! rclone listremotes | grep -q "imagenes:"; then
     exit 1
 fi
 
-echo "✅ Configuración de rclone verificada correctamente"e imágenes de UNIT3D
+echo "✅ Configuración de rclone verificada correctamente"e imágenes de Lat-team
 # Asume que rclone.conf ya está configurado y disponible
 
 set -e
 
-echo "🚀 Configuración completa de rclone para UNIT3D Image Service"
+echo "🚀 Configuración completa de rclone para Lat-team Image Service"
 echo "Servidor: $(hostname -f)"
 echo "Fecha: $(date)"
 echo ""
@@ -163,7 +163,7 @@ fi
 
 # 6. Crear directorio en OneDrive
 echo "📂 Creando directorio en OneDrive..."
-rclone mkdir imagenes:/UNIT3D-Images || echo "El directorio ya existe o se creó"
+rclone mkdir imagenes:/Lat-team-Images || echo "El directorio ya existe o se creó"
 
 # 7. Probar conexión con OneDrive
 echo "🧪 Probando conexión..."
@@ -182,7 +182,7 @@ echo "📋 Instalando servicios systemd..."
 # Servicio para rclone mount
 sudo tee /etc/systemd/system/rclone-onedrive.service > /dev/null <<EOF
 [Unit]
-Description=Rclone mount for OneDrive (UNIT3D Images)
+Description=Rclone mount for OneDrive (Lat-team Images)
 After=network-online.target
 Wants=network-online.target
 
@@ -190,7 +190,7 @@ Wants=network-online.target
 Type=simple
 User=root
 Group=root
-ExecStart=/usr/bin/rclone mount imagenes:UNIT3D-Images /var/www/html/storage/images \\
+ExecStart=/usr/bin/rclone mount imagenes:Lat-team-Images /var/www/html/storage/images \\
     --config=/etc/rclone/rclone.conf \\
     --allow-other \\
     --vfs-cache-mode writes \\
@@ -210,7 +210,7 @@ EOF
 # Servicio para image-service
 sudo tee /etc/systemd/system/image-service.service > /dev/null <<EOF
 [Unit]
-Description=UNIT3D Image Service
+Description=Lat-team Image Service
 After=network.target rclone-onedrive.service
 Requires=rclone-onedrive.service
 

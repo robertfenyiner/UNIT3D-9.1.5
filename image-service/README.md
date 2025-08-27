@@ -1,4 +1,4 @@
-# Sistema de Gestión de Imágenes para UNIT3D
+# Sistema de Gestión de Imágenes para Lat-team
 
 Sistema propio de subida y gestión de imágenes para reemplazar imgbb, con almacenamiento en OneDrive via rclone.
 
@@ -8,19 +8,19 @@ Sistema propio de subida y gestión de imágenes para reemplazar imgbb, con alma
 - ✅ **API REST** para subida y gestión de imágenes  
 - ✅ **Optimización automática** (redimensionar, comprimir)
 - ✅ **URLs públicas** compatibles con BBCode
-- ✅ **Integración perfecta** con formulario de UNIT3D
+- ✅ **Integración perfecta** con formulario de Lat-team
 - ✅ **Rate limiting** y validaciones de seguridad
 - ✅ **Gestión de cuotas** y limpieza automática
 
 ## 🏗️ Arquitectura
 
 ```
-UNIT3D Form ──▶ Image API ──▶ OneDrive (rclone)
+Lat-team Form ──▶ Image API ──▶ OneDrive (rclone)
      │              │              │
   Upload UI     Process &      Store Files
   BBCode Gen    Optimize      Public URLs
 ```markdown
-# Sistema de Gestión de Imágenes para UNIT3D
+# Sistema de Gestión de Imágenes para Lat-team
 
 Este servicio proporciona una API para subir, procesar y servir imágenes optimizadas, almacenadas mediante un mount rclone (OneDrive en nuestras pruebas). El README ha sido actualizado para reflejar cambios recientes realizados durante la puesta en marcha y despliegue.
 
@@ -91,7 +91,7 @@ Ejemplo (extracto):
     "path": "/var/www/html/storage/images",
     "tempPath": "/var/www/html/image-service/storage/temp",
     "publicUrl": "http://tu-tracker.com/image",
-    "rclone": { "remote": "onedrive-images", "path": "UNIT3D-Images" }
+    "rclone": { "remote": "onedrive-images", "path": "Lat-team-Images" }
   },
   "images": {
     "maxSize": "10MB",
@@ -276,7 +276,7 @@ echo "user_allow_other" | sudo tee -a /etc/fuse.conf
 # Servicio para rclone mount
 sudo tee /etc/systemd/system/rclone-onedrive.service > /dev/null <<EOF
 [Unit]
-Description=Rclone mount for OneDrive (UNIT3D Images)
+Description=Rclone mount for OneDrive (Lat-team Images)
 After=network-online.target
 Wants=network-online.target
 
@@ -284,7 +284,7 @@ Wants=network-online.target
 Type=simple
 User=root
 Group=root
-ExecStart=/usr/bin/rclone mount imagenes:UNIT3D-Images /var/www/html/storage/images 
+ExecStart=/usr/bin/rclone mount imagenes:Lat-team-Images /var/www/html/storage/images 
     --config=/etc/rclone/rclone.conf 
     --allow-other 
     --vfs-cache-mode writes 
@@ -304,7 +304,7 @@ EOF
 # Servicio para image-service
 sudo tee /etc/systemd/system/image-service.service > /dev/null <<EOF
 [Unit]
-Description=UNIT3D Image Service
+Description=Lat-team Image Service
 After=network.target rclone-onedrive.service
 Requires=rclone-onedrive.service
 
