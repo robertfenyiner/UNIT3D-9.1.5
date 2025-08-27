@@ -59,31 +59,31 @@
                     return 1;
                 },
                 getEditor: function () {
-                    // Prefer textareas commonly used in UNIT3D (description, mediainfo, bdinfo, etc.)
-                    var names = ['mediainfo', 'bdinfo', 'description', 'message', 'content'];
-
-                    var nameSelectors = names.map(function(n){ return 'textarea[name*="' + n + '"]'; }).join(',');
-
-                    var editors = [];
-
-                    try {
-                        if (nameSelectors) {
-                            editors = Array.prototype.slice.call(document.querySelectorAll(nameSelectors));
+                    var selectors = {
+                        textarea: {
+                            name: [
+                                'mediainfo',
+                                'bdinfo', 
+                                'description',
+                                'message',
+                                'content'
+                            ]
                         }
+                    };
 
-                        // Include any other non-readonly textarea (avoid duplicates)
-                        var others = Array.prototype.slice.call(document.querySelectorAll('textarea:not([readonly])'));
-                        others.forEach(function(t){ if (editors.indexOf(t) === -1) editors.push(t); });
-
-                        // Include contenteditable elements as well
-                        var ces = Array.prototype.slice.call(document.querySelectorAll('[contenteditable="true"]'));
-                        ces.forEach(function(c){ if (editors.indexOf(c) === -1) editors.push(c); });
-                    } catch (e) {
-                        // Fallback: select any textarea or contenteditable
-                        editors = Array.prototype.slice.call(document.querySelectorAll('textarea:not([readonly]), [contenteditable="true"]'));
+                    var exclusions = [];
+                    for (var type in selectors) {
+                        for (var attr in selectors[type]) {
+                            selectors[type][attr].forEach(function(name) {
+                                exclusions.push(':not([' + attr + '*="' + name + '"])');
+                            });
+                        }
                     }
 
-                    return editors;
+                    return document.querySelectorAll(
+                        'textarea:not([readonly])' + exclusions.join('') + 
+                        ',[contenteditable="true"]'
+                    );
                 }
             }
         },

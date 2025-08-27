@@ -716,19 +716,5 @@
                 },
             }));
         });
-        // Force insertion of uploader triggers for editors on this page
-        document.addEventListener('DOMContentLoaded', function() {
-            try {
-                if (window.UNIT3DUploader) {
-                    // Ensure settings mode is auto so it looks for textarea editors
-                    window.UNIT3DUploader.settings = window.UNIT3DUploader.settings || {};
-                    window.UNIT3DUploader.settings.mode = window.UNIT3DUploader.settings.mode || 'auto';
-                    // Attempt to insert triggers now (useful if pages are cached)
-                    window.UNIT3DUploader.insertTrigger();
-                }
-            } catch (e) {
-                console.error('Error initializing UNIT3D uploader:', e);
-            }
-        });
     </script>
 @endsection
