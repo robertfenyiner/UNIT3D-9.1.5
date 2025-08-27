@@ -1,7 +1,25 @@
 #!/bin/bash
 
 # Script maestro para configurar completamente rclone con OneDrive
-## Verificar que la configuración contiene onedrive-images
+## Verificar que la# Verificar que la configuración contiene imagenes
+if ! grep -q "\[imagenes\]" /etc/rclone/rclone.conf; then
+    echo "❌ No se encontró la configuración 'imagenes' en rclone.conf"
+    echo "   Asegúrate de que tu configuración incluya:"
+    echo "   [imagenes]"
+    echo "   type = onedrive"
+    echo "   ..."
+    exit 1
+fi
+
+# Probar configuración
+if ! rclone listremotes | grep -q "imagenes:"; then
+    echo "❌ Error: rclone no puede leer la configuración imagenes"
+    echo "   Verifica que el archivo /etc/rclone/rclone.conf tenga permisos correctos"
+    rclone config show imagenes
+    exit 1
+fi
+
+echo "✅ Configuración de rclone verificada correctamente"iene onedrive-images
 if ! grep -q "\[imagenes\]" /etc/rclone/rclone.conf; then
     echo "❌ No se encontró la configuración 'imagenes' en rclone.conf"
     echo "   Asegúrate de que tu configuración incluya:"

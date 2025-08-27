@@ -105,7 +105,7 @@ if [ ! -f "/etc/rclone/rclone.conf" ]; then
     echo ""
     echo "Opción A - Configurar automáticamente:"
     echo "   rclone config"
-    echo "   - Nombre: onedrive-images"
+    echo "   - Nombre: imagenes"
     echo "   - Tipo: Microsoft OneDrive (opción 26)"
     echo "   - client_id: (presiona Enter)"
     echo "   - client_secret: (presiona Enter)"
@@ -148,27 +148,30 @@ fi
 # 5. Verificar contenido de la configuración
 echo ""
 echo "5. Verificando contenido de la configuración..."
-if ! grep -q "\[onedrive-images\]" /etc/rclone/rclone.conf; then
-    echo "❌ No se encontró la sección [onedrive-images] en rclone.conf"
+if ! grep -q "\[imagenes\]" /etc/rclone/rclone.conf; then
+    echo "❌ No se encontró la sección [imagenes] en rclone.conf"
     echo ""
     echo "El archivo debe contener algo como:"
-    echo "[onedrive-images]"
+    echo "[imagenes]"
     echo "type = onedrive"
     echo "client_id ="
     echo "client_secret ="
     echo "region = global"
     echo "token = {\"access_token\":\"...\"}"
     echo ""
-    echo "Revisa tu configuración de rclone."
+    echo "Tu configuración actual:"
+    echo "---"
+    cat /etc/rclone/rclone.conf
+    echo "---"
     exit 1
 else
-    echo "✅ Sección [onedrive-images] encontrada"
+    echo "✅ Sección [imagenes] encontrada"
 fi
 
 # 6. Probar configuración
 echo ""
 echo "6. Probando configuración de rclone..."
-if ! rclone listremotes | grep -q "onedrive-images:"; then
+if ! rclone listremotes | grep -q "imagenes:"; then
     echo "❌ Error: rclone no puede leer la configuración"
     echo ""
     echo "Posibles soluciones:"
@@ -188,7 +191,7 @@ fi
 # 7. Probar conexión con OneDrive
 echo ""
 echo "7. Probando conexión con OneDrive..."
-if rclone lsd onedrive-images: >/dev/null 2>&1; then
+if rclone lsd imagenes: >/dev/null 2>&1; then
     echo "✅ Conexión con OneDrive exitosa"
 else
     echo "❌ Error conectando con OneDrive"
@@ -199,10 +202,10 @@ else
     echo "3. Configuración incorrecta"
     echo ""
     echo "Para reautenticar:"
-    echo "   rclone config reconnect onedrive-images:"
+    echo "   rclone config reconnect imagenes:"
     echo ""
     echo "Para ver detalles del error:"
-    echo "   rclone lsd onedrive-images:"
+    echo "   rclone lsd imagenes:"
     exit 1
 fi
 
@@ -227,5 +230,7 @@ echo "✅ Configuración válida"
 echo "✅ Conexión con OneDrive exitosa"
 echo ""
 echo "🚀 Ahora puedes ejecutar:"
-echo "   sudo bash scripts/setup-complete.sh"</content>
+echo "   sudo bash scripts/setup-complete.sh"
+echo ""
+echo "✨ Verificación completada"</content>
 <parameter name="filePath">d:\Onedrive Robert Personal\OneDrive\Documents\GitHub\UNIT3D-9.1.5\image-service\scripts\prepare-rclone.sh

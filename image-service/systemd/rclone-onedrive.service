@@ -8,7 +8,7 @@ Type=simple
 User=root
 Group=root
 # Adjust remote:path and mountpoint to match your config/config.json
-ExecStart=/usr/bin/rclone mount onedrive-images:UNIT3D-Images /var/www/html/storage/images --config=/etc/rclone/rclone.conf --allow-other --vfs-cache-mode writes --uid=33 --gid=33
+ExecStart=/usr/bin/rclone mount imagenes:UNIT3D-Images /var/www/html/storage/images --config=/etc/rclone/rclone.conf --allow-other --vfs-cache-mode writes --uid=33 --gid=33
 ExecStop=/bin/fusermount -uz /var/www/html/storage/images || /usr/bin/fusermount -uz /var/www/html/storage/images
 Restart=on-failure
 RestartSec=10s

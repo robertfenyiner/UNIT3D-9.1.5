@@ -243,6 +243,13 @@ curl -X POST -F "images=@/ruta/a/tu/imagen.jpg" http://216.9.226.186:3002/upload
 curl http://216.9.226.186:3002/health
 ```
 
+### Recuperación de problemas
+Si algo sale mal durante la configuración, usa el script de recuperación:
+```bash
+cd /var/www/html/image-service
+sudo bash scripts/recover-service.sh
+```
+
 ## 🔧 Solución de Problemas Comunes
 
 ### Problema: "Mount point no está montado"
@@ -292,6 +299,7 @@ sudo systemctl restart image-service.service
 
 - `prepare-rclone.sh` - Verifica y prepara la configuración de rclone antes del setup
 - `setup-complete.sh` - Configuración completa de rclone y servicios (requiere rclone.conf listo)
+- `recover-service.sh` - Recuperación rápida cuando hay problemas
 - `check-service.sh` - Verificación del estado del sistema
 - `monitor-rclone.sh` - Monitoreo automático del mount
 - `backup-rclone.sh` - Backup y restauración de configuración
