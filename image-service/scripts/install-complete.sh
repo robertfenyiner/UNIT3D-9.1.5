@@ -9,7 +9,46 @@ echo "🚀 INSTALACIÓN COMPLETA DESDE CERO - Lat-team Image Service"
 echo "Servidor: $(hostname -f)"
 echo "Fecha: $(date)"
 echo ""
-echo "⚠️  Este script incluye limpieza completa de instalaciones previas"
+echo "⚠️  Este script incluye limpieza completa de # Usar la ubicación del proyecto detectada
+SOURCE_DIR="$PROJECT_DIR"
+echo "    📂 Usando archivos desde: $SOURCE_DIR"ias"
+echo ""
+
+# Detectar automáticamente la ubicación del proyecto
+detect_project_directory() {
+    local script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    local project_dir="$(dirname "$script_dir")"
+    
+    if [ -f "$project_dir/package.json" ] && [ -f "$project_dir/app.js" ]; then
+        echo "$project_dir"
+        return 0
+    fi
+    
+    # Si no está en scripts/, buscar en el directorio actual
+    if [ -f "package.json" ] && [ -f "app.js" ]; then
+        echo "$(pwd)"
+        return 0
+    fi
+    
+    # Buscar en el directorio padre
+    if [ -f "../package.json" ] && [ -f "../app.js" ]; then
+        echo "$(dirname $(pwd))"
+        return 0
+    fi
+    
+    return 1
+}
+
+# Detectar ubicación del proyecto
+PROJECT_DIR=$(detect_project_directory)
+if [ $? -ne 0 ]; then
+    echo "❌ No se pudo detectar automáticamente la ubicación del proyecto"
+    echo "Asegúrate de ejecutar este script desde el directorio scripts/ del proyecto image-service"
+    echo "o desde el directorio raíz del proyecto."
+    exit 1
+fi
+
+echo "📂 Ubicación del proyecto detectada: $PROJECT_DIR"
 echo ""
 
 # Función para verificar si un comando existe

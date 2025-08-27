@@ -62,23 +62,16 @@ TEMP_SCRIPT="/tmp/install-complete-modified.sh"
 cp "$SCRIPT_DIR/install-complete.sh" "$TEMP_SCRIPT"
 
 # Reemplazar la lógica de copia de archivos en el script temporal
-# Primero, reemplazar el comentario
-sed -i 's|# Copiar archivos del proyecto.*|# Copiar archivos del proyecto|g' "$TEMP_SCRIPT"
-
-# Reemplazar la condición del primer if
-sed -i 's|if \[ -f "package\.json" \] \&\& \[ -f "app\.js" \]; then|if [ -f "'"$PROJECT_DIR"'/package.json" ] \&\& [ -f "'"$PROJECT_DIR"'/app.js" ]; then|g' "$TEMP_SCRIPT"
-
-# Reemplazar SOURCE_DIR en el primer bloque
-sed -i 's|SOURCE_DIR="\$(pwd)"|SOURCE_DIR="'"$PROJECT_DIR"'"|g' "$TEMP_SCRIPT"
-
-# Reemplazar el elif existente para que use PROJECT_DIR también
-sed -i 's|elif \[ -f "\.\./package\.json" \] \&\& \[ -f "\.\./app\.js" \]; then|elif [ -f "'"$PROJECT_DIR"'/package.json" ] \&\& [ -f "'"$PROJECT_DIR"'/app.js" ]; then|g' "$TEMP_SCRIPT"
-
-# Reemplazar SOURCE_DIR en el elif bloque
-sed -i 's|SOURCE_DIR="\$(dirname \$(pwd))"|SOURCE_DIR="'"$PROJECT_DIR"'"|g' "$TEMP_SCRIPT"
-
-# Eliminar el else y su bloque, ya que ahora siempre usamos PROJECT_DIR
-sed -i '/else/,/fi/d' "$TEMP_SCRIPT"
+# Eliminar el bloque completo de detección y reemplazarlo con asignación directa
+sed -i '/# Determinar la ubicación de los archivos fuente/,/fi/{ 
+    /# Determinar la ubicación de los archivos fuente/c\
+# Usar la ubicación del proyecto detectada\
+SOURCE_DIR="'"$PROJECT_DIR"'"
+    /if \[ -f/d
+    /SOURCE_DIR=/d
+    /elif/d
+    /else/,/fi/d
+}' "$TEMP_SCRIPT"
 
 # Ajustar el cp command
 sed -i 's|sudo cp -r "\$SOURCE_DIR"/\* /var/www/html/image-service/|sudo cp -r "'"$PROJECT_DIR"'"/* /var/www/html/image-service/|g' "$TEMP_SCRIPT"
