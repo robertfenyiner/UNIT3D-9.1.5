@@ -9,9 +9,7 @@ echo "🚀 INSTALACIÓN COMPLETA DESDE CERO - Lat-team Image Service"
 echo "Servidor: $(hostname -f)"
 echo "Fecha: $(date)"
 echo ""
-echo "⚠️  Este script incluye limpieza completa de # Usar la ubicación del proyecto detectada
-SOURCE_DIR="$PROJECT_DIR"
-echo "    📂 Usando archivos desde: $SOURCE_DIR"ias"
+echo "⚠️  Este script incluye limpieza completa de instalaciones previas"
 echo ""
 
 # Detectar automáticamente la ubicación del proyecto
@@ -257,7 +255,7 @@ if [ -d "/var/www/html/image-service" ] || [ -f "/etc/systemd/system/rclone-oned
     echo ""
     read -p "¿Deseas eliminar completamente las instalaciones previas? (recomendado) [S/n]: " -n 1 -r
     echo
-    if [[ ! $REPLY =~ ^[Nn]$ ]]; then
+    if [[ ! $REPLY =~ ^[Ss]$ ]]; then
         cleanup_previous_installation
     else
         print_warning "Continuando sin limpieza (pueden ocurrir conflictos)"
@@ -314,24 +312,9 @@ fi
 # Copiar archivos del proyecto
 echo "  📋 Copiando archivos del proyecto..."
 
-# Determinar la ubicación de los archivos fuente
-if [ -f "package.json" ] && [ -f "app.js" ]; then
-    # Los archivos están en el directorio actual
-    SOURCE_DIR="$(pwd)"
-    echo "    � Usando archivos desde: $SOURCE_DIR"
-elif [ -f "../package.json" ] && [ -f "../app.js" ]; then
-    # Los archivos están en el directorio padre
-    SOURCE_DIR="$(dirname $(pwd))"
-    echo "    📂 Usando archivos desde: $SOURCE_DIR"
-else
-    # No se encontraron archivos, pedir ubicación al usuario
-    echo "    ❓ No se encontraron archivos del proyecto automáticamente"
-    read -p "    Ingresa la ruta completa al directorio con los archivos del proyecto: " SOURCE_DIR
-    if [ ! -d "$SOURCE_DIR" ] || [ ! -f "$SOURCE_DIR/package.json" ] || [ ! -f "$SOURCE_DIR/app.js" ]; then
-        print_error "Directorio inválido o archivos no encontrados en: $SOURCE_DIR"
-        exit 1
-    fi
-fi
+# Usar la ubicación del proyecto detectada
+SOURCE_DIR="$PROJECT_DIR"
+echo "    📂 Usando archivos desde: $SOURCE_DIR"
 
 # Copiar archivos
 if sudo cp -r "$SOURCE_DIR"/* /var/www/html/image-service/ 2>/dev/null; then
@@ -554,4 +537,3 @@ echo "  Ver archivos en OneDrive: rclone lsd imagenes:Lat-team-Images"
 echo "  Ver uso de espacio: df -h /var/www/html/storage/images"
 echo ""
 echo "✨ ¡El servicio está listo para recibir imágenes!"
-<parameter name="filePath">d:\Onedrive Robert Personal\OneDrive\Documents\GitHub\UNIT3D-9.1.5\image-service\scripts\install-complete.sh
