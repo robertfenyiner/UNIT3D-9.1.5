@@ -42,11 +42,26 @@ async function processUploadFiles(req, res) {
                 // Procesar imagen
                 const processed = await imageProcessor.processImage(fileBuffer, file.originalname);
 
-                // Generar URLs públicas
-                const baseUrl = config.storage.publicUrl;
-                const imageUrl = `${baseUrl}/${processed.processed.fileName}`;
-                const thumbnailUrl = processed.thumbnail ?
-                    `${baseUrl}/thumbs/${processed.thumbnail.fileName}` : null;
+                    // Generar URLs públicas.
+                    // Preferir el origen de la petición para que las URLs funcionen
+                    // cuando el usuario accede por IP o dominio local.
+                    let baseUrl;
+                    try {
+                        // Intentar parsear config.publicUrl si está bien formada
+                        if (config.storage.publicUrl && config.storage.publicUrl.startsWith('http')) {
+                            const parsed = new URL(config.storage.publicUrl);
+                            baseUrl = parsed.origin + (parsed.pathname ? parsed.pathname.replace(/\/$/, '') : '');
+                        } else {
+                            throw new Error('no-valid-publicUrl');
+                        }
+                    } catch (e) {
+                        // Fallback: construir desde la petición actual
+                        baseUrl = `${req.protocol}://${req.get('host')}/image`;
+                    }
+
+                    const imageUrl = `${baseUrl}/${processed.processed.fileName}`;
+                    const thumbnailUrl = processed.thumbnail ?
+                        `${baseUrl}/thumbs/${processed.thumbnail.fileName}` : null;
 
                 // Preparar resultado
                 const result = {
@@ -270,9 +285,21 @@ router.post('/url', async (req, res) => {
         const processed = await imageProcessor.processImage(imageBuffer, originalName);
         
         // Generar respuesta
-        const baseUrl = config.storage.publicUrl;
+        // Construir URLs públicas para la respuesta (preferir origen de la petición)
+        let baseUrl;
+        try {
+            if (config.storage.publicUrl && config.storage.publicUrl.startsWith('http')) {
+                const parsed = new URL(config.storage.publicUrl);
+                baseUrl = parsed.origin + (parsed.pathname ? parsed.pathname.replace(/\/$/, '') : '');
+            } else {
+                throw new Error('no-valid-publicUrl');
+            }
+        } catch (e) {
+            baseUrl = `${req.protocol}://${req.get('host')}/image`;
+        }
+
         const imageUrl = `${baseUrl}/${processed.processed.fileName}`;
-        const thumbnailUrl = processed.thumbnail ? 
+        const thumbnailUrl = processed.thumbnail ?
             `${baseUrl}/thumbs/${processed.thumbnail.fileName}` : null;
         
         logger.logUpload('URL upload completed', {
