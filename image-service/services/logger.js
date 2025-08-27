@@ -1,6 +1,8 @@
 const winston = require('winston');
 const path = require('path');
-const config = require('../config/config.json');
+// Load configuration matching NODE_ENV (production vs development)
+const configFile = process.env.NODE_ENV === 'production' ? '../config/config.json' : '../config/config.dev.json';
+const config = require(configFile);
 
 // Crear logger con Winston
 const logger = winston.createLogger({
