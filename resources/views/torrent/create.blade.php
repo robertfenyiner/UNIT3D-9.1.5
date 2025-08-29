@@ -699,7 +699,7 @@
     <script src="{{ asset('build/unit3d/tmdb.js') }}" crossorigin="anonymous"></script>
     <script src="{{ asset('build/unit3d/parser.js') }}" crossorigin="anonymous"></script>
     <script src="{{ asset('build/unit3d/helper.js') }}" crossorigin="anonymous"></script>
-    <script src="{{ asset('js/vendor/unit3d-uploader.js') }}" crossorigin="anonymous"></script>
+    <script src="{{ asset('build/unit3d/imgbb.js') }}" crossorigin="anonymous"></script>
     <script nonce="{{ HDVinnie\SecureHeaders\SecureHeaders::nonce('script') }}">
         document.addEventListener('alpine:init', () => {
             Alpine.data('upload', () => ({

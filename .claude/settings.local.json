@@ -17,7 +17,8 @@
       "Bash(powershell:*)",
       "Bash(start /B node:*)",
       "Bash(timeout:*)",
-      "Bash(npm install:*)"
+      "Bash(npm install:*)",
+      "Bash(rm:*)"
     ],
     "deny": []
   }
