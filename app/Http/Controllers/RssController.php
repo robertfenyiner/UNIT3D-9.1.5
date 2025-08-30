@@ -138,13 +138,13 @@ class RssController extends Controller
 
         abort_if($user->group_id === $bannedGroup[0] || $user->group_id === $disabledGroup[0] || !$user->active, 404);
 
-        $rss = Rss::query()
-            ->where(
-                fn ($query) => $query
-                    ->where('user_id', '=', $user->id)
-                    ->orWhere('is_private', '=', false)
-            )
-            ->findOrFail($id);
+            $rss = Rss::query()
+                ->where(
+                    fn ($query) => $query
+                        ->where('user_id', '=', $user->id)
+                        ->orWhere('is_private', '=', false)
+                )
+                ->findOrFail($id);
 
         $search = $rss->object_torrent;
 
