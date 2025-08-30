@@ -153,7 +153,7 @@ class RssController extends Controller
 
             $torrents = cache()->remember($cacheKey, 300, function () use ($search, $user) {
                 $filters = new TorrentSearchFiltersDTO(
-                    user: $user,
+                    $user,
                     name: $search->search ?? '',
                     description: $search->description ?? '',
                     uploader: $search->uploader ?? '',
