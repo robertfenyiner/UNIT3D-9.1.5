@@ -136,8 +136,12 @@ class RssController extends Controller
         $bannedGroup = cache()->rememberForever('banned_group', fn () => Group::where('slug', '=', 'banned')->pluck('id'));
         $disabledGroup = cache()->rememberForever('disabled_group', fn () => Group::where('slug', '=', 'disabled')->pluck('id'));
 
-        abort_if($user->group_id === $bannedGroup[0] || $user->group_id === $disabledGroup[0] || !$user->active, 404);
+        if ($user->group_id === ($bannedGroup[0] ?? null) || $user->group_id === ($disabledGroup[0] ?? null) || !$user->active) {
+            \Log::info('RSS 404 reason: user banned/disabled/inactive', ['user_id' => $user->id, 'group_id' => $user->group_id, 'banned_group' => $bannedGroup->toArray(), 'disabled_group' => $disabledGroup->toArray()]);
+            abort(404);
+        }
 
+        try {
             $rss = Rss::query()
                 ->where(
                     fn ($query) => $query
@@ -145,10 +149,14 @@ class RssController extends Controller
                         ->orWhere('is_private', '=', false)
                 )
                 ->findOrFail($id);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            \Log::info('RSS 404 reason: rss not found or not accessible', ['user_id' => $user->id, 'rss_id' => $id]);
+            abort(404);
+        }
 
         $search = $rss->object_torrent;
 
-        if (\is_object($search)) {
+    if (\is_object($search)) {
             $cacheKey = 'rss:'.$rss->id;
 
             $torrents = cache()->remember($cacheKey, 300, function () use ($search, $user) {
@@ -202,8 +210,9 @@ class RssController extends Controller
                 'rss'      => $rss,
             ])
                 ->header('Content-Type', 'text/xml');
-        }
-        abort(404);
+    }
+    \Log::info('RSS 404 reason: object_torrent empty or invalid', ['rss_id' => $rss->id ?? $id]);
+    abort(404);
     }
 
     /**
