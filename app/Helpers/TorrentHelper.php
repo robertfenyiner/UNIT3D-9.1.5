@@ -102,8 +102,8 @@ class TorrentHelper
         }
 
         $user = $torrent->user;
-        $username = $user->username;
         $anon = $torrent->anon;
+        $username = $anon ? 'Anonimo' : $user->username;
 
         if (!$anon) {
             // Achievements
@@ -156,7 +156,7 @@ class TorrentHelper
             \Http::timeout(5)->post('http://localhost:3001/torrent-approved', [
                 'torrent_id' => $torrent->id,
                 'name' => $torrent->name,
-                'user' => $torrent->user->username,
+                'user' => $username,
                 'category' => $torrent->category->name ?? 'Unknown',
                 'size' => $torrent->getSize(),
                 'imdb' => $torrent->imdb,
