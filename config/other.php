@@ -56,7 +56,7 @@ return [
     |
     */
 
-    'meta_description' => 'Built On Laravel',
+    'meta_description' => 'Poder Latino',
 
     /*
     |--------------------------------------------------------------------------
@@ -66,7 +66,7 @@ return [
     | Date Site Was Born
     |
     */
-    'birthdate' => 'December 30th 2017',
+    'birthdate' => 'February 2 2021',
 
     /*
     |--------------------------------------------------------------------------
@@ -109,7 +109,7 @@ return [
     |
     */
 
-    'ratio' => 0.4,
+    'ratio' => 0.25,
 
     /*
     |--------------------------------------------------------------------------
@@ -129,6 +129,11 @@ return [
     'invite_groups'     => [
         'Administrator',
         'Owner',
+        'InsaneUser',
+	    'Veteran',
+	    'Seeder',
+	    'Archivist',
+	    'VIP',    
     ],
     'max_unused_user_invites' => 1,
 
@@ -206,7 +211,7 @@ return [
     |--------------------------------------------------------------------------
     | Example: 4
     */
-    'upload-guide_url' => env('APP_URL').'/pages/4',
+    'upload-guide_url' => env('APP_URL').'/wikis',
 
     /*
     |--------------------------------------------------------------------------
