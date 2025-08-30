@@ -370,6 +370,24 @@
                     />
                     <label for="is_donor">Lifetime Donor?</label>
                 </p>
+
+
+
+                <p class="form__group">
+                <input type="hidden" name="can_download" value="0" />
+                <input
+                        type="checkbox"
+                        class="form__checkbox"
+                        id="can_download"
+                        name="can_download"
+                        value="1"
+                        @checked($user->can_download)
+			            />
+                        <label for="can_download">{{ __('user.can-download') }}?</label>
+                        </p>
+
+
+                
                 <p class="form__group">
                     <button class="form__button form__button--filled">
                         {{ __('common.save') }}
