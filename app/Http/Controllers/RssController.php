@@ -137,7 +137,7 @@ class RssController extends Controller
         $disabledGroup = cache()->rememberForever('disabled_group', fn () => Group::where('slug', '=', 'disabled')->pluck('id'));
 
         if ($user->group_id === ($bannedGroup[0] ?? null) || $user->group_id === ($disabledGroup[0] ?? null) || !is_null($user->disabled_at)) {
-            \Log::info('RSS 404 reason: user banned/disabled', ['user_id' => $user->id, 'group_id' => $user->group_id, 'disabled_at' => $user->disabled_at, 'banned_group' => $bannedGroup->toArray(), 'disabled_group' => $disabledGroup->toArray()]);
+            \Log::debug('RSS 404 reason: user banned/disabled', ['user_id' => $user->id, 'group_id' => $user->group_id, 'disabled_at' => $user->disabled_at, 'banned_group' => $bannedGroup->toArray(), 'disabled_group' => $disabledGroup->toArray()]);
             abort(404);
         }
 
@@ -150,7 +150,7 @@ class RssController extends Controller
                 )
                 ->findOrFail($id);
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-            \Log::info('RSS 404 reason: rss not found or not accessible', ['user_id' => $user->id, 'rss_id' => $id]);
+            \Log::debug('RSS 404 reason: rss not found or not accessible', ['user_id' => $user->id, 'rss_id' => $id]);
             abort(404);
         }
 
@@ -211,7 +211,7 @@ class RssController extends Controller
             ])
                 ->header('Content-Type', 'text/xml');
     }
-    \Log::info('RSS 404 reason: object_torrent empty or invalid', ['rss_id' => $rss->id ?? $id]);
+    \Log::debug('RSS 404 reason: object_torrent empty or invalid', ['rss_id' => $rss->id ?? $id]);
     abort(404);
     }
 
