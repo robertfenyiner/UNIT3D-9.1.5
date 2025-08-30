@@ -136,8 +136,8 @@ class RssController extends Controller
         $bannedGroup = cache()->rememberForever('banned_group', fn () => Group::where('slug', '=', 'banned')->pluck('id'));
         $disabledGroup = cache()->rememberForever('disabled_group', fn () => Group::where('slug', '=', 'disabled')->pluck('id'));
 
-        if ($user->group_id === ($bannedGroup[0] ?? null) || $user->group_id === ($disabledGroup[0] ?? null) || !$user->active) {
-            \Log::info('RSS 404 reason: user banned/disabled/inactive', ['user_id' => $user->id, 'group_id' => $user->group_id, 'banned_group' => $bannedGroup->toArray(), 'disabled_group' => $disabledGroup->toArray()]);
+        if ($user->group_id === ($bannedGroup[0] ?? null) || $user->group_id === ($disabledGroup[0] ?? null) || !is_null($user->disabled_at)) {
+            \Log::info('RSS 404 reason: user banned/disabled', ['user_id' => $user->id, 'group_id' => $user->group_id, 'disabled_at' => $user->disabled_at, 'banned_group' => $bannedGroup->toArray(), 'disabled_group' => $disabledGroup->toArray()]);
             abort(404);
         }
 
