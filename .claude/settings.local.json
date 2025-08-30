@@ -18,7 +18,8 @@
       "Bash(start /B node:*)",
       "Bash(timeout:*)",
       "Bash(npm install:*)",
-      "Bash(rm:*)"
+      "Bash(rm:*)",
+      "Bash(where php)"
     ],
     "deny": []
   }
