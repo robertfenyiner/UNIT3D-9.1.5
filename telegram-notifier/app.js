@@ -607,30 +607,31 @@ async function getPosterUrl(torrent) {
                     const publicCoverUrl = `${base}/public-torrent-covers/${encodeURIComponent(torrent.torrent_id)}`;
                     const publicBannerUrl = `${base}/public-torrent-banners/${encodeURIComponent(torrent.torrent_id)}`;
 
-                    const coverStatus = await urlStatus(coverUrl);
-                    logger.info(`HEAD ${coverUrl} => ${coverStatus}`);
-                    if (coverStatus >= 200 && coverStatus < 400) {
-                        imageUrl = coverUrl;
-                        logger.info(`🖼️ Usando torrent cover del tracker (autenticado): ${imageUrl}`);
+                    // Prefer public endpoints first (they return 200 when present).
+                    const publicCoverStatus = await urlStatus(publicCoverUrl);
+                    logger.info(`HEAD ${publicCoverUrl} => ${publicCoverStatus}`);
+                    if (publicCoverStatus === 200) {
+                        imageUrl = publicCoverUrl;
+                        logger.info(`🖼️ Usando torrent cover público: ${imageUrl}`);
                     } else {
-                        // Try the public cover endpoint (if exists)
-                        const publicCoverStatus = await urlStatus(publicCoverUrl);
-                        logger.info(`HEAD ${publicCoverUrl} => ${publicCoverStatus}`);
-                        if (publicCoverStatus >= 200 && publicCoverStatus < 400) {
-                            imageUrl = publicCoverUrl;
-                            logger.info(`🖼️ Usando torrent cover público: ${imageUrl}`);
+                        // Only treat authenticated endpoints as valid when they return 200
+                        const coverStatus = await urlStatus(coverUrl);
+                        logger.info(`HEAD ${coverUrl} => ${coverStatus}`);
+                        if (coverStatus === 200) {
+                            imageUrl = coverUrl;
+                            logger.info(`🖼️ Usando torrent cover del tracker (autenticado): ${imageUrl}`);
                         } else {
-                            const bannerStatus = await urlStatus(bannerUrl);
-                            logger.info(`HEAD ${bannerUrl} => ${bannerStatus}`);
-                            if (bannerStatus >= 200 && bannerStatus < 400) {
-                                imageUrl = bannerUrl;
-                                logger.info(`🖼️ Usando torrent banner del tracker (autenticado): ${imageUrl}`);
+                            const publicBannerStatus = await urlStatus(publicBannerUrl);
+                            logger.info(`HEAD ${publicBannerUrl} => ${publicBannerStatus}`);
+                            if (publicBannerStatus === 200) {
+                                imageUrl = publicBannerUrl;
+                                logger.info(`🖼️ Usando torrent banner público: ${imageUrl}`);
                             } else {
-                                const publicBannerStatus = await urlStatus(publicBannerUrl);
-                                logger.info(`HEAD ${publicBannerUrl} => ${publicBannerStatus}`);
-                                if (publicBannerStatus >= 200 && publicBannerStatus < 400) {
-                                    imageUrl = publicBannerUrl;
-                                    logger.info(`🖼️ Usando torrent banner público: ${imageUrl}`);
+                                const bannerStatus = await urlStatus(bannerUrl);
+                                logger.info(`HEAD ${bannerUrl} => ${bannerStatus}`);
+                                if (bannerStatus === 200) {
+                                    imageUrl = bannerUrl;
+                                    logger.info(`🖼️ Usando torrent banner del tracker (autenticado): ${imageUrl}`);
                                 }
                             }
                         }
