@@ -579,7 +579,29 @@ async function getPosterUrl(torrent) {
             logger.info(`🔍 Intentando fallback: búsqueda por título`);
             imageUrl = await searchTMDBByTitle(torrent);
         }
-        
+
+        // Antes de usar imagen genérica o por categoría: intentar portada/banner del propio torrent
+        if (!imageUrl) {
+            try {
+                const base = (config.tracker && config.tracker.base_url) ? config.tracker.base_url.replace(/\/$/, '') : null;
+                if (base) {
+                    // Portada del torrent (preferida)
+                    const coverUrl = `${base}/authenticated-images/torrent-covers/${encodeURIComponent(torrent.torrent_id)}`;
+                    const bannerUrl = `${base}/authenticated-images/torrent-banners/${encodeURIComponent(torrent.torrent_id)}`;
+
+                    if (await urlExists(coverUrl)) {
+                        imageUrl = coverUrl;
+                        logger.info(`🖼️ Usando torrent cover del tracker: ${imageUrl}`);
+                    } else if (await urlExists(bannerUrl)) {
+                        imageUrl = bannerUrl;
+                        logger.info(`🖼️ Usando torrent banner del tracker: ${imageUrl}`);
+                    }
+                }
+            } catch (err) {
+                logger.warn(`⚠️ Error comprobando cover/banner del torrent: ${err.message}`);
+            }
+        }
+
         // Fallback final: imagen genérica por categoría
         if (!imageUrl && config.features.fallback_generic_image) {
             imageUrl = getGenericCategoryImage(torrent.category);
@@ -588,7 +610,7 @@ async function getPosterUrl(torrent) {
             }
         }
 
-        // Intentar usar imagen manual subida en el tracker (ruta pública)
+        // Intentar usar imagen manual subida en el tracker (ruta pública por categoría)
         if (!imageUrl) {
             try {
                 const base = (config.tracker && config.tracker.base_url) ? config.tracker.base_url.replace(/\/$/, '') : null;
