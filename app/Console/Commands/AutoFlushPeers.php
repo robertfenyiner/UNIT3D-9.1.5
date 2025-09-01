@@ -53,7 +53,7 @@ class AutoFlushPeers extends Command
         Peer::select(['torrent_id', 'user_id', 'peer_id', 'seeder', 'updated_at'])
             ->where('updated_at', '<', $carbon->copy()->subHours(2))
             ->where('active', '=', 1)
-            ->chunkById(500, function ($peers) {
+            ->chunk(500, function ($peers) {
                 foreach ($peers as $peer) {
                     History::query()
                         ->where('torrent_id', '=', $peer->torrent_id)
@@ -86,7 +86,7 @@ class AutoFlushPeers extends Command
             Peer::select(['torrent_id', 'user_id', 'peer_id'])
                 ->where('updated_at', '<', $carbon->copy()->subDays(2))
                 ->where('active', '=', 0)
-                ->chunkById(500, function ($peers) {
+                ->chunk(500, function ($peers) {
                     foreach ($peers as $peer) {
                         cache()->decrement('user-leeching-count:'.$peer->user_id);
 

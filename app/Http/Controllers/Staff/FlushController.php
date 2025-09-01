@@ -55,7 +55,7 @@ class FlushController extends Controller
             // Procesar en bloques para evitar cargar todos los peers en memoria
             Peer::select(['torrent_id', 'user_id', 'peer_id', 'updated_at'])
                 ->where('updated_at', '<', $cutoff)
-                ->chunkById(500, function ($peers) {
+                ->chunk(500, function ($peers) {
                     foreach ($peers as $peer) {
                         History::query()
                             ->where('torrent_id', '=', $peer->torrent_id)
