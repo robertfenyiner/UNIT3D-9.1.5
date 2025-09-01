@@ -53,25 +53,28 @@ class FlushController extends Controller
 
         try {
             // Procesar en bloques para evitar cargar todos los peers en memoria
-            Peer::select(['torrent_id', 'user_id', 'peer_id', 'updated_at'])
+            // Usar cursor() para evitar que Eloquent intente ordenar por una columna `id` inexistente
+            $lazy = Peer::select(['torrent_id', 'user_id', 'peer_id', 'updated_at'])
                 ->where('updated_at', '<', $cutoff)
-                ->chunk(500, function ($peers) {
-                    foreach ($peers as $peer) {
-                        History::query()
-                            ->where('torrent_id', '=', $peer->torrent_id)
-                            ->where('user_id', '=', $peer->user_id)
-                            ->update([
-                                'active'     => false,
-                                'updated_at' => DB::raw('updated_at'),
-                            ]);
+                ->cursor();
 
-                        Peer::query()
-                            ->where('torrent_id', '=', $peer->torrent_id)
-                            ->where('user_id', '=', $peer->user_id)
-                            ->where('peer_id', '=', $peer->peer_id)
-                            ->delete();
-                    }
-                });
+            foreach ($lazy->chunk(500) as $peers) {
+                foreach ($peers as $peer) {
+                    History::query()
+                        ->where('torrent_id', '=', $peer->torrent_id)
+                        ->where('user_id', '=', $peer->user_id)
+                        ->update([
+                            'active'     => false,
+                            'updated_at' => DB::raw('updated_at'),
+                        ]);
+
+                    Peer::query()
+                        ->where('torrent_id', '=', $peer->torrent_id)
+                        ->where('user_id', '=', $peer->user_id)
+                        ->where('peer_id', '=', $peer->peer_id)
+                        ->delete();
+                }
+            }
         } catch (Exception $e) {
             report($e);
 
