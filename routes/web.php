@@ -93,20 +93,7 @@ Route::middleware('language')->group(function (): void {
     | Website (When Authorized) (Alpha Ordered)
     |---------------------------------------------------------------------------------
     */
-    // Public category/torrent image endpoints for bots (no auth)
-    Route::get('/public-category-images/{category}', [App\Http\Controllers\AuthenticatedImageController::class, 'publicCategoryImage'])
-        ->name('public_category_image')
-        ->withoutMiddleware(['auth', 'banned', 'verified']);
-
-    Route::get('/public-torrent-covers/{id}', [App\Http\Controllers\AuthenticatedImageController::class, 'publicTorrentCover'])
-        ->whereNumber('id')
-        ->name('public_torrent_cover')
-        ->withoutMiddleware(['auth', 'banned', 'verified']);
-
-    Route::get('/public-torrent-banners/{id}', [App\Http\Controllers\AuthenticatedImageController::class, 'publicTorrentBanner'])
-        ->whereNumber('id')
-        ->name('public_torrent_banner')
-        ->withoutMiddleware(['auth', 'banned', 'verified']);
+    // public image routes moved to routes/public_images.php
 
     Route::middleware(['auth', 'banned', 'verified'])->group(function (): void {
         // General

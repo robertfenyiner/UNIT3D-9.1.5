@@ -50,6 +50,9 @@ class RouteServiceProvider extends ServiceProvider
                 ->middleware(MiddlewareGroup::CHAT->value)
                 ->group(base_path('routes/vue.php'));
 
+            // Public image routes for bots (no web/auth middleware)
+            Route::group([], base_path('routes/public_images.php'));
+
             Route::middleware(MiddlewareGroup::WEB->value)
                 ->group(base_path('routes/web.php'));
 
