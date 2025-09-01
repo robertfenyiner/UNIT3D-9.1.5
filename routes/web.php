@@ -119,6 +119,9 @@ Route::middleware('language')->group(function (): void {
 
     // Public category images (for bots / integrations) - no auth required
     Route::get('/public-category-images/{category}', [App\Http\Controllers\AuthenticatedImageController::class, 'publicCategoryImage'])->name('public_category_image');
+    // Public torrent cover/banner endpoints (bots/integrations)
+    Route::get('/public-torrent-covers/{id}', [App\Http\Controllers\AuthenticatedImageController::class, 'publicTorrentCover'])->whereNumber('id')->name('public_torrent_cover');
+    Route::get('/public-torrent-banners/{id}', [App\Http\Controllers\AuthenticatedImageController::class, 'publicTorrentBanner'])->whereNumber('id')->name('public_torrent_banner');
 
         // Donation System
         Route::prefix('donations')->group(function (): void {

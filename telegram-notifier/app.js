@@ -397,6 +397,22 @@ function urlExists(url) {
     });
 }
 
+// Obtener status HTTP (HEAD) de una URL -- devuelve status code (0 en error)
+function urlStatus(url) {
+    return new Promise((resolve) => {
+        try {
+            const req = https.request(url, { method: 'HEAD' }, (res) => {
+                resolve(res.statusCode || 0);
+            });
+            req.on('error', () => resolve(0));
+            req.setTimeout(5000, () => { req.destroy(); resolve(0); });
+            req.end();
+        } catch (err) {
+            resolve(0);
+        }
+    });
+}
+
 // Función para buscar en TMDB por título cuando no hay ID
 async function searchTMDBByTitle(torrent) {
     try {
@@ -589,12 +605,18 @@ async function getPosterUrl(torrent) {
                     const coverUrl = `${base}/authenticated-images/torrent-covers/${encodeURIComponent(torrent.torrent_id)}`;
                     const bannerUrl = `${base}/authenticated-images/torrent-banners/${encodeURIComponent(torrent.torrent_id)}`;
 
-                    if (await urlExists(coverUrl)) {
+                    const coverStatus = await urlStatus(coverUrl);
+                    logger.info(`HEAD ${coverUrl} => ${coverStatus}`);
+                    if (coverStatus >= 200 && coverStatus < 400) {
                         imageUrl = coverUrl;
                         logger.info(`🖼️ Usando torrent cover del tracker: ${imageUrl}`);
-                    } else if (await urlExists(bannerUrl)) {
-                        imageUrl = bannerUrl;
-                        logger.info(`🖼️ Usando torrent banner del tracker: ${imageUrl}`);
+                    } else {
+                        const bannerStatus = await urlStatus(bannerUrl);
+                        logger.info(`HEAD ${bannerUrl} => ${bannerStatus}`);
+                        if (bannerStatus >= 200 && bannerStatus < 400) {
+                            imageUrl = bannerUrl;
+                            logger.info(`🖼️ Usando torrent banner del tracker: ${imageUrl}`);
+                        }
                     }
                 }
             } catch (err) {
@@ -653,6 +675,18 @@ function downloadImageBuffer(url) {
             reject(err);
         }
     });
+}
+
+// Detectar si un buffer parece una imagen (chequeo simple por magic bytes)
+function isImageBuffer(buffer) {
+    if (!buffer || buffer.length < 10) return false;
+    // JPEG: FF D8 FF
+    if (buffer[0] === 0xFF && buffer[1] === 0xD8 && buffer[2] === 0xFF) return true;
+    // PNG: 89 50 4E 47
+    if (buffer[0] === 0x89 && buffer[1] === 0x50 && buffer[2] === 0x4E && buffer[3] === 0x47) return true;
+    // GIF: 47 49 46 38
+    if (buffer[0] === 0x47 && buffer[1] === 0x49 && buffer[2] === 0x46 && buffer[3] === 0x38) return true;
+    return false;
 }
 
 // Redimensionar buffer con sharp (ancho fijo, mantener aspect ratio)
@@ -778,33 +812,31 @@ app.post('/torrent-approved', async (req, res) => {
                 const singleCaption = buildSingleCaption(torrent);
                 const MAX_CAPTION = 1000; // seguro por debajo de límite de Telegram (~1024)
                 const finalCaption = singleCaption.length > MAX_CAPTION ? singleCaption.slice(0, MAX_CAPTION - 3) + '...' : singleCaption;
-
-                // Si está configurado poster_max_width, intentamos descargar y redimensionar la imagen
-                if (config.features && config.features.poster_max_width) {
-                    try {
-                        const maxWidth = parseInt(config.features.poster_max_width, 10) || 320;
-                        const imgBuffer = await downloadImageBuffer(posterUrl);
-                        const resized = await resizeImageBuffer(imgBuffer, maxWidth);
-
-                        await bot.sendPhoto(config.telegram.chat_id, resized, {
-                            caption: finalCaption,
-                            parse_mode: parseMode
-                        });
-                        logger.info(`✅ Foto (buffer) enviada exitosamente (redimensionada a ${maxWidth}px)`);
-                    } catch (resizeError) {
-                        logger.warn(`⚠️ Falló redimensionado/envío buffer: ${resizeError.message} — intentando enviar como URL`);
-                        // Fallback a enviar por URL
-                        await bot.sendPhoto(config.telegram.chat_id, posterUrl, {
-                            caption: finalCaption,
-                            parse_mode: parseMode
-                        });
+                // Intentar descargar y validar buffer (evitar enviar HTML/placeholders)
+                try {
+                    const imgBuffer = await downloadImageBuffer(posterUrl);
+                    if (isImageBuffer(imgBuffer)) {
+                        if (config.features && config.features.poster_max_width) {
+                            try {
+                                const maxWidth = parseInt(config.features.poster_max_width, 10) || 320;
+                                const resized = await resizeImageBuffer(imgBuffer, maxWidth);
+                                await bot.sendPhoto(config.telegram.chat_id, resized, { caption: finalCaption, parse_mode: parseMode });
+                                logger.info(`✅ Foto (buffer) enviada exitosamente (redimensionada a ${maxWidth}px)`);
+                            } catch (resizeError) {
+                                logger.warn(`⚠️ Falló redimensionado: ${resizeError.message} — enviando buffer original`);
+                                await bot.sendPhoto(config.telegram.chat_id, imgBuffer, { caption: finalCaption, parse_mode: parseMode });
+                            }
+                        } else {
+                            await bot.sendPhoto(config.telegram.chat_id, imgBuffer, { caption: finalCaption, parse_mode: parseMode });
+                        }
+                    } else {
+                        logger.warn(`⚠️ La URL ${posterUrl} devolvió contenido que no parece imagen (envío por URL como fallback)`);
+                        // Intentar enviar por URL (fallback)
+                        await bot.sendPhoto(config.telegram.chat_id, posterUrl, { caption: finalCaption, parse_mode: parseMode });
                     }
-                } else {
-                    // Enviar por URL si no se solicita redimensionado
-                    await bot.sendPhoto(config.telegram.chat_id, posterUrl, {
-                        caption: finalCaption,
-                        parse_mode: parseMode
-                    });
+                } catch (downloadErr) {
+                    logger.warn(`⚠️ Error descargando imagen ${downloadErr.message} — intentando enviar por URL: ${posterUrl}`);
+                    await bot.sendPhoto(config.telegram.chat_id, posterUrl, { caption: finalCaption, parse_mode: parseMode });
                 }
                 logger.info(`✅ Foto + caption enviada exitosamente`);
             } catch (photoError) {
@@ -840,18 +872,36 @@ app.post('/torrent-approved', async (req, res) => {
                 const embed = buildDiscordEmbed(torrent);
 
                 // attempt attachment if we have posterUrl and resizing configured
-                if (posterUrl && config.features && config.features.poster_max_width) {
+                if (posterUrl) {
                     try {
-                        const maxWidth = parseInt(config.features.poster_max_width, 10) || 320;
+                        // intentar descargar y validar
                         const imgBuffer = await downloadImageBuffer(posterUrl);
-                        const resized = await resizeImageBuffer(imgBuffer, maxWidth);
-                        const filename = `poster_${torrent.torrent_id}.jpg`;
-                        embed.image = { url: `attachment://${filename}` };
-                        const payload = { embeds: [embed] };
-                        const sendResult = await sendDiscordWebhook(discordWebhook, payload, resized, filename);
-                        logger.info('✅ Discord: notificación enviada con attachment', sendResult);
+                        if (isImageBuffer(imgBuffer)) {
+                            // redimensionar si está configurado
+                            let outBuffer = imgBuffer;
+                            if (config.features && config.features.poster_max_width) {
+                                try {
+                                    const maxWidth = parseInt(config.features.poster_max_width, 10) || 320;
+                                    outBuffer = await resizeImageBuffer(imgBuffer, maxWidth);
+                                } catch (rErr) {
+                                    logger.warn('⚠️ Discord: fallo redimensionando, usar buffer original: ' + rErr.message);
+                                }
+                            }
+
+                            const filename = `poster_${torrent.torrent_id}.jpg`;
+                            embed.image = { url: `attachment://${filename}` };
+                            const payload = { embeds: [embed] };
+                            const sendResult = await sendDiscordWebhook(discordWebhook, payload, outBuffer, filename);
+                            logger.info('✅ Discord: notificación enviada con attachment', sendResult);
+                        } else {
+                            logger.warn('⚠️ Discord: la URL no devolvió una imagen válida, enviando embed con URL');
+                            embed.image = { url: posterUrl };
+                            const payload = { embeds: [embed] };
+                            const sendResult = await sendDiscordWebhook(discordWebhook, payload, null, null);
+                            logger.info('✅ Discord: notificación enviada (embed con URL)', sendResult);
+                        }
                     } catch (dErr) {
-                        logger.warn('⚠️ Discord: fallo al adjuntar imagen, enviando embed con URL: ' + dErr.message);
+                        logger.warn('⚠️ Discord: fallo descargando imagen, enviando embed con URL: ' + dErr.message);
                         embed.image = posterUrl ? { url: posterUrl } : undefined;
                         const payload = { embeds: [embed] };
                         const sendResult = await sendDiscordWebhook(discordWebhook, payload, null, null);
@@ -859,7 +909,7 @@ app.post('/torrent-approved', async (req, res) => {
                     }
                 } else {
                     // send embed without attachment
-                    embed.image = posterUrl ? { url: posterUrl } : undefined;
+                    embed.image = undefined;
                     const payload = { embeds: [embed] };
                     const sendResult = await sendDiscordWebhook(discordWebhook, payload, null, null);
                     logger.info('✅ Discord: notificación enviada', sendResult);

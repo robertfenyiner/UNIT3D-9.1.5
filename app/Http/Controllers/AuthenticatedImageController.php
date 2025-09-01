@@ -119,6 +119,26 @@ class AuthenticatedImageController extends Controller
         return response()->file($path, self::HEADERS);
     }
 
+    /**
+     * Public torrent cover for bots/integrations (no auth required)
+     */
+    public function publicTorrentCover(int $id)
+    {
+        $path = Storage::disk('torrent-covers')->path("torrent-cover_{$id}.jpg");
+        abort_unless(file_exists($path), 404);
+        return response()->file($path, self::HEADERS);
+    }
+
+    /**
+     * Public torrent banner for bots/integrations (no auth required)
+     */
+    public function publicTorrentBanner(int $id)
+    {
+        $path = Storage::disk('torrent-banners')->path("torrent-banner_{$id}.jpg");
+        abort_unless(file_exists($path), 404);
+        return response()->file($path, self::HEADERS);
+    }
+
     public function userAvatar(User $user): \Symfony\Component\HttpFoundation\BinaryFileResponse
     {
         abort_if($user->image === null, 404);
