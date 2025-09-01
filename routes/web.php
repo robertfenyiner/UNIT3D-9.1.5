@@ -106,8 +106,8 @@ Route::middleware('language')->group(function (): void {
             });
         });
 
-        // Authenticated Images
-        Route::prefix('authenticated-images')->name('authenticated_images.')->middleware('throttle:authenticated-images')->withoutMiddleware('throttle:web')->group(function (): void {
+    // Authenticated Images
+    Route::prefix('authenticated-images')->name('authenticated_images.')->middleware('throttle:authenticated-images')->withoutMiddleware('throttle:web')->group(function (): void {
             Route::get('/article-images/{article}', [App\Http\Controllers\AuthenticatedImageController::class, 'articleImage'])->name('article_image');
             Route::get('/category-images/{category}', [App\Http\Controllers\AuthenticatedImageController::class, 'categoryImage'])->name('category_image');
             Route::get('/playlist-images/{playlist}', [App\Http\Controllers\AuthenticatedImageController::class, 'playlistImage'])->name('playlist_image');
@@ -116,6 +116,9 @@ Route::middleware('language')->group(function (): void {
             Route::get('/user-avatars/{user:username}', [App\Http\Controllers\AuthenticatedImageController::class, 'userAvatar'])->name('user_avatar');
             Route::get('/user-icons/{user:username}', [App\Http\Controllers\AuthenticatedImageController::class, 'userIcon'])->name('user_icon');
         });
+
+    // Public category images (for bots / integrations) - no auth required
+    Route::get('/public-category-images/{category}', [App\Http\Controllers\AuthenticatedImageController::class, 'publicCategoryImage'])->name('public_category_image');
 
         // Donation System
         Route::prefix('donations')->group(function (): void {

@@ -22,6 +22,7 @@ use App\Models\Playlist;
 use App\Models\Torrent;
 use App\Models\User;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class AuthenticatedImageController extends Controller
 {
@@ -49,6 +50,44 @@ class AuthenticatedImageController extends Controller
         abort_unless(file_exists($path), 404);
 
         return response()->file($path, self::HEADERS);
+    }
+
+    /**
+     * Serve a public category image without requiring authentication.
+     * This endpoint is intended for bots/integrations that need a stable URL
+     * for manually uploaded category artwork.
+     */
+    public function publicCategoryImage(string $category)
+    {
+        // Try to find a Category model by name first (case-insensitive)
+        $cat = Category::whereRaw('LOWER(name) = ?', [mb_strtolower($category)])->first();
+        if ($cat && $cat->image) {
+            $path = Storage::disk('category-images')->path($cat->image);
+            if (file_exists($path)) {
+                return response()->file($path, self::HEADERS);
+            }
+        }
+
+        // Fallback: attempt to find a file matching the category slug or name in disk
+        $possibleFiles = [
+            $category . '.jpg',
+            $category . '.png',
+            Str::slug($category) . '.jpg',
+            Str::slug($category) . '.png'
+        ];
+
+        foreach ($possibleFiles as $f) {
+            try {
+                $path = Storage::disk('category-images')->path($f);
+                if (file_exists($path)) {
+                    return response()->file($path, self::HEADERS);
+                }
+            } catch (\Exception $e) {
+                // ignore
+            }
+        }
+
+        abort(404);
     }
 
     public function playlistImage(Playlist $playlist): \Symfony\Component\HttpFoundation\BinaryFileResponse

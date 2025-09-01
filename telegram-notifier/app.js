@@ -381,6 +381,22 @@ function makeRequest(url) {
     });
 }
 
+// Verificar si una URL existe (HEAD request)
+function urlExists(url) {
+    return new Promise((resolve) => {
+        try {
+            const req = https.request(url, { method: 'HEAD' }, (res) => {
+                resolve(res.statusCode >= 200 && res.statusCode < 400);
+            });
+            req.on('error', () => resolve(false));
+            req.setTimeout(3000, () => { req.destroy(); resolve(false); });
+            req.end();
+        } catch (err) {
+            resolve(false);
+        }
+    });
+}
+
 // Función para buscar en TMDB por título cuando no hay ID
 async function searchTMDBByTitle(torrent) {
     try {
@@ -492,29 +508,19 @@ function getGenericCategoryImage(category) {
 // Función para obtener URL del póster desde TMDB
 async function getPosterUrl(torrent) {
     try {
-        // Solo intentar obtener póster para películas y series (incluyendo todas las categorías de tu tracker)
-        const supportedCategories = [
-            'Movies', 'TV', 'TV Shows', 'Peliculas', 'Series', 'Series de TV',
-            'TV Series', 'Anime', 'Asiáticas & Turcas', 'Telenovelas'
-        ];
-        if (!supportedCategories.includes(torrent.category)) {
-            logger.info(`🚫 Categoría no soportada para imágenes: ${torrent.category}`);
-            return null;
-        }
-        
+        // No bloquear por categoría aquí: películas/series usan TMDB; otras categorías
+        // pueden tener imágenes subidas manualmente en el tracker. Intentaremos
+        // obtener póster vía TMDB cuando aplique y cuando la API key exista.
         let imageUrl = null;
-        
+
         // Verificar si las imágenes están habilitadas
         if (!config.features.include_poster_images) {
             logger.info(`🚫 Imágenes deshabilitadas en configuración`);
             return null;
         }
-        
-        // Verificar si tenemos API key de TMDB
-        if (!config.tmdb || !config.tmdb.api_key || config.tmdb.api_key === 'TU_TMDB_API_KEY_AQUI') {
-            logger.warn(`🚫 API key de TMDB no configurada`);
-            return null;
-        }
+
+        // Determinar si TMDB está configurado (pero no abortar si no lo está)
+        const tmdbConfigured = !!(config.tmdb && config.tmdb.api_key && config.tmdb.api_key !== 'TU_TMDB_API_KEY_AQUI');
         
         // Logging detallado de datos de entrada
         logger.info(`🔍 ANÁLISIS DE TORRENT:
@@ -525,15 +531,15 @@ async function getPosterUrl(torrent) {
         - TMDB TV ID: ${torrent.tmdb_tv_id || 'NULL/UNDEFINED'}
         - IMDB: ${torrent.imdb || 'NULL/UNDEFINED'}`);
         
-        // Para películas
+        // Para películas: usar TMDB solo si hay ID y la API key está configurada
         if (torrent.category === 'Movies' || torrent.category === 'Peliculas') {
-            if (torrent.tmdb_movie_id && torrent.tmdb_movie_id > 0) {
+            if (torrent.tmdb_movie_id && torrent.tmdb_movie_id > 0 && tmdbConfigured) {
                 logger.info(`🎬 Buscando póster para película TMDB ID: ${torrent.tmdb_movie_id}`);
                 const url = `https://api.themoviedb.org/3/movie/${torrent.tmdb_movie_id}?api_key=${config.tmdb.api_key}`;
-                
+
                 const data = await makeRequest(url);
                 logger.info(`🎬 Datos recibidos de TMDB: ${JSON.stringify(data, null, 2)}`);
-                
+
                 if (data.poster_path) {
                     const size = (config.features && config.features.poster_size) ? config.features.poster_size : 'w154';
                     imageUrl = `https://image.tmdb.org/t/p/${size}${data.poster_path}`;
@@ -542,25 +548,20 @@ async function getPosterUrl(torrent) {
                     logger.warn(`⚠️ No se encontró poster_path para película ID ${torrent.tmdb_movie_id}`);
                 }
             } else {
-                logger.warn(`❌ PELÍCULA SIN TMDB_MOVIE_ID:
-                - Torrent ID: ${torrent.torrent_id}
-                - Nombre: ${torrent.name}
-                - Valor tmdb_movie_id: ${torrent.tmdb_movie_id}
-                - Razón: El torrent no tiene metadata de TMDB asignada
-                - Solución: El uploader debe agregar el TMDB ID durante la subida`);
+                logger.info(`ℹ️ Película sin TMDB disponible o TMDB no configurado: tmdb_movie_id=${torrent.tmdb_movie_id} tmdbConfigured=${tmdbConfigured}`);
             }
         }
 
         // Para series (incluyendo todas las variantes de tu tracker)
         const seriesCategories = ['TV', 'TV Shows', 'Series', 'Series de TV', 'TV Series', 'Anime', 'Asiáticas & Turcas', 'Telenovelas'];
         if (seriesCategories.includes(torrent.category)) {
-            if (torrent.tmdb_tv_id && torrent.tmdb_tv_id > 0) {
+            if (torrent.tmdb_tv_id && torrent.tmdb_tv_id > 0 && tmdbConfigured) {
                 logger.info(`📺 Buscando póster para serie TMDB ID: ${torrent.tmdb_tv_id}`);
                 const url = `https://api.themoviedb.org/3/tv/${torrent.tmdb_tv_id}?api_key=${config.tmdb.api_key}`;
-                
+
                 const data = await makeRequest(url);
                 logger.info(`📺 Datos recibidos de TMDB: ${JSON.stringify(data, null, 2)}`);
-                
+
                 if (data.poster_path) {
                         const size = (config.features && config.features.poster_size) ? config.features.poster_size : 'w154';
                         imageUrl = `https://image.tmdb.org/t/p/${size}${data.poster_path}`;
@@ -569,13 +570,7 @@ async function getPosterUrl(torrent) {
                     logger.warn(`⚠️ No se encontró poster_path para serie ID ${torrent.tmdb_tv_id}`);
                 }
             } else {
-                logger.warn(`❌ SERIE/TV SIN TMDB_TV_ID:
-                - Torrent ID: ${torrent.torrent_id}
-                - Nombre: ${torrent.name}
-                - Categoría: ${torrent.category}
-                - Valor tmdb_tv_id: ${torrent.tmdb_tv_id}
-                - Razón: El torrent no tiene metadata de TMDB asignada
-                - Solución: El uploader debe agregar el TMDB ID durante la subida`);
+                logger.info(`ℹ️ Serie/TV sin TMDB disponible o TMDB no configurado: tmdb_tv_id=${torrent.tmdb_tv_id} tmdbConfigured=${tmdbConfigured}`);
             }
         }
 
@@ -590,6 +585,26 @@ async function getPosterUrl(torrent) {
             imageUrl = getGenericCategoryImage(torrent.category);
             if (imageUrl) {
                 logger.info(`🖼️ Usando imagen genérica para categoría ${torrent.category}: ${imageUrl}`);
+            }
+        }
+
+        // Intentar usar imagen manual subida en el tracker (ruta pública)
+        if (!imageUrl) {
+            try {
+                const base = (config.tracker && config.tracker.base_url) ? config.tracker.base_url.replace(/\/$/, '') : null;
+                if (base) {
+                    const categoryUrl = `${base}/public-category-images/${encodeURIComponent(torrent.category)}`;
+                    // Comprobar existencia mediante HEAD
+                    const exists = await urlExists(categoryUrl);
+                    if (exists) {
+                        imageUrl = categoryUrl;
+                        logger.info(`🖼️ Imagen de categoría manual encontrada: ${imageUrl}`);
+                    } else {
+                        logger.info(`🖼️ No se encontró imagen manual en: ${categoryUrl}`);
+                    }
+                }
+            } catch (err) {
+                logger.warn(`⚠️ Error comprobando imagen manual: ${err.message}`);
             }
         }
 
