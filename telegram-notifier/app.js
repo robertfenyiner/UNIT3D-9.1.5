@@ -604,18 +604,35 @@ async function getPosterUrl(torrent) {
                     // Portada del torrent (preferida)
                     const coverUrl = `${base}/authenticated-images/torrent-covers/${encodeURIComponent(torrent.torrent_id)}`;
                     const bannerUrl = `${base}/authenticated-images/torrent-banners/${encodeURIComponent(torrent.torrent_id)}`;
+                    const publicCoverUrl = `${base}/public-torrent-covers/${encodeURIComponent(torrent.torrent_id)}`;
+                    const publicBannerUrl = `${base}/public-torrent-banners/${encodeURIComponent(torrent.torrent_id)}`;
 
                     const coverStatus = await urlStatus(coverUrl);
                     logger.info(`HEAD ${coverUrl} => ${coverStatus}`);
                     if (coverStatus >= 200 && coverStatus < 400) {
                         imageUrl = coverUrl;
-                        logger.info(`🖼️ Usando torrent cover del tracker: ${imageUrl}`);
+                        logger.info(`🖼️ Usando torrent cover del tracker (autenticado): ${imageUrl}`);
                     } else {
-                        const bannerStatus = await urlStatus(bannerUrl);
-                        logger.info(`HEAD ${bannerUrl} => ${bannerStatus}`);
-                        if (bannerStatus >= 200 && bannerStatus < 400) {
-                            imageUrl = bannerUrl;
-                            logger.info(`🖼️ Usando torrent banner del tracker: ${imageUrl}`);
+                        // Try the public cover endpoint (if exists)
+                        const publicCoverStatus = await urlStatus(publicCoverUrl);
+                        logger.info(`HEAD ${publicCoverUrl} => ${publicCoverStatus}`);
+                        if (publicCoverStatus >= 200 && publicCoverStatus < 400) {
+                            imageUrl = publicCoverUrl;
+                            logger.info(`🖼️ Usando torrent cover público: ${imageUrl}`);
+                        } else {
+                            const bannerStatus = await urlStatus(bannerUrl);
+                            logger.info(`HEAD ${bannerUrl} => ${bannerStatus}`);
+                            if (bannerStatus >= 200 && bannerStatus < 400) {
+                                imageUrl = bannerUrl;
+                                logger.info(`🖼️ Usando torrent banner del tracker (autenticado): ${imageUrl}`);
+                            } else {
+                                const publicBannerStatus = await urlStatus(publicBannerUrl);
+                                logger.info(`HEAD ${publicBannerUrl} => ${publicBannerStatus}`);
+                                if (publicBannerStatus >= 200 && publicBannerStatus < 400) {
+                                    imageUrl = publicBannerUrl;
+                                    logger.info(`🖼️ Usando torrent banner público: ${imageUrl}`);
+                                }
+                            }
                         }
                     }
                 }

@@ -93,6 +93,21 @@ Route::middleware('language')->group(function (): void {
     | Website (When Authorized) (Alpha Ordered)
     |---------------------------------------------------------------------------------
     */
+    // Public category/torrent image endpoints for bots (no auth)
+    Route::get('/public-category-images/{category}', [App\Http\Controllers\AuthenticatedImageController::class, 'publicCategoryImage'])
+        ->name('public_category_image')
+        ->withoutMiddleware(['auth', 'banned', 'verified']);
+
+    Route::get('/public-torrent-covers/{id}', [App\Http\Controllers\AuthenticatedImageController::class, 'publicTorrentCover'])
+        ->whereNumber('id')
+        ->name('public_torrent_cover')
+        ->withoutMiddleware(['auth', 'banned', 'verified']);
+
+    Route::get('/public-torrent-banners/{id}', [App\Http\Controllers\AuthenticatedImageController::class, 'publicTorrentBanner'])
+        ->whereNumber('id')
+        ->name('public_torrent_banner')
+        ->withoutMiddleware(['auth', 'banned', 'verified']);
+
     Route::middleware(['auth', 'banned', 'verified'])->group(function (): void {
         // General
         Route::get('/', [App\Http\Controllers\HomeController::class, 'index'])->name('home.index');
@@ -117,11 +132,7 @@ Route::middleware('language')->group(function (): void {
             Route::get('/user-icons/{user:username}', [App\Http\Controllers\AuthenticatedImageController::class, 'userIcon'])->name('user_icon');
         });
 
-    // Public category images (for bots / integrations) - no auth required
-    Route::get('/public-category-images/{category}', [App\Http\Controllers\AuthenticatedImageController::class, 'publicCategoryImage'])->name('public_category_image');
-    // Public torrent cover/banner endpoints (bots/integrations)
-    Route::get('/public-torrent-covers/{id}', [App\Http\Controllers\AuthenticatedImageController::class, 'publicTorrentCover'])->whereNumber('id')->name('public_torrent_cover');
-    Route::get('/public-torrent-banners/{id}', [App\Http\Controllers\AuthenticatedImageController::class, 'publicTorrentBanner'])->whereNumber('id')->name('public_torrent_banner');
+    
 
         // Donation System
         Route::prefix('donations')->group(function (): void {
