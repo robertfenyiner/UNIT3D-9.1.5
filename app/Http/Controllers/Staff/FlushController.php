@@ -49,36 +49,23 @@ class FlushController extends Controller
             return redirect()->back()->withErrors("The external tracker doesn't support flushing peers.");
         }
 
-        $cutoff = Carbon::now()->subHours(2);
+        $carbon = new Carbon();
+        $peers = Peer::select(['torrent_id', 'user_id', 'peer_id', 'updated_at'])->where('updated_at', '<', $carbon->copy()->subHours(2))->get();
 
-        try {
-            // Procesar en bloques para evitar cargar todos los peers en memoria
-            // Usar cursor() para evitar que Eloquent intente ordenar por una columna `id` inexistente
-            $lazy = Peer::select(['torrent_id', 'user_id', 'peer_id', 'updated_at'])
-                ->where('updated_at', '<', $cutoff)
-                ->cursor();
+        foreach ($peers as $peer) {
+            History::query()
+                ->where('torrent_id', '=', $peer->torrent_id)
+                ->where('user_id', '=', $peer->user_id)
+                ->update([
+                    'active'     => false,
+                    'updated_at' => DB::raw('updated_at'),
+                ]);
 
-            foreach ($lazy->chunk(500) as $peers) {
-                foreach ($peers as $peer) {
-                    History::query()
-                        ->where('torrent_id', '=', $peer->torrent_id)
-                        ->where('user_id', '=', $peer->user_id)
-                        ->update([
-                            'active'     => false,
-                            'updated_at' => DB::raw('updated_at'),
-                        ]);
-
-                    Peer::query()
-                        ->where('torrent_id', '=', $peer->torrent_id)
-                        ->where('user_id', '=', $peer->user_id)
-                        ->where('peer_id', '=', $peer->peer_id)
-                        ->delete();
-                }
-            }
-        } catch (Exception $e) {
-            report($e);
-
-            return redirect()->back()->withErrors('Failed to flush ghost peers: '.trim($e->getMessage()));
+            Peer::query()
+                ->where('torrent_id', '=', $peer->torrent_id)
+                ->where('user_id', '=', $peer->user_id)
+                ->where('peer_id', '=', $peer->peer_id)
+                ->delete();
         }
 
         return to_route('staff.dashboard.index')
