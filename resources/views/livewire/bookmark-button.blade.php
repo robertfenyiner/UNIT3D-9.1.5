@@ -1,6 +1,6 @@
 @if ($this->isBookmarked)
     <button
-        wire:click="destroy({{ $torrent->id }})"
+        wire:click="destroy"
         class="form__button form__button--filled form__button--centered"
         title="Bookmarked by {{ $bookmarksCount }} users"
     >
@@ -9,7 +9,7 @@
     </button>
 @else
     <button
-        wire:click="store({{ $torrent->id }})"
+        wire:click="store"
         class="form__button form__button--outlined form__button--centered"
         title="Bookmarked by {{ $bookmarksCount }} users"
     >
