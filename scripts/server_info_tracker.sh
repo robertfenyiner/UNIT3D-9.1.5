@@ -72,15 +72,15 @@ if [[ -f "$ACCESS_LOG" ]]; then
     ANNOUNCE_429_COUNT=$(echo "$LOG_SAMPLE" | grep ' 429 ' | wc -l)
 
     # Top IPs hitting announce (top 10)
-    TOP_IPS=$(echo "$LOG_SAMPLE" | grep -F "$ANNOUNCE_PATH" | awk '{print $1}' | sort | uniq -c | sort -rn | head -n 10 | awk '{print $2 " (" $1 ")"}' | paste -sd ", " -)
+    TOP_IPS=$(echo "$LOG_SAMPLE" | grep -F "$ANNOUNCE_PATH" | awk '{print $1}' | sort | uniq -c | sort -rn | head -n 5 | awk '{print "• " $2 " (" $1 ")"}' | tr '\n' '\n')
     [[ -z "$TOP_IPS" ]] && TOP_IPS="(none)"
 
     # Top User-Agents for announce (top 10)
-    TOP_UAS=$(echo "$LOG_SAMPLE" | grep -F "$ANNOUNCE_PATH" | awk -F '"' '{print $6}' | sort | uniq -c | sort -rn | head -n 10 | awk '{$1=$1; print substr($0,index($0,$2)) " (" $1 ")"}' | paste -sd ", " -)
+    TOP_UAS=$(echo "$LOG_SAMPLE" | grep -F "$ANNOUNCE_PATH" | awk -F '"' '{print $6}' | sort | uniq -c | sort -rn | head -n 3 | awk '{$1=$1; print "• " substr($0,index($0,$2)) " (" $1 ")"}' | tr '\n' '\n')
     [[ -z "$TOP_UAS" ]] && TOP_UAS="(none)"
 
     # Top passkeys extracted from the path /announce/{passkey}
-    TOP_PASSKEYS=$(echo "$LOG_SAMPLE" | grep -F "$ANNOUNCE_PATH" | awk -F '"' '{print $2}' | awk '{print $2}' | sed -n 's|.*/announce/\([^/? ]*\).*|\1|p' | sort | uniq -c | sort -rn | head -n 10 | awk '{print $2 " (" $1 ")"}' | paste -sd ", " -)
+    TOP_PASSKEYS=$(echo "$LOG_SAMPLE" | grep -F "$ANNOUNCE_PATH" | awk -F '"' '{print $2}' | awk '{print $2}' | sed -n 's|.*/announce/\([^/? ]*\).*|\1|p' | sort | uniq -c | sort -rn | head -n 3 | awk '{print "• " $2 " (" $1 ")"}' | tr '\n' '\n')
     [[ -z "$TOP_PASSKEYS" ]] && TOP_PASSKEYS="(none)"
   fi
 else
@@ -150,41 +150,58 @@ if [[ "$PHP_FPM_PROCESS_COUNT" -gt 0 ]]; then
 fi
 
 # Build message
-MSG="🧾 *Estado del servidor - ${HOSTNAME}*\n\n"
-MSG+="📆 *Hora:* ${DATE}\n"
-MSG+="🖥️ *Uptime:* ${UPTIME}\n"
-MSG+="📊 *Carga promedio:* ${LOAD}\n"
-MSG+="⚙️ *CPU en uso:* ${CPU_USAGE}\n"
-MSG+="💾 *RAM:* ${USED_MEM}MB / ${TOTAL_MEM}MB\n"
-MSG+="📦 *Swap usada:* ${USED_SWAP}MB\n"
-MSG+="🗃️ *Disco en /*: ${DISK_USAGE}\n"
-MSG+="🌐 *Conexiones activas:* ${ACTIVE_CONNS}\n"
-MSG+="🔐 *Sesiones SSH:* ${SSH_SESSIONS}\n\n"
-MSG+="🔍 *Top procesos por CPU:*\n${TOP_CPU}\n\n"
-MSG+="🧠 *Top procesos por RAM:*\n${TOP_MEM}\n\n"
-MSG+="🧩 *Servicios monitoreados:*\n${SERVICIO_STATUS}\n"
+MSG="🧾 ESTADO DEL SERVIDOR - ${HOSTNAME}\n"
+MSG+="━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+MSG+="📆 ${DATE}\n\n"
 
-MSG+="\n🛰️ *Tracker diagnostics (last ${TAIL_LINES} lines of access log or until file end):*\n"
-MSG+="• Access log: ${ACCESS_LOG}\n"
-MSG+="• Announce requests (sample): ${ANNOUNCE_REQUESTS}\n"
-MSG+="• Unique IPs hitting announce (sample): ${ANNOUNCE_UNIQUE_IPS}\n"
-MSG+="• HTTP 429 in sample: ${ANNOUNCE_429_COUNT}\n"
-MSG+="\n🔝 *Top IPs (announce):* ${TOP_IPS}\n"
-MSG+="\n🧾 *Top User-Agents (announce):* ${TOP_UAS}\n"
-MSG+="\n🔑 *Top passkeys (announce):* ${TOP_PASSKEYS}\n"
-MSG+="• Tracker-related log matches: ${TRACKER_LOG_MATCHES}\n\n"
-MSG+="🔧 *Redis & queues:*\n"
-MSG+="• Redis INFO (ops/clients/memory):\n${REDIS_INFO}\n"
-MSG+="• Redis keys matching '*announce*': ${REDIS_ANNOUNCE_KEYS}\n"
-MSG+="• Queue lengths:\n${QUEUE_INFO}\n"
+MSG+="� SISTEMA\n"
+MSG+="─────────\n"
+MSG+="⏱️ Uptime: ${UPTIME}\n"
+MSG+="📊 Carga: ${LOAD}\n"
+MSG+="⚙️ CPU: ${CPU_USAGE}\n"
+MSG+="💾 RAM: ${USED_MEM}MB / ${TOTAL_MEM}MB\n"
+MSG+="📦 Swap: ${USED_SWAP}MB\n"
+MSG+="🗃️ Disco /: ${DISK_USAGE}\n"
+MSG+="🌐 Conexiones: ${ACTIVE_CONNS} | 🔐 SSH: ${SSH_SESSIONS}\n\n"
 
-# Append PHP-FPM and CPU details
-MSG+=$'\n'"🧩 *PHP-FPM & CPU diagnostics:*\n"
-MSG+="• CPU count: ${CPU_COUNT}\n"
-MSG+="• PHP-FPM pools found:\n${PHP_FPM_POOLS_INFO}\n"
-MSG+="• Total configured pm.max_children (sum of pools): ${PHP_FPM_TOTAL_MAX_CHILDREN}\n"
-MSG+="• PHP-FPM running processes: ${PHP_FPM_PROCESS_COUNT}\n"
-MSG+="• Avg RSS per php-fpm process: ${PHP_FPM_AVG_RSS_MB} MB\n"
+MSG+="� TOP PROCESOS\n"
+MSG+="──────────────\n"
+MSG+="🔍 CPU:\n${TOP_CPU}\n\n"
+MSG+="🧠 RAM:\n${TOP_MEM}\n\n"
+
+MSG+="🧩 SERVICIOS\n"
+MSG+="───────────\n"
+MSG+="${SERVICIO_STATUS}\n"
+
+MSG+="🛰️ TRACKER (sample ${TAIL_LINES} líneas)\n"
+MSG+="────────────────────────────────\n"
+MSG+="📈 Announces: ${ANNOUNCE_REQUESTS}\n"
+MSG+="🌍 IPs únicas: ${ANNOUNCE_UNIQUE_IPS}\n"
+MSG+="⚠️ HTTP 429: ${ANNOUNCE_429_COUNT}\n"
+MSG+="📋 Log matches: ${TRACKER_LOG_MATCHES}\n\n"
+
+if [[ "$TOP_IPS" != "(none)" && "$TOP_IPS" != "(no data)" ]]; then
+  MSG+="🥇 TOP IPs:\n${TOP_IPS}\n"
+fi
+if [[ "$TOP_UAS" != "(none)" && "$TOP_UAS" != "(no data)" ]]; then
+  MSG+="� TOP User-Agents:\n${TOP_UAS}\n"
+fi
+if [[ "$TOP_PASSKEYS" != "(none)" && "$TOP_PASSKEYS" != "(no data)" ]]; then
+  MSG+="🔑 TOP Passkeys:\n${TOP_PASSKEYS}\n"
+fi
+
+MSG+="\n🔧 REDIS & COLAS\n"
+MSG+="──────────────\n"
+MSG+="${REDIS_INFO}\n"
+MSG+="🗝️ Keys 'announce': ${REDIS_ANNOUNCE_KEYS}\n"
+MSG+="📋 Colas:\n${QUEUE_INFO}\n"
+
+MSG+="🧩 PHP-FPM & CPU\n"
+MSG+="───────────────\n"
+MSG+="🖥️ CPUs: ${CPU_COUNT}\n"
+MSG+="⚙️ Pools: ${PHP_FPM_TOTAL_MAX_CHILDREN} max\n"
+MSG+="🔄 Procesos: ${PHP_FPM_PROCESS_COUNT}\n"
+MSG+="💾 Avg RSS: ${PHP_FPM_AVG_RSS_MB} MB\n"
 
 # Send message
 curl -s -X POST "https://api.telegram.org/bot${BOT_TOKEN}/sendMessage" \

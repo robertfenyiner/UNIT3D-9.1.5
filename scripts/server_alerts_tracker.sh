@@ -90,15 +90,15 @@ if [[ -f "$ACCESS_LOG" ]]; then
     ANNOUNCE_UNIQUE_IPS=$(echo "$SAMPLE" | grep -F "$ANNOUNCE_PATH" | awk '{print $1}' | sort -u | wc -l)
 
     # Top IPs hitting announce (top 10)
-    TOP_IPS=$(echo "$SAMPLE" | grep -F "$ANNOUNCE_PATH" | awk '{print $1}' | sort | uniq -c | sort -rn | head -n 10 | awk '{print $2 " (" $1 ")"}' | paste -sd ", " -)
+    TOP_IPS=$(echo "$SAMPLE" | grep -F "$ANNOUNCE_PATH" | awk '{print $1}' | sort | uniq -c | sort -rn | head -n 10 | awk '{print "• " $2 " (" $1 ")"}' | tr '\n' '\n')
     [[ -z "$TOP_IPS" ]] && TOP_IPS="(none)"
 
     # Top User-Agents for announce (top 10)
-    TOP_UAS=$(echo "$SAMPLE" | grep -F "$ANNOUNCE_PATH" | awk -F '"' '{print $6}' | sort | uniq -c | sort -rn | head -n 10 | awk '{$1=$1; print substr($0,index($0,$2)) " (" $1 ")"}' | paste -sd ", " -)
+    TOP_UAS=$(echo "$SAMPLE" | grep -F "$ANNOUNCE_PATH" | awk -F '"' '{print $6}' | sort | uniq -c | sort -rn | head -n 5 | awk '{$1=$1; print "• " substr($0,index($0,$2)) " (" $1 ")"}' | tr '\n' '\n')
     [[ -z "$TOP_UAS" ]] && TOP_UAS="(none)"
 
     # Top passkeys extracted from the path /announce/{passkey}
-    TOP_PASSKEYS=$(echo "$SAMPLE" | grep -F "$ANNOUNCE_PATH" | awk -F '"' '{print $2}' | awk '{print $2}' | sed -n 's|.*/announce/\([^/? ]*\).*|\1|p' | sort | uniq -c | sort -rn | head -n 10 | awk '{print $2 " (" $1 ")"}' | paste -sd ", " -)
+    TOP_PASSKEYS=$(echo "$SAMPLE" | grep -F "$ANNOUNCE_PATH" | awk -F '"' '{print $2}' | awk '{print $2}' | sed -n 's|.*/announce/\([^/? ]*\).*|\1|p' | sort | uniq -c | sort -rn | head -n 5 | awk '{print "• " $2 " (" $1 ")"}' | tr '\n' '\n')
     [[ -z "$TOP_PASSKEYS" ]] && TOP_PASSKEYS="(none)"
 
     if [ "$ANNOUNCE_429" -gt 0 ]; then
@@ -115,21 +115,32 @@ fi
 
 # If alert, append details and send
 if [ "$SEND_ALERT" = true ]; then
-  ALERT_TEXT="🚨 *ALERTA CRÍTICA - $(hostname)* 🚨\n\n"
-  ALERT_TEXT+="📆 *Hora:* ${DATE}\n\n"
-  ALERT_TEXT+=$ALERT_MSG
-  ALERT_TEXT+=$'\n'"🔍 *Top procesos por CPU:*\n${TOP_CPU}\n\n"
-  ALERT_TEXT+=$'\n'"🧠 *Top procesos por RAM:*\n${TOP_MEM}\n\n"
-  ALERT_TEXT+=$'\n'"🌐 *Conexiones activas:* ${ACTIVE_CONNS}\n"
-  ALERT_TEXT+=$'\n'"🔐 *Sesiones SSH:* ${SSH_SESSIONS}\n\n"
-  ALERT_TEXT+=$'\n'"🛰️ *Tracker quick stats (sample last ${TAIL_LINES} lines):*\n"
-  ALERT_TEXT+="• Announce requests (sample): ${ANNOUNCE_REQUESTS}\n"
-  ALERT_TEXT+="• Unique IPs hitting announce (sample): ${ANNOUNCE_UNIQUE_IPS}\n"
-  ALERT_TEXT+="• HTTP 429 in sample: ${ANNOUNCE_429}\n"
+  ALERT_TEXT="🚨 ALERTA CRÍTICA - $(hostname) 🚨\n"
+  ALERT_TEXT+="━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+  ALERT_TEXT+="📆 Hora: ${DATE}\n\n"
+  ALERT_TEXT+="${ALERT_MSG}\n"
+  
+  ALERT_TEXT+="📊 ESTADO DEL SISTEMA\n"
+  ALERT_TEXT+="────────────────────\n"
+  ALERT_TEXT+="🔍 Top procesos CPU:\n${TOP_CPU}\n\n"
+  ALERT_TEXT+="🧠 Top procesos RAM:\n${TOP_MEM}\n\n"
+  ALERT_TEXT+="🌐 Conexiones: ${ACTIVE_CONNS} | 🔐 SSH: ${SSH_SESSIONS}\n\n"
+  
+  ALERT_TEXT+="🛰️ DIAGNÓSTICO TRACKER\n"
+  ALERT_TEXT+="─────────────────────\n"
+  ALERT_TEXT+="📈 Announces (sample): ${ANNOUNCE_REQUESTS}\n"
+  ALERT_TEXT+="🌍 IPs únicas: ${ANNOUNCE_UNIQUE_IPS}\n"
+  ALERT_TEXT+="⚠️ HTTP 429: ${ANNOUNCE_429}\n\n"
 
-  ALERT_TEXT+=$'\n'"🔝 *Top IPs (announce):* ${TOP_IPS}\n"
-  ALERT_TEXT+=$'\n'"🧾 *Top User-Agents (announce):* ${TOP_UAS}\n"
-  ALERT_TEXT+=$'\n'"🔑 *Top passkeys (announce):* ${TOP_PASSKEYS}\n"
+  if [[ "$TOP_IPS" != "(none)" && "$TOP_IPS" != "(no data)" ]]; then
+    ALERT_TEXT+="🥇 TOP IPs:\n${TOP_IPS}\n\n"
+  fi
+  if [[ "$TOP_UAS" != "(none)" && "$TOP_UAS" != "(no data)" ]]; then
+    ALERT_TEXT+="� TOP User-Agents:\n${TOP_UAS}\n\n"
+  fi
+  if [[ "$TOP_PASSKEYS" != "(none)" && "$TOP_PASSKEYS" != "(no data)" ]]; then
+    ALERT_TEXT+="🔑 TOP Passkeys:\n${TOP_PASSKEYS}\n"
+  fi
 
   curl -s -X POST "https://api.telegram.org/bot${BOT_TOKEN}/sendMessage" \
     -d chat_id="${CHAT_ID}" \
