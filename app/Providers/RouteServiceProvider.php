@@ -89,7 +89,9 @@ class RouteServiceProvider extends ServiceProvider
                 ->by('web'.$request->user()->id)
             : Limit::perMinute(8)->by('web'.$request->ip()));
         RateLimiter::for(GlobalRateLimit::API, fn (Request $request) => Limit::perMinute(30)->by('api'.$request->ip()));
-        RateLimiter::for(GlobalRateLimit::ANNOUNCE, fn (Request $request) => Limit::perMinute(500)->by('announce'.$request->ip()));
+    // Temporary: increase announce rate limit slightly for short-term testing (monitor Redis/queue)
+    // Change reverts after testing window if no issues found.
+    RateLimiter::for(GlobalRateLimit::ANNOUNCE, fn (Request $request) => Limit::perMinute(1200)->by('announce'.$request->ip()));
         RateLimiter::for(GlobalRateLimit::CHAT, fn (Request $request) => Limit::perMinute(60)->by('chat'.($request->user()?->id ?? $request->ip())));
         RateLimiter::for(GlobalRateLimit::RSS, fn (Request $request) => Limit::perMinute(30)->by('rss'.$request->ip()));
         RateLimiter::for(GlobalRateLimit::AUTHENTICATED_IMAGES, fn (Request $request): Limit => Limit::perMinute(200)->by('authenticated-images:'.$request->user()->id));

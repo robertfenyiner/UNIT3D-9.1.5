@@ -77,7 +77,8 @@ return [
     |
     */
 
-    'rate_limit' => 3,
+    // Temporary increase for a short testing period: allow slightly more peers per user per torrent.
+    'rate_limit' => 6,
 
     /*
     |--------------------------------------------------------------------------
