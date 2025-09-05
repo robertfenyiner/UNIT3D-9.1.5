@@ -74,7 +74,9 @@ if [[ -f "$ACCESS_LOG" ]]; then
   # High 429 rate (>10% of requests)
   if [[ "$ANNOUNCE_REQUESTS" -gt 100 && "$ANNOUNCE_429_COUNT" -gt 0 ]]; then
     PCT_429=$(awk "BEGIN {printf \"%.1f\", ($ANNOUNCE_429_COUNT/$ANNOUNCE_REQUESTS)*100}")
-    if (( $(awk "BEGIN {print ($PCT_429 > 10.0)}") )); then
+    # Clean the percentage value and check if it's > 10
+    PCT_CLEAN=$(echo "$PCT_429" | tr -d '\n\r' | awk '{print $1}')
+    if awk "BEGIN {exit !($PCT_CLEAN > 10.0)}"; then
       ALERT_NEEDED=true
       ALERT_TEXT+=$'🚨 TRACKER 429s: '"${ANNOUNCE_429_COUNT}"$'/'"${ANNOUNCE_REQUESTS}"$' ('"${PCT_429}"$'%)\n'
     fi
