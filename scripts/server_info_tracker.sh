@@ -2,6 +2,13 @@
 # Enhanced server info script with tracker diagnostics
 # Reads TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID from environment (do NOT hardcode tokens)
 
+# Load environment file if present (so running with sudo will still pick credentials)
+ENV_FILE="/etc/default/metrics_bot_env"
+if [[ -f "$ENV_FILE" ]]; then
+  # shellcheck source=/etc/default/metrics_bot_env
+  source "$ENV_FILE"
+fi
+
 BOT_TOKEN="${TELEGRAM_BOT_TOKEN:-}" 
 CHAT_ID="${TELEGRAM_CHAT_ID:-}" 
 
@@ -39,7 +46,7 @@ for SERV in "${SERVICIOS[@]}"; do
   STATUS=$(systemctl is-active $SERV 2>/dev/null || echo "not found")
   ICON="✅"
   [[ "$STATUS" != "active" ]] && ICON="❌"
-  SERVICIO_STATUS+="${ICON} *${SERV}*: ${STATUS}\n"
+  SERVICIO_STATUS+="${ICON} *${SERV}*: ${STATUS}"$'\n'
 done
 
 # Tracker diagnostics (access log sample)
@@ -49,41 +56,51 @@ ANNOUNCE_429_COUNT="(no log)"
 TRACKER_LOG_MATCHES="(no logs)"
 REDIS_INFO="(redis-cli not found)"
 REDIS_ANNOUNCE_KEYS="(redis-cli not found)"
-QUEUE_INFO="(redis-cli not found)"
+QUEUE_INFO=""
 
 if [[ -f "$ACCESS_LOG" ]]; then
+  # Use tail to bound the amount of log lines we analyze
   LOG_SAMPLE=$(tail -n "$TAIL_LINES" "$ACCESS_LOG" 2>/dev/null || true)
   if [[ -n "$LOG_SAMPLE" ]]; then
+    # Count announce requests (simple substring match) and unique IPs for those requests
     ANNOUNCE_REQUESTS=$(echo "$LOG_SAMPLE" | grep -F "$ANNOUNCE_PATH" | wc -l)
     ANNOUNCE_UNIQUE_IPS=$(echo "$LOG_SAMPLE" | grep -F "$ANNOUNCE_PATH" | awk '{print $1}' | sort -u | wc -l)
+    # Count HTTP 429 responses seen in the sample
     ANNOUNCE_429_COUNT=$(echo "$LOG_SAMPLE" | grep ' 429 ' | wc -l)
   fi
+else
+  ACCESS_LOG="(not found)"
 fi
 
-# Laravel logs quick scan
+# Grep application logs (Laravel) for tracker-related exceptions or 429s
 LOG_DIR="storage/logs"
 if [[ -d "$LOG_DIR" ]]; then
-  TRACKER_LOG_MATCHES=$(grep -E "TrackerException|Too Many Requests|announce" -R --line-number "$LOG_DIR" 2>/dev/null | wc -l)
+  TRACKER_LOG_MATCHES=$(grep -E "TrackerException|HTTP 429|Too Many Requests|announce" -R --line-number "$LOG_DIR" 2>/dev/null | wc -l)
 else
   TRACKER_LOG_MATCHES="(no storage/logs)"
 fi
 
-# Redis & queues
-if [[ -n "$REDIS_CLI" ]]; then
+# Redis metrics (if redis-cli exists)
+if command -v redis-cli >/dev/null 2>&1; then
+  # Basic info
   REDIS_INFO=$(redis-cli INFO SERVER | sed -n 's/\r//g; /instantaneous_ops_per_sec/p; /connected_clients/p; /used_memory_human/p' 2>/dev/null || echo "(redis info failed)")
-  # Count keys without blocking using SCAN
+  # Count keys with 'announce' in the name (tries to use SCAN to avoid blocking)
   if redis-cli --scan --pattern '*announce*' >/dev/null 2>&1; then
     REDIS_ANNOUNCE_KEYS=$(redis-cli --scan --pattern '*announce*' 2>/dev/null | wc -l)
   else
     REDIS_ANNOUNCE_KEYS=$(redis-cli KEYS '*announce*' 2>/dev/null | wc -l)
   fi
 
-  QUEUE_INFO=""
-  for q in "queues:announce" "queues:default" "queues:high" "queues:low"; do
-    # LLEN for lists, or ZCARD for sorted sets
-    len=$(redis-cli LLEN "$q" 2>/dev/null || echo "0")
-    [[ -n "$len" ]] && QUEUE_INFO+="${q}: ${len}\n"
+  # Check common Laravel queue keys for length (announce or default)
+  for q in "queues:announce" "queues:default" "queues:high" "queues:low" "queues:processing"; do
+    if redis-cli EXISTS "$q" >/dev/null 2>&1; then
+      len=$(redis-cli LLEN "$q" 2>/dev/null || echo "0")
+      QUEUE_INFO+="${q}: ${len}\n"
+    fi
   done
+else
+  REDIS_INFO="(redis-cli not found)"
+  REDIS_ANNOUNCE_KEYS="(redis-cli not found)"
 fi
 
 # PHP-FPM diagnostics (pools and process metrics)
