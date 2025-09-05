@@ -2,15 +2,7 @@
 # Enhanced alert script with tracker checks
 # Expects TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID in environment
 
-# Load envir  if [[ "$TOP_IPS" != "(none)" && "$TOP_IPS" != "(no data)" ]]; then
-    ALERT_TEXT+=$'🥇 TOP IPs:\n'"${TOP_IPS}"$'\n'
-  fi
-  if [[ "$TOP_UAS" != "(none)" && "$TOP_UAS" != "(no data)" ]]; then
-    ALERT_TEXT+=$'🤖 TOP User-Agents:\n'"${TOP_UAS}"$'\n'
-  fi
-  if [[ "$TOP_PASSKEYS" != "(none)" && "$TOP_PASSKEYS" != "(no data)" ]]; then
-    ALERT_TEXT+=$'🔑 TOP Passkeys:\n'"${TOP_PASSKEYS}"$'\n'
-  file if present (so running with sudo will still pick credentials)
+# Load environment file if present (so running with sudo will still pick credentials)
 ENV_FILE="/etc/default/metrics_bot_env"
 if [[ -f "$ENV_FILE" ]]; then
   # shellcheck source=/etc/default/metrics_bot_env
@@ -49,108 +41,132 @@ TOP_MEM=$(ps -eo pid,comm,%mem --sort=-%mem | head -n 4 | tail -n 3 | awk '{prin
 
 # Connections
 ACTIVE_CONNS=$(ss -tun | grep ESTAB | wc -l 2>/dev/null || echo "0")
-SSH_SESSIONS=$(who | wc -l 2>/dev/null || echo "0")
 
-# Services
-SERVICIOS=("nginx" "mysql" "redis" "php-fpm" "meilisearch")
+# Check if any thresholds exceeded
+ALERT_NEEDED=false
+ALERT_TEXT=""
 
-ALERT_MSG=""
-SEND_ALERT=false
-
-# Checks
-if [ "$USED_SWAP" -gt "$MAX_SWAP_MB" ]; then
-  ALERT_MSG+="⚠️ *Swap alta:* ${USED_SWAP}MB (umbral: ${MAX_SWAP_MB}MB)\n"
-  SEND_ALERT=true
-fi
-if [ "$DISK_USAGE" -gt "$MAX_DISK_PCT" ]; then
-  ALERT_MSG+="⚠️ *Disco lleno:* ${DISK_USAGE}% (umbral: ${MAX_DISK_PCT}%)\n"
-  SEND_ALERT=true
-fi
-if [ "$MEM_USAGE" -gt "$MAX_MEM_PCT" ]; then
-  ALERT_MSG+="⚠️ *RAM alta:* ${MEM_USAGE}% (umbral: ${MAX_MEM_PCT}%)\n"
-  SEND_ALERT=true
-fi
-if [ "$CPU_USAGE_INT" -gt "$MAX_CPU_PCT" ]; then
-  ALERT_MSG+="⚠️ *CPU alta:* ${CPU_USAGE_INT}% (umbral: ${MAX_CPU_PCT}%)\n"
-  SEND_ALERT=true
+if [[ "$USED_SWAP" -gt "$MAX_SWAP_MB" ]]; then
+  ALERT_NEEDED=true
+  ALERT_TEXT+=$'🚨 SWAP ALTA: '"${USED_SWAP}"$'MB > '"${MAX_SWAP_MB}"$'MB\n'
 fi
 
-for SERV in "${SERVICIOS[@]}"; do
-  STATUS=$(systemctl is-active $SERV 2>/dev/null || echo "not found")
-  if [[ "$STATUS" != "active" ]]; then
-    ALERT_MSG+="❌ *Servicio caído:* ${SERV} (${STATUS})\n"
-    SEND_ALERT=true
-  fi
-done
+if [[ "$DISK_USAGE" -gt "$MAX_DISK_PCT" ]]; then
+  ALERT_NEEDED=true
+  ALERT_TEXT+=$'🚨 DISCO LLENO: '"${DISK_USAGE}"$'% > '"${MAX_DISK_PCT}"$'%\n'
+fi
 
-# Tracker quick checks: look for 429s and announce spikes
-ANNOUNCE_REQUESTS=0
-ANNOUNCE_429=0
-ANNOUNCE_UNIQUE_IPS=0
-TOP_IPS="(no data)"
-TOP_UAS="(no data)"
-TOP_PASSKEYS="(no data)"
+if [[ "$MEM_USAGE" -gt "$MAX_MEM_PCT" ]]; then
+  ALERT_NEEDED=true
+  ALERT_TEXT+=$'🚨 RAM ALTA: '"${MEM_USAGE}"$'% > '"${MAX_MEM_PCT}"$'%\n'
+fi
+
+if [[ "$CPU_USAGE_INT" -gt "$MAX_CPU_PCT" ]]; then
+  ALERT_NEEDED=true
+  ALERT_TEXT+=$'🚨 CPU ALTA: '"${CPU_USAGE_INT}"$'% > '"${MAX_CPU_PCT}"$'%\n'
+fi
+
+# Tracker analysis
 if [[ -f "$ACCESS_LOG" ]]; then
-  SAMPLE=$(tail -n "$TAIL_LINES" "$ACCESS_LOG" 2>/dev/null || true)
-  if [[ -n "$SAMPLE" ]]; then
-    ANNOUNCE_REQUESTS=$(echo "$SAMPLE" | grep -F "$ANNOUNCE_PATH" | wc -l)
-    ANNOUNCE_429=$(echo "$SAMPLE" | grep -F " 429 " | wc -l)
-    ANNOUNCE_UNIQUE_IPS=$(echo "$SAMPLE" | grep -F "$ANNOUNCE_PATH" | awk '{print $1}' | sort -u | wc -l)
-
-    # Top IPs hitting announce (top 10)
-    TOP_IPS=$(echo "$SAMPLE" | grep -F "$ANNOUNCE_PATH" | awk '{print $1}' | sort | uniq -c | sort -rn | head -n 10 | awk '{print "• " $2 " (" $1 ")"}' | tr '\n' '\n')
-    [[ -z "$TOP_IPS" ]] && TOP_IPS="(none)"
-
-    # Top User-Agents for announce (top 10)
-    TOP_UAS=$(echo "$SAMPLE" | grep -F "$ANNOUNCE_PATH" | awk -F '"' '{print $6}' | sort | uniq -c | sort -rn | head -n 5 | awk '{$1=$1; print "• " substr($0,index($0,$2)) " (" $1 ")"}' | tr '\n' '\n')
-    [[ -z "$TOP_UAS" ]] && TOP_UAS="(none)"
-
-    # Top passkeys extracted from the path /announce/{passkey}
-    TOP_PASSKEYS=$(echo "$SAMPLE" | grep -F "$ANNOUNCE_PATH" | awk -F '"' '{print $2}' | awk '{print $2}' | sed -n 's|.*/announce/\([^/? ]*\).*|\1|p' | sort | uniq -c | sort -rn | head -n 5 | awk '{print "• " $2 " (" $1 ")"}' | tr '\n' '\n')
-    [[ -z "$TOP_PASSKEYS" ]] && TOP_PASSKEYS="(none)"
-
-    if [ "$ANNOUNCE_429" -gt 0 ]; then
-      ALERT_MSG+="⚠️ *HTTP 429s detected in access log:* ${ANNOUNCE_429} occurrences (sample)\n"
-      SEND_ALERT=true
-    fi
-    # Heuristic: sudden spike threshold (adjust to your normal traffic)
-    if [ "$ANNOUNCE_REQUESTS" -gt 1000 ]; then
-      ALERT_MSG+="⚠️ *High announce rate:* ${ANNOUNCE_REQUESTS} announces in sample (possible bot/spike)\n"
-      SEND_ALERT=true
+  ANNOUNCE_REQUESTS=$(tail -n "$TAIL_LINES" "$ACCESS_LOG" | grep -c "$ANNOUNCE_PATH" || echo "0")
+  ANNOUNCE_429_COUNT=$(tail -n "$TAIL_LINES" "$ACCESS_LOG" | grep "$ANNOUNCE_PATH" | grep -c ' 429 ' || echo "0")
+  
+  # High 429 rate (>10% of requests)
+  if [[ "$ANNOUNCE_REQUESTS" -gt 100 && "$ANNOUNCE_429_COUNT" -gt 0 ]]; then
+    PCT_429=$(awk "BEGIN {printf \"%.1f\", ($ANNOUNCE_429_COUNT/$ANNOUNCE_REQUESTS)*100}")
+    if (( $(awk "BEGIN {print ($PCT_429 > 10.0)}") )); then
+      ALERT_NEEDED=true
+      ALERT_TEXT+=$'🚨 TRACKER 429s: '"${ANNOUNCE_429_COUNT}"$'/'"${ANNOUNCE_REQUESTS}"$' ('"${PCT_429}"$'%)\n'
     fi
   fi
+
+  # Extract analysis data for context
+  ANNOUNCE_UNIQUE_IPS=$(tail -n "$TAIL_LINES" "$ACCESS_LOG" | grep "$ANNOUNCE_PATH" | awk '{print $1}' | sort -u | wc -l || echo "0")
+  
+  # Top IPs making announce requests
+  TOP_IPS_RAW=$(tail -n "$TAIL_LINES" "$ACCESS_LOG" | grep "$ANNOUNCE_PATH" | awk '{print $1}' | sort | uniq -c | sort -nr | head -n 3)
+  if [[ -n "$TOP_IPS_RAW" ]]; then
+    TOP_IPS=$(echo "$TOP_IPS_RAW" | awk '{print "🔸 " $2 ": " $1 " reqs"}')
+  else
+    TOP_IPS="(none)"
+  fi
+  
+  # Top User-Agents making announce requests
+  TOP_UAS_RAW=$(tail -n "$TAIL_LINES" "$ACCESS_LOG" | grep "$ANNOUNCE_PATH" | sed 's/.*"\([^"]*\)"$/\1/' | sort | uniq -c | sort -nr | head -n 3)
+  if [[ -n "$TOP_UAS_RAW" ]]; then
+    TOP_UAS=$(echo "$TOP_UAS_RAW" | awk '{$1=$1; gsub(/^[0-9]+ /, ""); print "🔸 " substr($0, 1, 40) "..."}')
+  else
+    TOP_UAS="(none)"
+  fi
+  
+  # Top passkeys (extract from announce URLs)
+  TOP_PASSKEYS_RAW=$(tail -n "$TAIL_LINES" "$ACCESS_LOG" | grep "$ANNOUNCE_PATH" | grep -oE 'passkey=[a-f0-9]{32}' | cut -d= -f2 | sort | uniq -c | sort -nr | head -n 3)
+  if [[ -n "$TOP_PASSKEYS_RAW" ]]; then
+    TOP_PASSKEYS=$(echo "$TOP_PASSKEYS_RAW" | awk '{print "🔸 " substr($2, 1, 8) "...: " $1 " reqs"}')
+  else
+    TOP_PASSKEYS="(none)"
+  fi
+else
+  ANNOUNCE_REQUESTS="(log not found)"
+  ANNOUNCE_UNIQUE_IPS="(log not found)"
+  ANNOUNCE_429_COUNT="(log not found)"
+  TOP_IPS="(no data)"
+  TOP_UAS="(no data)"
+  TOP_PASSKEYS="(no data)"
 fi
 
-# If alert, append details and send
-if [ "$SEND_ALERT" = true ]; then
-  ALERT_TEXT=$'🚨 ALERTA CRÍTICA - '$(hostname)$' 🚨\n'
-  ALERT_TEXT+=$'━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n'
-  ALERT_TEXT+=$'📆 Hora: '"${DATE}"$'\n\n'
-  ALERT_TEXT+="${ALERT_MSG}"$'\n'
+# Only send alert if thresholds exceeded
+if [[ "$ALERT_NEEDED" == "true" ]]; then
+  HOSTNAME=$(hostname)
   
-  ALERT_TEXT+=$'📊 ESTADO DEL SISTEMA\n'
-  ALERT_TEXT+=$'────────────────────\n'
-  ALERT_TEXT+=$'🔍 Top procesos CPU:\n'"${TOP_CPU}"$'\n\n'
-  ALERT_TEXT+=$'🧠 Top procesos RAM:\n'"${TOP_MEM}"$'\n\n'
-  ALERT_TEXT+=$'🌐 Conexiones: '"${ACTIVE_CONNS}"$' | 🔐 SSH: '"${SSH_SESSIONS}"$'\n\n'
+  # Build full alert message
+  FULL_MSG=$'🔥 ALERTA DEL SERVIDOR - '"${HOSTNAME}"$'\n'
+  FULL_MSG+=$'━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n'
+  FULL_MSG+=$'📆 '"${DATE}"$'\n\n'
+  FULL_MSG+="${ALERT_TEXT}"$'\n'
   
-  ALERT_TEXT+=$'🛰️ DIAGNÓSTICO TRACKER\n'
-  ALERT_TEXT+=$'─────────────────────\n'
-  ALERT_TEXT+=$'📈 Announces (sample): '"${ANNOUNCE_REQUESTS}"$'\n'
-  ALERT_TEXT+=$'🌍 IPs únicas: '"${ANNOUNCE_UNIQUE_IPS}"$'\n'
-  ALERT_TEXT+=$'⚠️ HTTP 429: '"${ANNOUNCE_429}"$'\n\n'
-
-  if [[ "$TOP_IPS" != "(none)" && "$TOP_IPS" != "(no data)" ]]; then
-    ALERT_TEXT+="🥇 TOP IPs:\n${TOP_IPS}\n\n"
+  FULL_MSG+=$'📊 CONTEXTO DEL SISTEMA\n'
+  FULL_MSG+=$'─────────────────────\n'
+  FULL_MSG+=$'💾 RAM: '"${MEM_USAGE}"$'%\n'
+  FULL_MSG+=$'📦 Swap: '"${USED_SWAP}"$'MB\n'
+  FULL_MSG+=$'🗃️ Disco: '"${DISK_USAGE}"$'%\n'
+  FULL_MSG+=$'⚙️ CPU: '"${CPU_USAGE_INT}"$'%\n'
+  FULL_MSG+=$'🌐 Conexiones: '"${ACTIVE_CONNS}"$'\n\n'
+  
+  FULL_MSG+=$'🔍 TOP PROCESOS CPU\n'
+  FULL_MSG+=$'──────────────────\n'
+  FULL_MSG+="${TOP_CPU}"$'\n\n'
+  
+  FULL_MSG+=$'🧠 TOP PROCESOS RAM\n'
+  FULL_MSG+=$'──────────────────\n'
+  FULL_MSG+="${TOP_MEM}"$'\n\n'
+  
+  if [[ "$ANNOUNCE_REQUESTS" != "(log not found)" ]]; then
+    FULL_MSG+=$'🛰️ TRACKER (últimas '"${TAIL_LINES}"$' líneas)\n'
+    FULL_MSG+=$'────────────────────────────────\n'
+    FULL_MSG+=$'📈 Announces: '"${ANNOUNCE_REQUESTS}"$'\n'
+    FULL_MSG+=$'🌍 IPs únicas: '"${ANNOUNCE_UNIQUE_IPS}"$'\n'
+    FULL_MSG+=$'⚠️ HTTP 429: '"${ANNOUNCE_429_COUNT}"$'\n\n'
+    
+    if [[ "$TOP_IPS" != "(none)" && "$TOP_IPS" != "(no data)" ]]; then
+      FULL_MSG+=$'🥇 TOP IPs:\n'"${TOP_IPS}"$'\n'
+    fi
+    if [[ "$TOP_UAS" != "(none)" && "$TOP_UAS" != "(no data)" ]]; then
+      FULL_MSG+=$'🤖 TOP User-Agents:\n'"${TOP_UAS}"$'\n'
+    fi
+    if [[ "$TOP_PASSKEYS" != "(none)" && "$TOP_PASSKEYS" != "(no data)" ]]; then
+      FULL_MSG+=$'🔑 TOP Passkeys:\n'"${TOP_PASSKEYS}"$'\n'
+    fi
   fi
-  if [[ "$TOP_UAS" != "(none)" && "$TOP_UAS" != "(no data)" ]]; then
-    ALERT_TEXT+="� TOP User-Agents:\n${TOP_UAS}\n\n"
-  fi
-  if [[ "$TOP_PASSKEYS" != "(none)" && "$TOP_PASSKEYS" != "(no data)" ]]; then
-    ALERT_TEXT+="🔑 TOP Passkeys:\n${TOP_PASSKEYS}\n"
-  fi
-
-  curl -s -X POST "https://api.telegram.org/bot${BOT_TOKEN}/sendMessage" \
-    -d chat_id="${CHAT_ID}" \
-    --data-urlencode "text=${ALERT_TEXT}"
+  
+  # Send alert to Telegram
+  curl -s -X POST \
+    "https://api.telegram.org/bot${BOT_TOKEN}/sendMessage" \
+    -d "chat_id=${CHAT_ID}" \
+    -d "text=${FULL_MSG}" \
+    -d "parse_mode=HTML" >/dev/null
+  
+  echo "Alert sent to Telegram: thresholds exceeded."
+else
+  echo "No alerts needed - all metrics within thresholds."
 fi
