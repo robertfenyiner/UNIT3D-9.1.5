@@ -23,10 +23,31 @@ MAX_DISK_PCT=90
 MAX_MEM_PCT=85
 MAX_CPU_PCT=85
 
-# Tracker / log settings
+# Config (tune for your environment)
 ACCESS_LOG="/var/log/nginx/access.log"
 ANNOUNCE_PATH="/announce/"
 TAIL_LINES=20000
+
+# Database connection for user lookup (optional - will work without it)
+MYSQL_CMD="$(command -v mysql || true)"
+DB_HOST="${DB_HOST:-localhost}"
+DB_DATABASE="${DB_DATABASE:-unit3d}"
+DB_USERNAME="${DB_USERNAME:-}"
+DB_PASSWORD="${DB_PASSWORD:-}"
+
+# Function to get username from passkey
+get_username_from_passkey() {
+  local passkey="$1"
+  if [[ -n "$MYSQL_CMD" && -x "$MYSQL_CMD" && -n "$DB_USERNAME" ]]; then
+    if [[ -n "$DB_PASSWORD" ]]; then
+      mysql -h "$DB_HOST" -u "$DB_USERNAME" -p"$DB_PASSWORD" "$DB_DATABASE" -se "SELECT username FROM users WHERE passkey='$passkey' LIMIT 1;" 2>/dev/null || echo "unknown"
+    else
+      mysql -h "$DB_HOST" -u "$DB_USERNAME" "$DB_DATABASE" -se "SELECT username FROM users WHERE passkey='$passkey' LIMIT 1;" 2>/dev/null || echo "unknown"
+    fi
+  else
+    echo "unknown"
+  fi
+}
 
 # Collect system metrics
 USED_SWAP=$(free -m | awk '/Swap/ {print $3}' 2>/dev/null || echo "0")
@@ -114,10 +135,20 @@ if [[ -f "$ACCESS_LOG" ]]; then
     TOP_UAS="(none)"
   fi
   
-  # Top passkeys (extract from announce URLs)
+  # Top passkeys (extract from announce URLs with usernames)
   TOP_PASSKEYS_RAW=$(tail -n "$TAIL_LINES" "$ACCESS_LOG" | grep "$ANNOUNCE_PATH" | grep -oE 'passkey=[a-f0-9]{32}' | cut -d= -f2 | sort | uniq -c | sort -nr | head -n 3)
   if [[ -n "$TOP_PASSKEYS_RAW" ]]; then
-    TOP_PASSKEYS=$(echo "$TOP_PASSKEYS_RAW" | awk '{print "🔸 " substr($2, 1, 8) "...: " $1 " reqs"}')
+    TOP_PASSKEYS=""
+    while read -r count passkey; do
+      if [[ -n "$count" && -n "$passkey" ]]; then
+        username=$(get_username_from_passkey "$passkey")
+        if [[ "$username" != "unknown" && -n "$username" ]]; then
+          TOP_PASSKEYS+="🔸 $username ($(echo $passkey | cut -c1-8)...): $count reqs"$'\n'
+        else
+          TOP_PASSKEYS+="🔸 $(echo $passkey | cut -c1-8)...: $count reqs"$'\n'
+        fi
+      fi
+    done <<< "$TOP_PASSKEYS_RAW"
   else
     TOP_PASSKEYS="(none)"
   fi
@@ -170,7 +201,7 @@ if [[ "$ALERT_NEEDED" == "true" ]]; then
       FULL_MSG+=$'🤖 TOP User-Agents:\n'"${TOP_UAS}"$'\n'
     fi
     if [[ "$TOP_PASSKEYS" != "(none)" && "$TOP_PASSKEYS" != "(no data)" ]]; then
-      FULL_MSG+=$'🔑 TOP Passkeys:\n'"${TOP_PASSKEYS}"$'\n'
+      FULL_MSG+=$'� TOP USUARIOS:\n'"${TOP_PASSKEYS}"$'\n'
     fi
   fi
   

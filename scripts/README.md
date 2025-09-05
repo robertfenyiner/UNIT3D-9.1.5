@@ -239,7 +239,36 @@ fi
 - Si el token fue expuesto, revócalo en @BotFather y genera uno nuevo. Luego actualiza `/etc/default/metrics_bot_env`.
 - Mantén `/etc/default/metrics_bot_env` con permisos 600 y propietario root: `sudo chmod 600 /etc/default/metrics_bot_env && sudo chown root:root /etc/default/metrics_bot_env`.
 
-11) Extensiones futuras (ideas)
+12) **NUEVO**: Configuración de Base de Datos para Mostrar Nombres de Usuario
+
+Para que los scripts muestren nombres de usuario reales en lugar de solo passkeys truncados, agrega estas variables a `/etc/default/metrics_bot_env`:
+
+```bash
+# Variables de base de datos (OPCIONALES)
+DB_HOST="localhost"
+DB_DATABASE="unit3d"  
+DB_USERNAME="tu_usuario_db"
+DB_PASSWORD="tu_password_db"
+```
+
+**Beneficios:**
+- Los scripts mostrarán `👤 TOP USUARIOS` con nombres reales como "usuario123 (a1b2c3d4...): 45 reqs"
+- En lugar de solo mostrar "🔑 TOP Passkeys: a1b2c3d4...: 45 reqs"
+- Si no configuras la DB, los scripts siguen funcionando normalmente
+
+**Requisitos:**
+- El usuario de DB debe tener permisos de `SELECT` en la tabla `users`
+- MySQL/MariaDB instalado y comando `mysql` disponible
+
+**Ejemplo de configuración de permisos:**
+```sql
+-- Crear usuario solo para lectura de métricas
+CREATE USER 'metrics_reader'@'localhost' IDENTIFIED BY 'password_seguro';
+GRANT SELECT ON unit3d.users TO 'metrics_reader'@'localhost';
+FLUSH PRIVILEGES;
+```
+
+13) Extensiones futuras (ideas)
 
 - Enviar métricas a Prometheus Pushgateway en lugar de solo Telegram para tener gráficas y alertas más avanzadas.
 - Exportar top offenders a un archivo CSV rotado y consumirlo con herramientas de BI.

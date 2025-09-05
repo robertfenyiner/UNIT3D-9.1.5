@@ -24,6 +24,27 @@ TAIL_LINES=20000
 TIME_WINDOW_MIN=60
 REDIS_CLI="$(command -v redis-cli || true)"
 
+# Database connection for user lookup (optional - will work without it)
+MYSQL_CMD="$(command -v mysql || true)"
+DB_HOST="${DB_HOST:-localhost}"
+DB_DATABASE="${DB_DATABASE:-unit3d}"
+DB_USERNAME="${DB_USERNAME:-}"
+DB_PASSWORD="${DB_PASSWORD:-}"
+
+# Function to get username from passkey
+get_username_from_passkey() {
+  local passkey="$1"
+  if [[ -n "$MYSQL_CMD" && -x "$MYSQL_CMD" && -n "$DB_USERNAME" ]]; then
+    if [[ -n "$DB_PASSWORD" ]]; then
+      mysql -h "$DB_HOST" -u "$DB_USERNAME" -p"$DB_PASSWORD" "$DB_DATABASE" -se "SELECT username FROM users WHERE passkey='$passkey' LIMIT 1;" 2>/dev/null || echo "unknown"
+    else
+      mysql -h "$DB_HOST" -u "$DB_USERNAME" "$DB_DATABASE" -se "SELECT username FROM users WHERE passkey='$passkey' LIMIT 1;" 2>/dev/null || echo "unknown"
+    fi
+  else
+    echo "unknown"
+  fi
+}
+
 HOSTNAME=$(hostname)
 UPTIME=$(uptime -p)
 LOAD=$(uptime | awk -F'load average:' '{ print $2 }' | sed 's/^ //')
@@ -73,10 +94,20 @@ if [[ -f "$ACCESS_LOG" ]]; then
     TOP_UAS="(none)"
   fi
   
-  # Top passkeys (extract from announce URLs)
+  # Top passkeys (extract from announce URLs with usernames)
   TOP_PASSKEYS_RAW=$(tail -n "$TAIL_LINES" "$ACCESS_LOG" | grep "$ANNOUNCE_PATH" | grep -oE 'passkey=[a-f0-9]{32}' | cut -d= -f2 | sort | uniq -c | sort -nr | head -n 3)
   if [[ -n "$TOP_PASSKEYS_RAW" ]]; then
-    TOP_PASSKEYS=$(echo "$TOP_PASSKEYS_RAW" | awk '{print "🔸 " substr($2, 1, 8) "...: " $1 " reqs"}')
+    TOP_PASSKEYS=""
+    while read -r count passkey; do
+      if [[ -n "$count" && -n "$passkey" ]]; then
+        username=$(get_username_from_passkey "$passkey")
+        if [[ "$username" != "unknown" && -n "$username" ]]; then
+          TOP_PASSKEYS+="🔸 $username ($(echo $passkey | cut -c1-8)...): $count reqs"$'\n'
+        else
+          TOP_PASSKEYS+="🔸 $(echo $passkey | cut -c1-8)...: $count reqs"$'\n'
+        fi
+      fi
+    done <<< "$TOP_PASSKEYS_RAW"
   else
     TOP_PASSKEYS="(none)"
   fi
@@ -172,21 +203,20 @@ MSG+=$'🧩 SERVICIOS\n'
 MSG+=$'───────────\n'
 MSG+="${SERVICIO_STATUS}"$'\n'
 
-MSG+=$'🛰️ TRACKER (sample '"${TAIL_LINES}"$' líneas)\n'
-MSG+=$'────────────────────────────────\n'
+MSG+=$'🛰️ TRACKER\n'
+MSG+=$'──────────\n'
 MSG+=$'📈 Announces: '"${ANNOUNCE_REQUESTS}"$'\n'
 MSG+=$'🌍 IPs únicas: '"${ANNOUNCE_UNIQUE_IPS}"$'\n'
-MSG+=$'⚠️ HTTP 429: '"${ANNOUNCE_429_COUNT}"$'\n'
-MSG+=$'📋 Log matches: '"${TRACKER_LOG_MATCHES}"$'\n\n'
+if [[ "$ANNOUNCE_429_COUNT" != "0" ]]; then
+  MSG+=$'⚠️ HTTP 429: '"${ANNOUNCE_429_COUNT}"$'\n'
+fi
+MSG+=$'\n'
 
 if [[ "$TOP_IPS" != "(none)" && "$TOP_IPS" != "(no data)" ]]; then
   MSG+=$'🥇 TOP IPs:\n'"${TOP_IPS}"$'\n'
 fi
-if [[ "$TOP_UAS" != "(none)" && "$TOP_UAS" != "(no data)" ]]; then
-  MSG+=$'🤖 TOP User-Agents:\n'"${TOP_UAS}"$'\n'
-fi
 if [[ "$TOP_PASSKEYS" != "(none)" && "$TOP_PASSKEYS" != "(no data)" ]]; then
-  MSG+=$'🔑 TOP Passkeys:\n'"${TOP_PASSKEYS}"$'\n'
+  MSG+=$'� TOP USUARIOS:\n'"${TOP_PASSKEYS}"$'\n'
 fi
 
 MSG+=$'\n🔧 REDIS & COLAS\n'
