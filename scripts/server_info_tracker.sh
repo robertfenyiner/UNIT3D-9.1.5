@@ -86,6 +86,37 @@ if [[ -n "$REDIS_CLI" ]]; then
   done
 fi
 
+# PHP-FPM diagnostics (pools and process metrics)
+PHP_FPM_POOLS_INFO="(none found)"
+PHP_FPM_TOTAL_MAX_CHILDREN="(none)"
+PHP_FPM_PROCESS_COUNT=0
+PHP_FPM_AVG_RSS_MB="0"
+CPU_COUNT=$(nproc 2>/dev/null || echo "n/a")
+
+# Try to read pool files for any PHP version
+POOL_FILES=$(ls /etc/php/*/fpm/pool.d/*.conf 2>/dev/null || true)
+if [[ -n "$POOL_FILES" ]]; then
+  PHP_FPM_POOLS_INFO=""
+  total_max=0
+  for f in $POOL_FILES; do
+    name=$(basename "$f" .conf)
+    pm_children=$(grep -E '^pm.max_children' "$f" 2>/dev/null | awk -F'=' '{gsub(/ /,"",$2); print $2}' || true)
+    if [[ -z "$pm_children" ]]; then pm_children="(unset)"; fi
+    PHP_FPM_POOLS_INFO+="${name}: pm.max_children=${pm_children}\n"
+    if [[ "$pm_children" =~ ^[0-9]+$ ]]; then total_max=$((total_max + pm_children)); fi
+  done
+  if [[ $total_max -gt 0 ]]; then PHP_FPM_TOTAL_MAX_CHILDREN=$total_max; fi
+fi
+
+# Count php-fpm processes and estimate average RSS
+PHP_FPM_PROCESS_COUNT=$(pgrep -f 'php.*fpm' | wc -l 2>/dev/null || echo 0)
+if [[ "$PHP_FPM_PROCESS_COUNT" -gt 0 ]]; then
+  avg_rss_kb=$(pgrep -f 'php.*fpm' | xargs -r ps -o rss= -p 2>/dev/null | awk '{sum+=$1; n+=1} END{ if(n>0) printf("%.0f", sum/n); else print "0"}')
+  if [[ "$avg_rss_kb" =~ ^[0-9]+$ && "$avg_rss_kb" -gt 0 ]]; then
+    PHP_FPM_AVG_RSS_MB=$(awk "BEGIN {printf \"%.1f\", ($avg_rss_kb/1024)}")
+  fi
+fi
+
 # Build message
 MSG="🧾 *Estado del servidor - ${HOSTNAME}*\n\n"
 MSG+="📆 *Hora:* ${DATE}\n"
@@ -111,6 +142,14 @@ MSG+="🔧 *Redis & queues:*\n"
 MSG+="• Redis INFO (ops/clients/memory):\n${REDIS_INFO}\n"
 MSG+="• Redis keys matching '*announce*': ${REDIS_ANNOUNCE_KEYS}\n"
 MSG+="• Queue lengths:\n${QUEUE_INFO}\n"
+
+# Append PHP-FPM and CPU details
+MSG+=$'\n'"🧩 *PHP-FPM & CPU diagnostics:*\n"
+MSG+="• CPU count: ${CPU_COUNT}\n"
+MSG+="• PHP-FPM pools found:\n${PHP_FPM_POOLS_INFO}\n"
+MSG+="• Total configured pm.max_children (sum of pools): ${PHP_FPM_TOTAL_MAX_CHILDREN}\n"
+MSG+="• PHP-FPM running processes: ${PHP_FPM_PROCESS_COUNT}\n"
+MSG+="• Avg RSS per php-fpm process: ${PHP_FPM_AVG_RSS_MB} MB\n"
 
 # Send message
 curl -s -X POST "https://api.telegram.org/bot${BOT_TOKEN}/sendMessage" \

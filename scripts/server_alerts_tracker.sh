@@ -90,6 +90,42 @@ if [[ -f "$ACCESS_LOG" ]]; then
   fi
 fi
 
+# PHP-FPM checks
+PHP_FPM_POOLS_SUM=0
+PHP_FPM_POOLS_DESC="(none)"
+PHP_FPM_PROCS=0
+PHP_FPM_AVG_RSS_MB=0
+
+POOL_FILES=$(ls /etc/php/*/fpm/pool.d/*.conf 2>/dev/null || true)
+if [[ -n "$POOL_FILES" ]]; then
+  PHP_FPM_POOLS_DESC=""
+  total=0
+  for f in $POOL_FILES; do
+    name=$(basename "$f" .conf)
+    pm_children=$(grep -E '^pm.max_children' "$f" 2>/dev/null | awk -F'=' '{gsub(/ /,"",$2); print $2}' || true)
+    if [[ -z "$pm_children" ]]; then pm_children="(unset)"; fi
+    PHP_FPM_POOLS_DESC+="${name}: pm.max_children=${pm_children}\n"
+    if [[ "$pm_children" =~ ^[0-9]+$ ]]; then total=$((total + pm_children)); fi
+  done
+  PHP_FPM_POOLS_SUM=$total
+fi
+PHP_FPM_PROCS=$(pgrep -f 'php.*fpm' | wc -l 2>/dev/null || echo 0)
+if [[ "$PHP_FPM_PROCS" -gt 0 ]]; then
+  avg_rss_kb=$(pgrep -f 'php.*fpm' | xargs -r ps -o rss= -p 2>/dev/null | awk '{sum+=$1; n+=1} END{ if(n>0) printf("%.0f", sum/n); else print "0"}')
+  if [[ "$avg_rss_kb" =~ ^[0-9]+$ && "$avg_rss_kb" -gt 0 ]]; then
+    PHP_FPM_AVG_RSS_MB=$(awk "BEGIN {printf \"%.1f\", ($avg_rss_kb/1024)}")
+  fi
+fi
+
+# Include PHP-FPM summary in alert details
+if [ "$SEND_ALERT" = true ]; then
+  ALERT_TEXT+=$'\n'"🧩 *PHP-FPM summary:*\n"
+  ALERT_TEXT+="• Pools (pm.max_children):\n${PHP_FPM_POOLS_DESC}\n"
+  ALERT_TEXT+="• Total configured pm.max_children(sum): ${PHP_FPM_POOLS_SUM}\n"
+  ALERT_TEXT+="• PHP-FPM running processes: ${PHP_FPM_PROCS}\n"
+  ALERT_TEXT+="• Avg RSS per php-fpm process: ${PHP_FPM_AVG_RSS_MB} MB\n"
+fi
+
 # If alert, append details and send
 if [ "$SEND_ALERT" = true ]; then
   ALERT_TEXT="🚨 *ALERTA CRÍTICA - $(hostname)* 🚨\n\n"
