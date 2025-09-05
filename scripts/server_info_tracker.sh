@@ -189,4 +189,4 @@ MSG+="• Avg RSS per php-fpm process: ${PHP_FPM_AVG_RSS_MB} MB\n"
 # Send message
 curl -s -X POST "https://api.telegram.org/bot${BOT_TOKEN}/sendMessage" \
   -d chat_id="${CHAT_ID}" \
-  -d text="$MSG"
+  --data-urlencode "text=${MSG}"
