@@ -1,0 +1,12 @@
+# Example environment file for the metrics scripts
+# Copy to /etc/default/metrics_bot_env and set secure permissions (chmod 600)
+
+# Telegram bot token (get from @BotFather)
+TELEGRAM_BOT_TOKEN="PUT_YOUR_BOT_TOKEN_HERE"
+
+# Telegram chat id (group or user). Your group id example: -4930417726
+TELEGRAM_CHAT_ID="-4930417726"
+
+# Optional overrides
+# ACCESS_LOG="/var/log/nginx/access.log"
+# PATH_TO_REPO="/path/to/repo"
