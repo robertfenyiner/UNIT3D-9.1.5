@@ -2,7 +2,15 @@
 # Enhanced alert script with tracker checks
 # Expects TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID in environment
 
-# Load environment file if present (so running with sudo will still pick credentials)
+# Load envir  if [[ "$TOP_IPS" != "(none)" && "$TOP_IPS" != "(no data)" ]]; then
+    ALERT_TEXT+=$'🥇 TOP IPs:\n'"${TOP_IPS}"$'\n'
+  fi
+  if [[ "$TOP_UAS" != "(none)" && "$TOP_UAS" != "(no data)" ]]; then
+    ALERT_TEXT+=$'🤖 TOP User-Agents:\n'"${TOP_UAS}"$'\n'
+  fi
+  if [[ "$TOP_PASSKEYS" != "(none)" && "$TOP_PASSKEYS" != "(no data)" ]]; then
+    ALERT_TEXT+=$'🔑 TOP Passkeys:\n'"${TOP_PASSKEYS}"$'\n'
+  file if present (so running with sudo will still pick credentials)
 ENV_FILE="/etc/default/metrics_bot_env"
 if [[ -f "$ENV_FILE" ]]; then
   # shellcheck source=/etc/default/metrics_bot_env
@@ -115,22 +123,22 @@ fi
 
 # If alert, append details and send
 if [ "$SEND_ALERT" = true ]; then
-  ALERT_TEXT="🚨 ALERTA CRÍTICA - $(hostname) 🚨\n"
-  ALERT_TEXT+="━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
-  ALERT_TEXT+="📆 Hora: ${DATE}\n\n"
-  ALERT_TEXT+="${ALERT_MSG}\n"
+  ALERT_TEXT=$'🚨 ALERTA CRÍTICA - '$(hostname)$' 🚨\n'
+  ALERT_TEXT+=$'━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n'
+  ALERT_TEXT+=$'📆 Hora: '"${DATE}"$'\n\n'
+  ALERT_TEXT+="${ALERT_MSG}"$'\n'
   
-  ALERT_TEXT+="📊 ESTADO DEL SISTEMA\n"
-  ALERT_TEXT+="────────────────────\n"
-  ALERT_TEXT+="🔍 Top procesos CPU:\n${TOP_CPU}\n\n"
-  ALERT_TEXT+="🧠 Top procesos RAM:\n${TOP_MEM}\n\n"
-  ALERT_TEXT+="🌐 Conexiones: ${ACTIVE_CONNS} | 🔐 SSH: ${SSH_SESSIONS}\n\n"
+  ALERT_TEXT+=$'📊 ESTADO DEL SISTEMA\n'
+  ALERT_TEXT+=$'────────────────────\n'
+  ALERT_TEXT+=$'🔍 Top procesos CPU:\n'"${TOP_CPU}"$'\n\n'
+  ALERT_TEXT+=$'🧠 Top procesos RAM:\n'"${TOP_MEM}"$'\n\n'
+  ALERT_TEXT+=$'🌐 Conexiones: '"${ACTIVE_CONNS}"$' | 🔐 SSH: '"${SSH_SESSIONS}"$'\n\n'
   
-  ALERT_TEXT+="🛰️ DIAGNÓSTICO TRACKER\n"
-  ALERT_TEXT+="─────────────────────\n"
-  ALERT_TEXT+="📈 Announces (sample): ${ANNOUNCE_REQUESTS}\n"
-  ALERT_TEXT+="🌍 IPs únicas: ${ANNOUNCE_UNIQUE_IPS}\n"
-  ALERT_TEXT+="⚠️ HTTP 429: ${ANNOUNCE_429}\n\n"
+  ALERT_TEXT+=$'🛰️ DIAGNÓSTICO TRACKER\n'
+  ALERT_TEXT+=$'─────────────────────\n'
+  ALERT_TEXT+=$'📈 Announces (sample): '"${ANNOUNCE_REQUESTS}"$'\n'
+  ALERT_TEXT+=$'🌍 IPs únicas: '"${ANNOUNCE_UNIQUE_IPS}"$'\n'
+  ALERT_TEXT+=$'⚠️ HTTP 429: '"${ANNOUNCE_429}"$'\n\n'
 
   if [[ "$TOP_IPS" != "(none)" && "$TOP_IPS" != "(no data)" ]]; then
     ALERT_TEXT+="🥇 TOP IPs:\n${TOP_IPS}\n\n"
