@@ -53,6 +53,9 @@ done
 ANNOUNCE_REQUESTS="(no log)"
 ANNOUNCE_UNIQUE_IPS="(no log)"
 ANNOUNCE_429_COUNT="(no log)"
+TOP_IPS="(no data)"
+TOP_UAS="(no data)"
+TOP_PASSKEYS="(no data)"
 TRACKER_LOG_MATCHES="(no logs)"
 REDIS_INFO="(redis-cli not found)"
 REDIS_ANNOUNCE_KEYS="(redis-cli not found)"
@@ -67,6 +70,18 @@ if [[ -f "$ACCESS_LOG" ]]; then
     ANNOUNCE_UNIQUE_IPS=$(echo "$LOG_SAMPLE" | grep -F "$ANNOUNCE_PATH" | awk '{print $1}' | sort -u | wc -l)
     # Count HTTP 429 responses seen in the sample
     ANNOUNCE_429_COUNT=$(echo "$LOG_SAMPLE" | grep ' 429 ' | wc -l)
+
+    # Top IPs hitting announce (top 10)
+    TOP_IPS=$(echo "$LOG_SAMPLE" | grep -F "$ANNOUNCE_PATH" | awk '{print $1}' | sort | uniq -c | sort -rn | head -n 10 | awk '{print $2 " (" $1 ")"}' | paste -sd ", " -)
+    [[ -z "$TOP_IPS" ]] && TOP_IPS="(none)"
+
+    # Top User-Agents for announce (top 10)
+    TOP_UAS=$(echo "$LOG_SAMPLE" | grep -F "$ANNOUNCE_PATH" | awk -F '"' '{print $6}' | sort | uniq -c | sort -rn | head -n 10 | awk '{$1=$1; print substr($0,index($0,$2)) " (" $1 ")"}' | paste -sd ", " -)
+    [[ -z "$TOP_UAS" ]] && TOP_UAS="(none)"
+
+    # Top passkeys extracted from the path /announce/{passkey}
+    TOP_PASSKEYS=$(echo "$LOG_SAMPLE" | grep -F "$ANNOUNCE_PATH" | awk -F '"' '{print $2}' | awk '{print $2}' | sed -n 's|.*/announce/\([^/? ]*\).*|\1|p' | sort | uniq -c | sort -rn | head -n 10 | awk '{print $2 " (" $1 ")"}' | paste -sd ", " -)
+    [[ -z "$TOP_PASSKEYS" ]] && TOP_PASSKEYS="(none)"
   fi
 else
   ACCESS_LOG="(not found)"
@@ -154,6 +169,9 @@ MSG+="• Access log: ${ACCESS_LOG}\n"
 MSG+="• Announce requests (sample): ${ANNOUNCE_REQUESTS}\n"
 MSG+="• Unique IPs hitting announce (sample): ${ANNOUNCE_UNIQUE_IPS}\n"
 MSG+="• HTTP 429 in sample: ${ANNOUNCE_429_COUNT}\n"
+MSG+="\n🔝 *Top IPs (announce):* ${TOP_IPS}\n"
+MSG+="\n🧾 *Top User-Agents (announce):* ${TOP_UAS}\n"
+MSG+="\n🔑 *Top passkeys (announce):* ${TOP_PASSKEYS}\n"
 MSG+="• Tracker-related log matches: ${TRACKER_LOG_MATCHES}\n\n"
 MSG+="🔧 *Redis & queues:*\n"
 MSG+="• Redis INFO (ops/clients/memory):\n${REDIS_INFO}\n"

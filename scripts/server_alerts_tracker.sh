@@ -79,12 +79,28 @@ done
 ANNOUNCE_REQUESTS=0
 ANNOUNCE_429=0
 ANNOUNCE_UNIQUE_IPS=0
+TOP_IPS="(no data)"
+TOP_UAS="(no data)"
+TOP_PASSKEYS="(no data)"
 if [[ -f "$ACCESS_LOG" ]]; then
   SAMPLE=$(tail -n "$TAIL_LINES" "$ACCESS_LOG" 2>/dev/null || true)
   if [[ -n "$SAMPLE" ]]; then
     ANNOUNCE_REQUESTS=$(echo "$SAMPLE" | grep -F "$ANNOUNCE_PATH" | wc -l)
     ANNOUNCE_429=$(echo "$SAMPLE" | grep -F " 429 " | wc -l)
     ANNOUNCE_UNIQUE_IPS=$(echo "$SAMPLE" | grep -F "$ANNOUNCE_PATH" | awk '{print $1}' | sort -u | wc -l)
+
+    # Top IPs hitting announce (top 10)
+    TOP_IPS=$(echo "$SAMPLE" | grep -F "$ANNOUNCE_PATH" | awk '{print $1}' | sort | uniq -c | sort -rn | head -n 10 | awk '{print $2 " (" $1 ")"}' | paste -sd ", " -)
+    [[ -z "$TOP_IPS" ]] && TOP_IPS="(none)"
+
+    # Top User-Agents for announce (top 10)
+    TOP_UAS=$(echo "$SAMPLE" | grep -F "$ANNOUNCE_PATH" | awk -F '"' '{print $6}' | sort | uniq -c | sort -rn | head -n 10 | awk '{$1=$1; print substr($0,index($0,$2)) " (" $1 ")"}' | paste -sd ", " -)
+    [[ -z "$TOP_UAS" ]] && TOP_UAS="(none)"
+
+    # Top passkeys extracted from the path /announce/{passkey}
+    TOP_PASSKEYS=$(echo "$SAMPLE" | grep -F "$ANNOUNCE_PATH" | awk -F '"' '{print $2}' | awk '{print $2}' | sed -n 's|.*/announce/\([^/? ]*\).*|\1|p' | sort | uniq -c | sort -rn | head -n 10 | awk '{print $2 " (" $1 ")"}' | paste -sd ", " -)
+    [[ -z "$TOP_PASSKEYS" ]] && TOP_PASSKEYS="(none)"
+
     if [ "$ANNOUNCE_429" -gt 0 ]; then
       ALERT_MSG+="⚠️ *HTTP 429s detected in access log:* ${ANNOUNCE_429} occurrences (sample)\n"
       SEND_ALERT=true
@@ -110,6 +126,10 @@ if [ "$SEND_ALERT" = true ]; then
   ALERT_TEXT+="• Announce requests (sample): ${ANNOUNCE_REQUESTS}\n"
   ALERT_TEXT+="• Unique IPs hitting announce (sample): ${ANNOUNCE_UNIQUE_IPS}\n"
   ALERT_TEXT+="• HTTP 429 in sample: ${ANNOUNCE_429}\n"
+
+  ALERT_TEXT+=$'\n'"🔝 *Top IPs (announce):* ${TOP_IPS}\n"
+  ALERT_TEXT+=$'\n'"🧾 *Top User-Agents (announce):* ${TOP_UAS}\n"
+  ALERT_TEXT+=$'\n'"🔑 *Top passkeys (announce):* ${TOP_PASSKEYS}\n"
 
   curl -s -X POST "https://api.telegram.org/bot${BOT_TOKEN}/sendMessage" \
     -d chat_id="${CHAT_ID}" \
