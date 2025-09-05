@@ -154,14 +154,35 @@ POOL_FILES=$(ls /etc/php/*/fpm/pool.d/*.conf 2>/dev/null || true)
 if [[ -n "$POOL_FILES" ]]; then
   PHP_FPM_POOLS_INFO=""
   total_max=0
+  active_pools=0
   for f in $POOL_FILES; do
     name=$(basename "$f" .conf)
-    pm_children=$(grep -E '^pm.max_children' "$f" 2>/dev/null | awk -F'=' '{gsub(/ /,"",$2); print $2}' || true)
-    if [[ -z "$pm_children" ]]; then pm_children="(unset)"; fi
-    if [[ "$pm_children" =~ ^[0-9]+$ ]]; then
-      total_max=$((total_max + pm_children))
+    pm_children=$(grep -E '^pm\.max_children' "$f" 2>/dev/null | awk -F'=' '{gsub(/ /,"",$2); print $2}' || true)
+    
+    # Skip if no pm.max_children or if it's commented out
+    if [[ -n "$pm_children" && "$pm_children" =~ ^[0-9]+$ ]]; then
+      # Check if this pool is actually being used (has active processes)
+      pool_processes=$(pgrep -f "pool $name" 2>/dev/null | wc -l)
+      if [[ "$pool_processes" -gt 0 ]]; then
+        total_max=$((total_max + pm_children))
+        active_pools=$((active_pools + 1))
+        PHP_FPM_POOLS_INFO+="$name:$pm_children "
+      fi
     fi
   done
+  
+  # If no active pools found, fallback to all configured pools
+  if [[ "$active_pools" -eq 0 ]]; then
+    for f in $POOL_FILES; do
+      name=$(basename "$f" .conf)
+      pm_children=$(grep -E '^pm\.max_children' "$f" 2>/dev/null | awk -F'=' '{gsub(/ /,"",$2); print $2}' || true)
+      if [[ -n "$pm_children" && "$pm_children" =~ ^[0-9]+$ ]]; then
+        total_max=$((total_max + pm_children))
+        PHP_FPM_POOLS_INFO+="$name:$pm_children "
+      fi
+    done
+  fi
+  
   PHP_FPM_TOTAL_MAX_CHILDREN="$total_max"
   
   # Count actual running PHP-FPM processes
@@ -195,7 +216,8 @@ if [[ "$TOP_PASSKEYS" != "(none)" && "$TOP_PASSKEYS" != "(no data)" ]]; then
   MSG+=$'👤 '"${TOP_PASSKEYS}"$'\n'
 fi
 
-MSG+=$'🔧 Redis:'"${REDIS_INFO}"$' Keys:'"${REDIS_ANNOUNCE_KEYS}"$' | Colas:'"${QUEUE_INFO}"$' | PHP:'"${PHP_FPM_PROCESS_COUNT}"$'/'"${PHP_FPM_TOTAL_MAX_CHILDREN}"$'('"${PHP_FPM_AVG_RSS_MB}"$'MB)'
+MSG+=$'🔧 Redis:'"${REDIS_INFO}"$' Keys:'"${REDIS_ANNOUNCE_KEYS}"$' | Colas:'"${QUEUE_INFO}"$'\n'
+MSG+=$'🧩 PHP:'"${PHP_FPM_PROCESS_COUNT}"$'/'"${PHP_FPM_TOTAL_MAX_CHILDREN}"$'('"${PHP_FPM_AVG_RSS_MB}"$'MB) Pools:'"${PHP_FPM_POOLS_INFO}"$''
 
 # Send to Telegram
 curl -s -X POST \
