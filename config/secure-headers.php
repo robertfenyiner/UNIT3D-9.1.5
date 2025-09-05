@@ -674,8 +674,10 @@ return [
             'self'          => true,
             'unsafe-inline' => true,
 
+            // Allow any stylesheet loaded over HTTPS. This enables user-provided
+            // external CSS URLs served via HTTPS to be applied by the browser.
             'schemes' => [
-                // 'https:',
+                'https:',
             ],
 
             'allow' => [
