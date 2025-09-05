@@ -1,5 +1,5 @@
 #!/bin/bash
-# Enhanced server info script with tracker diagnostics
+# Enhanced server info script with tracker diagnostics - COMPACT VERSION
 # Reads TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID from environment (do NOT hardcode tokens!)
 
 # Load environment file if present (so running with sudo will still pick credentials)
@@ -60,14 +60,14 @@ TOP_MEM=$(ps -eo pid,comm,%mem --sort=-%mem | head -n 4 | tail -n 3 | awk '{prin
 ACTIVE_CONNS=$(ss -tun | grep ESTAB | wc -l 2>/dev/null || echo "n/a")
 SSH_SESSIONS=$(who | wc -l 2>/dev/null || echo "n/a")
 
-# Services monitored
+# Services monitored (compact format)
 SERVICES=("nginx" "redis-server" "php8.4-fpm")
 SERVICIO_STATUS=""
 for service in "${SERVICES[@]}"; do
   if systemctl is-active --quiet "$service"; then
-    SERVICIO_STATUS+="🟢 $service"$'\n'
+    SERVICIO_STATUS+="🟢$service "
   else
-    SERVICIO_STATUS+="🔴 $service"$'\n'
+    SERVICIO_STATUS+="🔴$service "
   fi
 done
 
@@ -76,25 +76,16 @@ if [[ -f "$ACCESS_LOG" ]]; then
   ANNOUNCE_REQUESTS=$(tail -n "$TAIL_LINES" "$ACCESS_LOG" | grep -c "$ANNOUNCE_PATH" || echo "0")
   ANNOUNCE_UNIQUE_IPS=$(tail -n "$TAIL_LINES" "$ACCESS_LOG" | grep "$ANNOUNCE_PATH" | awk '{print $1}' | sort -u | wc -l || echo "0")
   ANNOUNCE_429_COUNT=$(tail -n "$TAIL_LINES" "$ACCESS_LOG" | grep "$ANNOUNCE_PATH" | grep -c ' 429 ' || echo "0")
-  TRACKER_LOG_MATCHES=$(tail -n "$TAIL_LINES" "$ACCESS_LOG" | grep -c "$ANNOUNCE_PATH" || echo "0")
   
-  # Top IPs making announce requests
+  # Top IPs making announce requests (compact format)
   TOP_IPS_RAW=$(tail -n "$TAIL_LINES" "$ACCESS_LOG" | grep "$ANNOUNCE_PATH" | awk '{print $1}' | sort | uniq -c | sort -nr | head -n 3)
   if [[ -n "$TOP_IPS_RAW" ]]; then
-    TOP_IPS=$(echo "$TOP_IPS_RAW" | awk '{print "🔸 " $2 ": " $1 " reqs"}')
+    TOP_IPS=$(echo "$TOP_IPS_RAW" | awk '{printf "%s(%d) ", $2, $1}')
   else
     TOP_IPS="(none)"
   fi
   
-  # Top User-Agents making announce requests
-  TOP_UAS_RAW=$(tail -n "$TAIL_LINES" "$ACCESS_LOG" | grep "$ANNOUNCE_PATH" | sed 's/.*"\([^"]*\)"$/\1/' | sort | uniq -c | sort -nr | head -n 3)
-  if [[ -n "$TOP_UAS_RAW" ]]; then
-    TOP_UAS=$(echo "$TOP_UAS_RAW" | awk '{$1=$1; gsub(/^[0-9]+ /, ""); print "🔸 " substr($0, 1, 40) "..."}')
-  else
-    TOP_UAS="(none)"
-  fi
-  
-  # Top passkeys (extract from announce URLs with usernames)
+  # Top passkeys (extract from announce URLs with usernames - compact)
   TOP_PASSKEYS_RAW=$(tail -n "$TAIL_LINES" "$ACCESS_LOG" | grep "$ANNOUNCE_PATH" | grep -oE 'passkey=[a-f0-9]{32}' | cut -d= -f2 | sort | uniq -c | sort -nr | head -n 3)
   if [[ -n "$TOP_PASSKEYS_RAW" ]]; then
     TOP_PASSKEYS=""
@@ -102,9 +93,9 @@ if [[ -f "$ACCESS_LOG" ]]; then
       if [[ -n "$count" && -n "$passkey" ]]; then
         username=$(get_username_from_passkey "$passkey")
         if [[ "$username" != "unknown" && -n "$username" ]]; then
-          TOP_PASSKEYS+="🔸 $username ($(echo $passkey | cut -c1-8)...): $count reqs"$'\n'
+          TOP_PASSKEYS+="$username($count) "
         else
-          TOP_PASSKEYS+="🔸 $(echo $passkey | cut -c1-8)...: $count reqs"$'\n'
+          TOP_PASSKEYS+="$(echo $passkey | cut -c1-6)($count) "
         fi
       fi
     done <<< "$TOP_PASSKEYS_RAW"
@@ -115,35 +106,35 @@ else
   ANNOUNCE_REQUESTS="(log not found)"
   ANNOUNCE_UNIQUE_IPS="(log not found)"
   ANNOUNCE_429_COUNT="(log not found)"
-  TRACKER_LOG_MATCHES="(log not found)"
   TOP_IPS="(no data)"
-  TOP_UAS="(no data)"
   TOP_PASSKEYS="(no data)"
 fi
 
-# Queue info
-QUEUE_INFO="(none found)"
+# Queue info (compact)
+QUEUE_INFO="empty"
 if [[ -n "$REDIS_CLI" && -x "$REDIS_CLI" ]]; then
-  REDIS_INFO="🟢 Redis OK"
+  REDIS_INFO="OK"
   REDIS_ANNOUNCE_KEYS=$($REDIS_CLI --scan --pattern '*announce*' 2>/dev/null | wc -l || echo "0")
   
-  # Laravel queues (common queue names)
+  # Laravel queues (common queue names) - compact format
   QUEUE_NAMES=("default" "high" "low" "emails" "notifications")
   QUEUE_STATUS=""
+  total_jobs=0
   for queue in "${QUEUE_NAMES[@]}"; do
     queue_length=$($REDIS_CLI llen "queues:$queue" 2>/dev/null || echo "0")
     if [[ "$queue_length" -gt 0 ]]; then
-      QUEUE_STATUS+="🔸 $queue: $queue_length jobs"$'\n'
+      QUEUE_STATUS+="$queue:$queue_length "
+      total_jobs=$((total_jobs + queue_length))
     fi
   done
-  if [[ -n "$QUEUE_STATUS" ]]; then
-    QUEUE_INFO="$QUEUE_STATUS"
+  if [[ "$total_jobs" -gt 0 ]]; then
+    QUEUE_INFO="$total_jobs jobs ($QUEUE_STATUS)"
   else
-    QUEUE_INFO="🟢 All queues empty"
+    QUEUE_INFO="empty"
   fi
 else
-  REDIS_INFO="(redis-cli not found)"
-  REDIS_ANNOUNCE_KEYS="(redis-cli not found)"
+  REDIS_INFO="not found"
+  REDIS_ANNOUNCE_KEYS="n/a"
 fi
 
 # PHP-FPM diagnostics (pools and process metrics)
@@ -162,7 +153,6 @@ if [[ -n "$POOL_FILES" ]]; then
     name=$(basename "$f" .conf)
     pm_children=$(grep -E '^pm.max_children' "$f" 2>/dev/null | awk -F'=' '{gsub(/ /,"",$2); print $2}' || true)
     if [[ -z "$pm_children" ]]; then pm_children="(unset)"; fi
-    PHP_FPM_POOLS_INFO+="🔸 $name: $pm_children max"$'\n'
     if [[ "$pm_children" =~ ^[0-9]+$ ]]; then
       total_max=$((total_max + pm_children))
     fi
@@ -179,58 +169,36 @@ if [[ -n "$POOL_FILES" ]]; then
   fi
 fi
 
-# Build message with proper line breaks
-MSG=$'🧾 ESTADO DEL SERVIDOR - '"${HOSTNAME}"$'\n'
-MSG+=$'━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n'
-MSG+=$'📆 '"${DATE}"$'\n\n'
+# Build message with proper line breaks (optimized for Telegram limits)
+MSG=$'🧾 '"${HOSTNAME}"$' - '"${DATE}"$'\n'
+MSG+=$'━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n'
 
 MSG+=$'🖥️ SISTEMA\n'
-MSG+=$'─────────\n'
-MSG+=$'⏱️ Uptime: '"${UPTIME}"$'\n'
+MSG+=$'⏱️ '"${UPTIME}"$'\n'
 MSG+=$'📊 Carga: '"${LOAD}"$'\n'
-MSG+=$'⚙️ CPU: '"${CPU_USAGE}"$'\n'
-MSG+=$'💾 RAM: '"${USED_MEM}"$'MB / '"${TOTAL_MEM}"$'MB\n'
-MSG+=$'📦 Swap: '"${USED_SWAP}"$'MB\n'
-MSG+=$'🗃️ Disco /: '"${DISK_USAGE}"$'\n'
+MSG+=$'⚙️ CPU: '"${CPU_USAGE}"$' | 💾 RAM: '"${USED_MEM}"$'/'"${TOTAL_MEM}"$'MB\n'
+MSG+=$'📦 Swap: '"${USED_SWAP}"$'MB | 🗃️ Disco: '"${DISK_USAGE}"$'\n'
 MSG+=$'🌐 Conexiones: '"${ACTIVE_CONNS}"$' | 🔐 SSH: '"${SSH_SESSIONS}"$'\n\n'
 
-MSG+=$'📊 TOP PROCESOS\n'
-MSG+=$'──────────────\n'
-MSG+=$'🔍 CPU:\n'"${TOP_CPU}"$'\n\n'
-MSG+=$'🧠 RAM:\n'"${TOP_MEM}"$'\n\n'
-
-MSG+=$'🧩 SERVICIOS\n'
-MSG+=$'───────────\n'
-MSG+="${SERVICIO_STATUS}"$'\n'
+MSG+=$'🧩 SERVICIOS: '"${SERVICIO_STATUS}"$'\n\n'
 
 MSG+=$'🛰️ TRACKER\n'
-MSG+=$'──────────\n'
-MSG+=$'📈 Announces: '"${ANNOUNCE_REQUESTS}"$'\n'
-MSG+=$'🌍 IPs únicas: '"${ANNOUNCE_UNIQUE_IPS}"$'\n'
-if [[ "$ANNOUNCE_429_COUNT" != "0" ]]; then
-  MSG+=$'⚠️ HTTP 429: '"${ANNOUNCE_429_COUNT}"$'\n'
+MSG+=$'📈 '"${ANNOUNCE_REQUESTS}"$' announces | 🌍 '"${ANNOUNCE_UNIQUE_IPS}"$' IPs'
+if [[ "$ANNOUNCE_429_COUNT" != "0" && "$ANNOUNCE_429_COUNT" -gt 0 ]]; then
+  MSG+=$' | ⚠️ '"${ANNOUNCE_429_COUNT}"$' 429s'
 fi
 MSG+=$'\n'
 
 if [[ "$TOP_IPS" != "(none)" && "$TOP_IPS" != "(no data)" ]]; then
-  MSG+=$'🥇 TOP IPs:\n'"${TOP_IPS}"$'\n'
+  MSG+=$'🥇 TOP IPs: '"${TOP_IPS}"$'\n'
 fi
 if [[ "$TOP_PASSKEYS" != "(none)" && "$TOP_PASSKEYS" != "(no data)" ]]; then
-  MSG+=$'� TOP USUARIOS:\n'"${TOP_PASSKEYS}"$'\n'
+  MSG+=$'👤 TOP USUARIOS: '"${TOP_PASSKEYS}"$'\n'
 fi
 
-MSG+=$'\n🔧 REDIS & COLAS\n'
-MSG+=$'──────────────\n'
-MSG+="${REDIS_INFO}"$'\n'
-MSG+=$'🗝️ Keys '"'"'announce'"'"': '"${REDIS_ANNOUNCE_KEYS}"$'\n'
-MSG+=$'📋 Colas:\n'"${QUEUE_INFO}"$'\n'
-
-MSG+=$'🧩 PHP-FPM & CPU\n'
-MSG+=$'───────────────\n'
-MSG+=$'🖥️ CPUs: '"${CPU_COUNT}"$'\n'
-MSG+=$'⚙️ Pools: '"${PHP_FPM_TOTAL_MAX_CHILDREN}"$' max\n'
-MSG+=$'🔄 Procesos: '"${PHP_FPM_PROCESS_COUNT}"$'\n'
-MSG+=$'💾 Avg RSS: '"${PHP_FPM_AVG_RSS_MB}"$' MB\n'
+MSG+=$'\n🔧 REDIS: '"${REDIS_INFO}"$' | Keys: '"${REDIS_ANNOUNCE_KEYS}"$'\n'
+MSG+=$'📋 COLAS: '"${QUEUE_INFO}"$'\n'
+MSG+=$'🧩 PHP-FPM: '"${PHP_FPM_PROCESS_COUNT}"$'/'"${PHP_FPM_TOTAL_MAX_CHILDREN}"$' proc | '"${PHP_FPM_AVG_RSS_MB}"$'MB avg'
 
 # Send to Telegram
 curl -s -X POST \
