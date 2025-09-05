@@ -77,6 +77,11 @@ if [[ -f "$ACCESS_LOG" ]]; then
   ANNOUNCE_UNIQUE_IPS=$(tail -n "$TAIL_LINES" "$ACCESS_LOG" | grep "$ANNOUNCE_PATH" | awk '{print $1}' | sort -u | wc -l || echo "0")
   ANNOUNCE_429_COUNT=$(tail -n "$TAIL_LINES" "$ACCESS_LOG" | grep "$ANNOUNCE_PATH" | grep -c ' 429 ' || echo "0")
   
+  # Clean variables to remove any newlines or whitespace
+  ANNOUNCE_REQUESTS=$(echo "$ANNOUNCE_REQUESTS" | tr -d '\n\r' | awk '{print $1}')
+  ANNOUNCE_UNIQUE_IPS=$(echo "$ANNOUNCE_UNIQUE_IPS" | tr -d '\n\r' | awk '{print $1}')
+  ANNOUNCE_429_COUNT=$(echo "$ANNOUNCE_429_COUNT" | tr -d '\n\r' | awk '{print $1}')
+  
   # Top IPs making announce requests (compact format)
   TOP_IPS_RAW=$(tail -n "$TAIL_LINES" "$ACCESS_LOG" | grep "$ANNOUNCE_PATH" | awk '{print $1}' | sort | uniq -c | sort -nr | head -n 3)
   if [[ -n "$TOP_IPS_RAW" ]]; then
@@ -169,36 +174,28 @@ if [[ -n "$POOL_FILES" ]]; then
   fi
 fi
 
-# Build message with proper line breaks (optimized for Telegram limits)
-MSG=$'🧾 '"${HOSTNAME}"$' - '"${DATE}"$'\n'
-MSG+=$'━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n'
+# Build message with proper line breaks (ULTRA-COMPACT for Telegram limits)
+MSG=$'🧾 '"${HOSTNAME}"$' - '"${DATE}"$'\n\n'
 
-MSG+=$'🖥️ SISTEMA\n'
-MSG+=$'⏱️ '"${UPTIME}"$'\n'
-MSG+=$'📊 Carga: '"${LOAD}"$'\n'
-MSG+=$'⚙️ CPU: '"${CPU_USAGE}"$' | 💾 RAM: '"${USED_MEM}"$'/'"${TOTAL_MEM}"$'MB\n'
-MSG+=$'📦 Swap: '"${USED_SWAP}"$'MB | 🗃️ Disco: '"${DISK_USAGE}"$'\n'
-MSG+=$'🌐 Conexiones: '"${ACTIVE_CONNS}"$' | 🔐 SSH: '"${SSH_SESSIONS}"$'\n\n'
+MSG+=$'🖥️ '"${UPTIME}"$'\n'
+MSG+=$'📊 '"${LOAD}"$'\n'
+MSG+=$'⚙️ CPU:'"${CPU_USAGE}"$' RAM:'"${USED_MEM}"$'/'"${TOTAL_MEM}"$'MB Swap:'"${USED_SWAP}"$'MB Disco:'"${DISK_USAGE}"$'\n'
+MSG+=$'🌐 Conn:'"${ACTIVE_CONNS}"$' SSH:'"${SSH_SESSIONS}"$' | Servicios: '"${SERVICIO_STATUS}"$'\n\n'
 
-MSG+=$'🧩 SERVICIOS: '"${SERVICIO_STATUS}"$'\n\n'
-
-MSG+=$'🛰️ TRACKER\n'
-MSG+=$'📈 '"${ANNOUNCE_REQUESTS}"$' announces | 🌍 '"${ANNOUNCE_UNIQUE_IPS}"$' IPs'
+MSG+=$'🛰️ TRACKER: '"${ANNOUNCE_REQUESTS}"$' announces | '"${ANNOUNCE_UNIQUE_IPS}"$' IPs'
 if [[ "$ANNOUNCE_429_COUNT" != "0" && "$ANNOUNCE_429_COUNT" -gt 0 ]]; then
-  MSG+=$' | ⚠️ '"${ANNOUNCE_429_COUNT}"$' 429s'
+  MSG+=$' | ⚠️'"${ANNOUNCE_429_COUNT}"$' 429s'
 fi
 MSG+=$'\n'
 
 if [[ "$TOP_IPS" != "(none)" && "$TOP_IPS" != "(no data)" ]]; then
-  MSG+=$'🥇 TOP IPs: '"${TOP_IPS}"$'\n'
+  MSG+=$'🥇 '"${TOP_IPS}"$'\n'
 fi
 if [[ "$TOP_PASSKEYS" != "(none)" && "$TOP_PASSKEYS" != "(no data)" ]]; then
-  MSG+=$'👤 TOP USUARIOS: '"${TOP_PASSKEYS}"$'\n'
+  MSG+=$'👤 '"${TOP_PASSKEYS}"$'\n'
 fi
 
-MSG+=$'\n🔧 REDIS: '"${REDIS_INFO}"$' | Keys: '"${REDIS_ANNOUNCE_KEYS}"$'\n'
-MSG+=$'📋 COLAS: '"${QUEUE_INFO}"$'\n'
-MSG+=$'🧩 PHP-FPM: '"${PHP_FPM_PROCESS_COUNT}"$'/'"${PHP_FPM_TOTAL_MAX_CHILDREN}"$' proc | '"${PHP_FPM_AVG_RSS_MB}"$'MB avg'
+MSG+=$'🔧 Redis:'"${REDIS_INFO}"$' Keys:'"${REDIS_ANNOUNCE_KEYS}"$' | Colas:'"${QUEUE_INFO}"$' | PHP:'"${PHP_FPM_PROCESS_COUNT}"$'/'"${PHP_FPM_TOTAL_MAX_CHILDREN}"$'('"${PHP_FPM_AVG_RSS_MB}"$'MB)'
 
 # Send to Telegram
 curl -s -X POST \
