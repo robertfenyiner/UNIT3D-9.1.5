@@ -7,6 +7,9 @@ ENV_FILE="/etc/default/metrics_bot_env"
 if [[ -f "$ENV_FILE" ]]; then
   # shellcheck source=/etc/default/metrics_bot_env
   source "$ENV_FILE"
+  echo "DEBUG: Loaded env file, DB vars available" >> /tmp/debug_tracker.log
+else
+  echo "DEBUG: No env file found at $ENV_FILE" >> /tmp/debug_tracker.log
 fi
 
 BOT_TOKEN="${TELEGRAM_BOT_TOKEN:-}" 
@@ -30,6 +33,10 @@ DB_HOST="${DB_HOST:-localhost}"
 DB_DATABASE="${DB_DATABASE:-unit3d}"
 DB_USERNAME="${DB_USERNAME:-}"
 DB_PASSWORD="${DB_PASSWORD:-}"
+
+# Debug: Log final database configuration
+echo "DEBUG: Final DB config - Host:$DB_HOST, DB:$DB_DATABASE, User:$DB_USERNAME, MySQL:$MYSQL_CMD" >> /tmp/debug_tracker.log
+echo "DEBUG: MySQL available: $(test -n "$MYSQL_CMD" && test -x "$MYSQL_CMD" && echo "YES" || echo "NO")" >> /tmp/debug_tracker.log
 
 # Function to get username from passkey with enhanced debugging
 get_username_from_passkey() {
@@ -120,7 +127,7 @@ if [[ -f "$ACCESS_LOG" ]]; then
       if [[ -n "$count" && -n "$passkey" ]]; then
         echo "DEBUG: Looking up passkey: $passkey" >> /tmp/debug_tracker.log
         username=$(get_username_from_passkey "$passkey")
-        echo "DEBUG: Found username: $username" >> /tmp/debug_tracker.log
+        echo "DEBUG: Found username: '$username' for passkey $passkey" >> /tmp/debug_tracker.log
         if [[ "$username" != "unknown" && -n "$username" ]]; then
           TOP_PASSKEYS+="$username($count) "
         else
