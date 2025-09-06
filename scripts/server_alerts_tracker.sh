@@ -2,7 +2,18 @@
 # Enhanced alert script with tracker checks
 # Expects TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID in environment
 
-# Load environment file if present (so running with sudo will still pick credentials)
+# Load environment file if present (so running with sudo will still pick credent    if [[ "$TOP_PASSKEYS" != "(none)" && "$TOP_PASSKEYS" != "(no data)" ]]; then
+      FULL_MSG+=$'👤 TOP USUARIOS:\n'"${TOP_PASSKEYS}"$'\n'
+    fi
+    
+    # Add explanation for alerts
+    FULL_MSG+=$'\n📖 *Explicación de la alerta:*\n'
+    FULL_MSG+=$'• 🚨 Valores por encima de lo normal\n'
+    FULL_MSG+=$'• 📊 Load alto: servidor sobrecargado\n'
+    FULL_MSG+=$'• ⚙️ CPU/RAM alto: recursos limitados\n'
+    FULL_MSG+=$'• 🛰️ 429 errors: tracker rechazando peticiones\n'
+    FULL_MSG+=$'• 👤 Usuarios más activos en este momento'
+  fi)
 ENV_FILE="/etc/default/metrics_bot_env"
 if [[ -f "$ENV_FILE" ]]; then
   # shellcheck source=/etc/default/metrics_bot_env

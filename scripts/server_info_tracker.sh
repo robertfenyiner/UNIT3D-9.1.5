@@ -240,7 +240,18 @@ if [[ "$TOP_PASSKEYS" != "(sin datos recientes)" && "$TOP_PASSKEYS" != "(none)" 
 fi
 
 MSG+=$'🔧 Redis:'"${REDIS_INFO}"$' Keys:'"${REDIS_ANNOUNCE_KEYS}"$' | Colas:'"${QUEUE_INFO}"$'\n'
-MSG+=$'🧩 PHP:'"${PHP_FPM_PROCESS_COUNT}"$'/'"${PHP_FPM_TOTAL_MAX_CHILDREN}"$'('"${PHP_FPM_AVG_RSS_MB}"$'MB) Pools:'"${PHP_FPM_POOLS_INFO}"$''
+MSG+=$'🧩 PHP:'"${PHP_FPM_PROCESS_COUNT}"$'/'"${PHP_FPM_TOTAL_MAX_CHILDREN}"$'('"${PHP_FPM_AVG_RSS_MB}"$'MB) Pools:'"${PHP_FPM_POOLS_INFO}"$'\n\n'
+
+# Add explanation section
+MSG+=$'📖 *Explicación:*\n'
+MSG+=$'• 📊 Load: Carga del sistema (menor = mejor)\n'
+MSG+=$'• ⚙️ CPU/RAM: Uso de procesador y memoria\n'
+MSG+=$'• 🌐 Conn: Conexiones activas al servidor\n'
+MSG+=$'• 🛰️ TRACKER: Peticiones de torrent clients\n'
+MSG+=$'• 🥇 IPs más activas descargando\n'
+MSG+=$'• 👤 Usuarios más activos del tracker\n'
+MSG+=$'• 🔧 Redis: Base de datos en memoria\n'
+MSG+=$'• 🧩 PHP: Procesos web del servidor'
 
 # Send to Telegram
 curl -s -X POST \
