@@ -31,15 +31,32 @@ DB_DATABASE="${DB_DATABASE:-unit3d}"
 DB_USERNAME="${DB_USERNAME:-}"
 DB_PASSWORD="${DB_PASSWORD:-}"
 
-# Function to get username from passkey
+# Function to get username from passkey with enhanced debugging
 get_username_from_passkey() {
   local passkey="$1"
-  if [[ -n "$MYSQL_CMD" && -x "$MYSQL_CMD" && -n "$DB_USERNAME" ]]; then
-    if [[ -n "$DB_PASSWORD" ]]; then
-      mysql -h "$DB_HOST" -u "$DB_USERNAME" -p"$DB_PASSWORD" "$DB_DATABASE" -se "SELECT username FROM users WHERE passkey='$passkey' LIMIT 1;" 2>/dev/null || echo "unknown"
-    else
-      mysql -h "$DB_HOST" -u "$DB_USERNAME" "$DB_DATABASE" -se "SELECT username FROM users WHERE passkey='$passkey' LIMIT 1;" 2>/dev/null || echo "unknown"
-    fi
+  
+  # Debug: Check if mysql and credentials are available
+  if [[ -z "$MYSQL_CMD" || ! -x "$MYSQL_CMD" ]]; then
+    echo "unknown" # MySQL not available
+    return 1
+  fi
+  
+  if [[ -z "$DB_USERNAME" ]]; then
+    echo "unknown" # No DB username configured
+    return 1
+  fi
+  
+  # Try to get username from database
+  local username=""
+  if [[ -n "$DB_PASSWORD" ]]; then
+    username=$(mysql -h "$DB_HOST" -u "$DB_USERNAME" -p"$DB_PASSWORD" "$DB_DATABASE" -se "SELECT username FROM users WHERE passkey='$passkey' LIMIT 1;" 2>/dev/null)
+  else
+    username=$(mysql -h "$DB_HOST" -u "$DB_USERNAME" "$DB_DATABASE" -se "SELECT username FROM users WHERE passkey='$passkey' LIMIT 1;" 2>/dev/null)
+  fi
+  
+  # Return username if found, otherwise unknown
+  if [[ -n "$username" && "$username" != "" ]]; then
+    echo "$username"
   else
     echo "unknown"
   fi
@@ -94,9 +111,16 @@ if [[ -f "$ACCESS_LOG" ]]; then
   TOP_PASSKEYS_RAW=$(tail -n "$TAIL_LINES" "$ACCESS_LOG" | grep "$ANNOUNCE_PATH" | grep -oE 'passkey=[a-f0-9]{32}' | cut -d= -f2 | sort | uniq -c | sort -nr | head -n 3)
   if [[ -n "$TOP_PASSKEYS_RAW" ]]; then
     TOP_PASSKEYS=""
+    # Debug log (temporary)
+    echo "DEBUG: Found passkeys raw data:" >> /tmp/debug_tracker.log
+    echo "$TOP_PASSKEYS_RAW" >> /tmp/debug_tracker.log
+    echo "DEBUG: DB config - Host:$DB_HOST DB:$DB_DATABASE User:$DB_USERNAME" >> /tmp/debug_tracker.log
+    
     while read -r count passkey; do
       if [[ -n "$count" && -n "$passkey" ]]; then
+        echo "DEBUG: Looking up passkey: $passkey" >> /tmp/debug_tracker.log
         username=$(get_username_from_passkey "$passkey")
+        echo "DEBUG: Found username: $username" >> /tmp/debug_tracker.log
         if [[ "$username" != "unknown" && -n "$username" ]]; then
           TOP_PASSKEYS+="$username($count) "
         else
@@ -106,6 +130,7 @@ if [[ -f "$ACCESS_LOG" ]]; then
     done <<< "$TOP_PASSKEYS_RAW"
   else
     TOP_PASSKEYS="(none)"
+    echo "DEBUG: No passkeys found in log" >> /tmp/debug_tracker.log
   fi
 else
   ANNOUNCE_REQUESTS="(log not found)"
