@@ -2,14 +2,17 @@
 # Enhanced server info script with tracker diagnostics - COMPACT VERSION
 # Reads TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID from environment (do NOT hardcode tokens!)
 
-# Load environment file if present (so running with sudo will still pick credentials)
+# Load environment file if present (so running with sudo wilMSG+=$'🛰️ TRACKER: '"${ANNOUNCE_REQUESTS}"$' announces | '"${ANNOUNCE_UNIQUE_IPS}"$' IPs'
+if [[ "$ANNOUNCE_REQUESTS" == "0" || "$ANNOUNCE_REQUESTS" == "(log not found)" ]]; then
+  MSG+=$' (sin actividad reciente)'
+fi
+if [[ "$ANNOUNCE_429_COUNT" != "0" && "$ANNOUNCE_429_COUNT" -gt 0 ]]; then
+  MSG+=$' | ⚠️'"${ANNOUNCE_429_COUNT}"$' 429s'
+fiill pick credentials)
 ENV_FILE="/etc/default/metrics_bot_env"
 if [[ -f "$ENV_FILE" ]]; then
   # shellcheck source=/etc/default/metrics_bot_env
   source "$ENV_FILE"
-  echo "DEBUG: Loaded env file, DB vars available" >> /tmp/debug_tracker.log
-else
-  echo "DEBUG: No env file found at $ENV_FILE" >> /tmp/debug_tracker.log
 fi
 
 BOT_TOKEN="${TELEGRAM_BOT_TOKEN:-}" 
@@ -33,10 +36,6 @@ DB_HOST="${DB_HOST:-localhost}"
 DB_DATABASE="${DB_DATABASE:-unit3d}"
 DB_USERNAME="${DB_USERNAME:-}"
 DB_PASSWORD="${DB_PASSWORD:-}"
-
-# Debug: Log final database configuration
-echo "DEBUG: Final DB config - Host:$DB_HOST, DB:$DB_DATABASE, User:$DB_USERNAME, MySQL:$MYSQL_CMD" >> /tmp/debug_tracker.log
-echo "DEBUG: MySQL available: $(test -n "$MYSQL_CMD" && test -x "$MYSQL_CMD" && echo "YES" || echo "NO")" >> /tmp/debug_tracker.log
 
 # Function to get username from passkey with enhanced debugging
 get_username_from_passkey() {
@@ -111,23 +110,16 @@ if [[ -f "$ACCESS_LOG" ]]; then
   if [[ -n "$TOP_IPS_RAW" ]]; then
     TOP_IPS=$(echo "$TOP_IPS_RAW" | awk '{printf "%s(%d) ", $2, $1}')
   else
-    TOP_IPS="(none)"
+    TOP_IPS="(sin peticiones recientes)"
   fi
   
   # Top passkeys (extract from announce URLs with usernames - compact)
   TOP_PASSKEYS_RAW=$(tail -n "$TAIL_LINES" "$ACCESS_LOG" | grep "$ANNOUNCE_PATH" | grep -oE 'passkey=[a-f0-9]{32}' | cut -d= -f2 | sort | uniq -c | sort -nr | head -n 3)
   if [[ -n "$TOP_PASSKEYS_RAW" ]]; then
     TOP_PASSKEYS=""
-    # Debug log (temporary)
-    echo "DEBUG: Found passkeys raw data:" >> /tmp/debug_tracker.log
-    echo "$TOP_PASSKEYS_RAW" >> /tmp/debug_tracker.log
-    echo "DEBUG: DB config - Host:$DB_HOST DB:$DB_DATABASE User:$DB_USERNAME" >> /tmp/debug_tracker.log
-    
     while read -r count passkey; do
       if [[ -n "$count" && -n "$passkey" ]]; then
-        echo "DEBUG: Looking up passkey: $passkey" >> /tmp/debug_tracker.log
         username=$(get_username_from_passkey "$passkey")
-        echo "DEBUG: Found username: '$username' for passkey $passkey" >> /tmp/debug_tracker.log
         if [[ "$username" != "unknown" && -n "$username" ]]; then
           TOP_PASSKEYS+="$username($count) "
         else
@@ -136,8 +128,7 @@ if [[ -f "$ACCESS_LOG" ]]; then
       fi
     done <<< "$TOP_PASSKEYS_RAW"
   else
-    TOP_PASSKEYS="(none)"
-    echo "DEBUG: No passkeys found in log" >> /tmp/debug_tracker.log
+    TOP_PASSKEYS="(sin datos recientes)"
   fi
 else
   ANNOUNCE_REQUESTS="(log not found)"
@@ -241,10 +232,10 @@ if [[ "$ANNOUNCE_429_COUNT" != "0" && "$ANNOUNCE_429_COUNT" -gt 0 ]]; then
 fi
 MSG+=$'\n'
 
-if [[ "$TOP_IPS" != "(none)" && "$TOP_IPS" != "(no data)" ]]; then
+if [[ "$TOP_IPS" != "(sin peticiones recientes)" && "$TOP_IPS" != "(none)" && "$TOP_IPS" != "(no data)" ]]; then
   MSG+=$'🥇 '"${TOP_IPS}"$'\n'
 fi
-if [[ "$TOP_PASSKEYS" != "(none)" && "$TOP_PASSKEYS" != "(no data)" ]]; then
+if [[ "$TOP_PASSKEYS" != "(sin datos recientes)" && "$TOP_PASSKEYS" != "(none)" && "$TOP_PASSKEYS" != "(no data)" ]]; then
   MSG+=$'👤 '"${TOP_PASSKEYS}"$'\n'
 fi
 
