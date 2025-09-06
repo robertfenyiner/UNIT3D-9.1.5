@@ -135,8 +135,8 @@ if [[ -f "$ACCESS_LOG" ]]; then
     TOP_UAS="(none)"
   fi
   
-  # Top passkeys (extract from announce URLs with usernames)
-  TOP_PASSKEYS_RAW=$(tail -n "$TAIL_LINES" "$ACCESS_LOG" | grep "$ANNOUNCE_PATH" | grep -oE 'passkey=[a-f0-9]{32}' | cut -d= -f2 | sort | uniq -c | sort -nr | head -n 3)
+  # Top passkeys (extract from announce URLs - FIXED for UNIT3D format)
+  TOP_PASSKEYS_RAW=$(tail -n "$TAIL_LINES" "$ACCESS_LOG" | grep "$ANNOUNCE_PATH" | sed -n 's|.*GET /announce/\([a-f0-9]\{32\}\).*|\1|p' | sort | uniq -c | sort -nr | head -n 3)
   if [[ -n "$TOP_PASSKEYS_RAW" ]]; then
     TOP_PASSKEYS=""
     while read -r count passkey; do
