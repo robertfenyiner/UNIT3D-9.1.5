@@ -1,0 +1,11 @@
+[Unit]
+Description=UNIT3D Server Info Report Timer
+Requires=unit3d-info.service
+
+[Timer]
+OnCalendar=*:0/10
+RandomizedDelaySec=30
+Persistent=true
+
+[Install]
+WantedBy=timers.target

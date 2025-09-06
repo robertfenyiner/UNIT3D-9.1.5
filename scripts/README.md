@@ -1,53 +1,284 @@
-Scripts de métricas y alertas - instalación y configuración
+# UNIT3D Monitoring System
 
-Resumen
+Sistema completo de monitoreo y alertas para servidores UNIT3D con integración de Telegram.
 
-Esta carpeta contiene:
-- `server_info_tracker.sh` — script informativo que envía un resumen del servidor y diagnósticos del tracker (announces, Redis, php-fpm, top IPs/UAs/passkeys).
-- `server_alerts_tracker.sh` — script de alertas con thresholds y detección de spikes en announces; envía mensajes a Telegram cuando detecta condiciones críticas.
-- `metrics_env.example` — ejemplo de archivo de entorno (no contiene secrets reales).
-- `systemd/metrics_alerts.service` y `systemd/metrics_alerts.timer` — plantillas systemd para ejecutar `server_alerts_tracker.sh` periódicamente.
+## 📁 Archivos Principales
 
-Importante de seguridad
+```
+scripts/
+├── server_info_tracker.sh      # Script principal de información del servidor
+├── server_alerts_tracker.sh    # Script de alertas automáticas
+├── metrics_env.example         # Plantilla de configuración
+├── systemd/                    # Configuración de timers systemd
+└── README.md                   # Esta documentación
+```
 
-No incluyas tokens ni credenciales directamente en el repositorio. En vez de eso coloca las credenciales en `/etc/default/metrics_bot_env` en el servidor y dale permisos restrictivos (600). Aunque el repositorio sea privado, almacenar secretos en git no es recomendable.
+## 🚀 Características
 
-Paso a paso — instalación en el servidor (ejemplo path `/var/www/html`)
+### 📊 **Script de Información (`server_info_tracker.sh`)**
+- **Métricas del sistema**: CPU, RAM, Swap, Disco, Load Average
+- **Análisis del tracker**: Peticiones de announce, IPs únicas, usuarios activos
+- **Monitoreo de servicios**: nginx, redis, php-fpm
+- **Información de usuarios**: Muestra nombres reales de usuarios más activos
+- **Explicaciones incluidas**: Hace el reporte comprensible para usuarios no técnicos
 
-1) Copiar los scripts al servidor
+### 🚨 **Script de Alertas (`server_alerts_tracker.sh`)**
+- **Umbrales configurables** para todos los recursos del sistema
+- **Alertas inteligentes** solo cuando es necesario
+- **Información detallada** del tracker durante alertas
+- **Análisis de usuarios** más activos durante problemas
 
-Si ya estás en el servidor y tu repo está en `/var/www/html`, asegúrate de que los scripts existan en `/var/www/html/scripts`.
+## ⚙️ Instalación y Configuración
 
-2) Crear el archivo que contendrá las credenciales (solo en el servidor)
-
-- Copia el ejemplo a la ruta protegida y edítalo:
+### 1. **Configurar Variables de Entorno**
 
 ```bash
-sudo cp /var/www/html/scripts/metrics_env.example /etc/default/metrics_bot_env
+# Copiar plantilla de configuración
+sudo cp metrics_env.example /etc/default/metrics_bot_env
+
+# Editar con tus credenciales
 sudo nano /etc/default/metrics_bot_env
-```
 
-- En el archivo coloca (sustituye los valores por los reales):
-
-```text
-TELEGRAM_BOT_TOKEN="<pon_aqui_tu_token_de_bot>"
-TELEGRAM_CHAT_ID="<pon_aqui_tu_chat_id>"
-# Opcionales:
-# ACCESS_LOG="/ruta/a/tu/access.log"
-# PATH_TO_REPO="/var/www/html"
-```
-
-- Protege el archivo:
-
-```bash
+# Establecer permisos seguros
 sudo chmod 600 /etc/default/metrics_bot_env
 sudo chown root:root /etc/default/metrics_bot_env
 ```
 
-3) Permisos de los scripts y pruebas manuales
+### 2. **Configuración de /etc/default/metrics_bot_env**
 
 ```bash
-sudo chmod +x /var/www/html/scripts/server_alerts_tracker.sh
+# Telegram Bot Configuration
+TELEGRAM_BOT_TOKEN="tu_bot_token_aqui"
+TELEGRAM_CHAT_ID="tu_chat_id_aqui"
+
+# Database Configuration (para mostrar nombres de usuario)
+DB_HOST="127.0.0.1"
+DB_DATABASE="unit3d"
+DB_USERNAME="unit3d"
+DB_PASSWORD="tu_password_aqui"
+
+# Optional overrides
+# ACCESS_LOG="/var/log/nginx/access.log"
+# PATH_TO_REPO="/path/to/repo"
+```
+
+### 3. **Obtener Credenciales de Telegram**
+
+**Bot Token:**
+1. Habla con [@BotFather](https://t.me/botfather) en Telegram
+2. Ejecuta `/newbot` y sigue las instrucciones
+3. Copia el token que te proporciona
+
+**Chat ID:**
+```bash
+# Método 1: Para chat personal
+curl "https://api.telegram.org/bot<TU_BOT_TOKEN>/getUpdates"
+
+# Método 2: Para grupos (agrega el bot al grupo primero)
+curl "https://api.telegram.org/bot<TU_BOT_TOKEN>/getUpdates"
+```
+
+### 4. **Configurar Permisos de Base de Datos**
+
+```sql
+-- Si necesitas crear un usuario específico para el monitoreo
+CREATE USER 'monitor'@'localhost' IDENTIFIED BY 'password_seguro';
+GRANT SELECT ON unit3d.users TO 'monitor'@'localhost';
+FLUSH PRIVILEGES;
+```
+
+### 5. **Automatización con Systemd**
+
+```bash
+# Copiar configuración de systemd
+sudo cp -r systemd/* /etc/systemd/system/
+
+# Recargar systemd
+sudo systemctl daemon-reload
+
+# Habilitar y iniciar timers
+sudo systemctl enable --now unit3d-info.timer
+sudo systemctl enable --now unit3d-alerts.timer
+
+# Verificar estado
+sudo systemctl status unit3d-info.timer
+sudo systemctl status unit3d-alerts.timer
+```
+
+## 🛠️ Uso Manual
+
+### **Ejecutar Reporte de Información**
+```bash
+cd /var/www/html/scripts
+./server_info_tracker.sh
+```
+
+### **Ejecutar Verificación de Alertas**
+```bash
+cd /var/www/html/scripts
+./server_alerts_tracker.sh
+```
+
+## 📋 Configuración de Umbrales
+
+Edita `server_alerts_tracker.sh` para ajustar los umbrales según tu entorno:
+
+```bash
+# Umbrales (ajustar según tu entorno)
+LOAD_THRESHOLD=10.0          # Load average máximo
+CPU_THRESHOLD=80             # CPU máximo (%)
+MEM_THRESHOLD=85             # Memoria máxima (%)
+SWAP_THRESHOLD=50            # Swap máximo (%)
+DISK_THRESHOLD=85            # Disco máximo (%)
+ANNOUNCE_429_THRESHOLD=50    # Errores 429 máximos
+```
+
+## 📱 Ejemplo de Mensajes
+
+### **Reporte de Información**
+```
+🧾 lat-team.com - 2025-09-05 19:22:38
+
+🖥️ up 15 hours, 22 minutes
+📊 7.00, 5.79, 5.47
+⚙️ CPU:43.1% RAM:2055/7935MB Swap:1402MB Disco:33%
+🌐 Conn:309 SSH:1 | Servicios: 🟢nginx 🟢redis-server 🟢php8.4-fpm 
+
+🛰️ TRACKER: 19199 announces | 962 IPs
+🥇 46.4.242.200(839) 146.70.98.155(734) 181.42.151.17(402) 
+👤 Zorro(839) juchestalin(734) ruko(527) 
+🔧 Redis:OK Keys:0 | Colas:empty
+🧩 PHP:33/150(55.1MB) Pools:lat-team.com:150
+
+📖 Explicación:
+• 📊 Load: Carga del sistema (menor = mejor)
+• ⚙️ CPU/RAM: Uso de procesador y memoria
+• 🌐 Conn: Conexiones activas al servidor
+• 🛰️ TRACKER: Peticiones de torrent clients
+• 🥇 IPs más activas descargando
+• 👤 Usuarios más activos del tracker
+• 🔧 Redis: Base de datos en memoria
+• 🧩 PHP: Procesos web del servidor
+```
+
+### **Alerta de Sistema**
+```
+⚠️ ALERTA SERVIDOR: lat-team.com - 2025-09-05 20:15:30
+
+🚨 CPU HIGH: 85% (threshold: 80%)
+🚨 MEMORY HIGH: 90% (threshold: 85%)
+
+📊 Métricas actuales:
+• Load: 8.5
+• CPU: 85%
+• RAM: 90%
+• Swap: 25%
+• Disco: 35%
+• Tracker 429s: 15
+
+🛰️ TRACKER INFO:
+• Announces: 15420
+• Unique IPs: 856
+🥇 TOP IPs: 46.4.242.200(450) 146.70.98.155(380)
+👤 TOP USUARIOS: Zorro(450) juchestalin(380)
+
+📖 Explicación de la alerta:
+• 🚨 Valores por encima de lo normal
+• 📊 Load alto: servidor sobrecargado
+• ⚙️ CPU/RAM alto: recursos limitados
+• 🛰️ 429 errors: tracker rechazando peticiones
+• 👤 Usuarios más activos en este momento
+```
+
+## 🔧 Troubleshooting
+
+### **Problema: No aparecen nombres de usuario**
+```bash
+# Verificar conexión a base de datos
+mysql -h 127.0.0.1 -u unit3d -p unit3d -e "SELECT COUNT(*) FROM users;"
+
+# Verificar passkeys en logs
+tail -100 /var/log/nginx/access.log | grep "/announce/" | head -3
+```
+
+### **Problema: Script no envía mensajes**
+```bash
+# Verificar configuración
+source /etc/default/metrics_bot_env
+echo "Token: $TELEGRAM_BOT_TOKEN"
+echo "Chat: $TELEGRAM_CHAT_ID"
+
+# Probar envío manual
+curl -s -X POST "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendMessage" \
+  -d "chat_id=$TELEGRAM_CHAT_ID" \
+  -d "text=Prueba de conexión"
+```
+
+### **Problema: Errores de permisos**
+```bash
+# Verificar permisos de archivos
+chmod +x /var/www/html/scripts/*.sh
+chmod 600 /etc/default/metrics_bot_env
+
+# Verificar acceso a logs
+sudo chmod 644 /var/log/nginx/access.log
+```
+
+## 📝 Logs y Depuración
+
+```bash
+# Ver logs de systemd services
+sudo journalctl -u unit3d-info.service -f
+sudo journalctl -u unit3d-alerts.service -f
+
+# Ver últimos reportes enviados
+sudo journalctl -u unit3d-info.service --since "1 hour ago"
+
+# Verificar timers activos
+sudo systemctl list-timers --all | grep unit3d
+```
+
+## 🔄 Actualización
+
+Para actualizar el sistema:
+
+1. **Hacer backup de configuración**:
+   ```bash
+   sudo cp /etc/default/metrics_bot_env /etc/default/metrics_bot_env.backup
+   ```
+
+2. **Actualizar scripts**:
+   ```bash
+   cd /var/www/html/scripts
+   # Reemplazar archivos según sea necesario
+   ```
+
+3. **Reiniciar servicios**:
+   ```bash
+   sudo systemctl daemon-reload
+   sudo systemctl restart unit3d-info.timer
+   sudo systemctl restart unit3d-alerts.timer
+   ```
+
+## 🛡️ Seguridad
+
+- **Nunca** hardcodees tokens en los scripts
+- Usa permisos `600` para archivos de configuración
+- Considera usar un usuario dedicado para monitoreo en base de datos
+- Revisa regularmente los logs por actividad sospechosa
+
+## 📞 Soporte
+
+Si encuentras problemas:
+
+1. Revisa los logs de systemd
+2. Verifica la configuración de variables de entorno
+3. Prueba los scripts manualmente
+4. Confirma que los servicios (nginx, redis, php-fpm) estén activos
+
+---
+
+**Sistema desarrollado para UNIT3D-9.1.5 - Monitoreo completo con alertas inteligentes** 🚀
 sudo chmod +x /var/www/html/scripts/server_info_tracker.sh
 
 # Ejecutar manualmente (con sudo para que el script cargue /etc/default/metrics_bot_env)

@@ -1,0 +1,9 @@
+[Unit]
+Description=UNIT3D Server Info Report
+After=network.target
+
+[Service]
+Type=oneshot
+ExecStart=/var/www/html/scripts/server_info_tracker.sh
+User=root
+Environment=PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
