@@ -2,13 +2,7 @@
 # Enhanced server info script with tracker diagnostics - COMPACT VERSION
 # Reads TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID from environment (do NOT hardcode tokens!)
 
-# Load environment file if present (so running with sudo wilMSG+=$'🛰️ TRACKER: '"${ANNOUNCE_REQUESTS}"$' announces | '"${ANNOUNCE_UNIQUE_IPS}"$' IPs'
-if [[ "$ANNOUNCE_REQUESTS" == "0" || "$ANNOUNCE_REQUESTS" == "(log not found)" ]]; then
-  MSG+=$' (sin actividad reciente)'
-fi
-if [[ "$ANNOUNCE_429_COUNT" != "0" && "$ANNOUNCE_429_COUNT" -gt 0 ]]; then
-  MSG+=$' | ⚠️'"${ANNOUNCE_429_COUNT}"$' 429s'
-fiill pick credentials)
+# Load environment file if present (so running with sudo will pick credentials)
 ENV_FILE="/etc/default/metrics_bot_env"
 if [[ -f "$ENV_FILE" ]]; then
   # shellcheck source=/etc/default/metrics_bot_env
@@ -37,22 +31,20 @@ DB_DATABASE="${DB_DATABASE:-unit3d}"
 DB_USERNAME="${DB_USERNAME:-}"
 DB_PASSWORD="${DB_PASSWORD:-}"
 
-# Function to get username from passkey with enhanced debugging
+# Function to get username from passkey
 get_username_from_passkey() {
   local passkey="$1"
   
-  # Debug: Check if mysql and credentials are available
   if [[ -z "$MYSQL_CMD" || ! -x "$MYSQL_CMD" ]]; then
-    echo "unknown" # MySQL not available
+    echo "unknown"
     return 1
   fi
   
   if [[ -z "$DB_USERNAME" ]]; then
-    echo "unknown" # No DB username configured
+    echo "unknown"
     return 1
   fi
   
-  # Try to get username from database
   local username=""
   if [[ -n "$DB_PASSWORD" ]]; then
     username=$(mysql -h "$DB_HOST" -u "$DB_USERNAME" -p"$DB_PASSWORD" "$DB_DATABASE" -se "SELECT username FROM users WHERE passkey='$passkey' LIMIT 1;" 2>/dev/null)
@@ -60,7 +52,6 @@ get_username_from_passkey() {
     username=$(mysql -h "$DB_HOST" -u "$DB_USERNAME" "$DB_DATABASE" -se "SELECT username FROM users WHERE passkey='$passkey' LIMIT 1;" 2>/dev/null)
   fi
   
-  # Return username if found, otherwise unknown
   if [[ -n "$username" && "$username" != "" ]]; then
     echo "$username"
   else
@@ -78,19 +69,16 @@ USED_SWAP=$(free -m | awk '/Swap:/ {print $3}' 2>/dev/null || echo "n/a")
 DISK_USAGE=$(df -h / | awk 'NR==2 {print $5}' 2>/dev/null || echo "n/a")
 DATE=$(date '+%Y-%m-%d %H:%M:%S')
 
-TOP_CPU=$(ps -eo pid,comm,%cpu --sort=-%cpu | head -n 4 | tail -n 3 | awk '{print "🔸 " $2 " (PID " $1 "): " $3 "% CPU"}')
-TOP_MEM=$(ps -eo pid,comm,%mem --sort=-%mem | head -n 4 | tail -n 3 | awk '{print "🔸 " $2 " (PID " $1 "): " $3 "% RAM"}')
 ACTIVE_CONNS=$(ss -tun | grep ESTAB | wc -l 2>/dev/null || echo "n/a")
 SSH_SESSIONS=$(who | wc -l 2>/dev/null || echo "n/a")
 
-# Services monitored (compact format)
-SERVICES=("nginx" "redis-server" "php8.4-fpm")
+# Compact service checks
 SERVICIO_STATUS=""
-for service in "${SERVICES[@]}"; do
-  if systemctl is-active --quiet "$service"; then
-    SERVICIO_STATUS+="🟢$service "
+for svc in nginx redis-server php8.4-fpm; do
+  if systemctl is-active --quiet "$svc"; then
+    SERVICIO_STATUS+="🟢$svc "
   else
-    SERVICIO_STATUS+="🔴$service "
+    SERVICIO_STATUS+="🔴$svc "
   fi
 done
 
@@ -141,92 +129,73 @@ fi
 # Queue info (compact)
 QUEUE_INFO="empty"
 if [[ -n "$REDIS_CLI" && -x "$REDIS_CLI" ]]; then
-  REDIS_INFO="OK"
-  REDIS_ANNOUNCE_KEYS=$($REDIS_CLI --scan --pattern '*announce*' 2>/dev/null | wc -l || echo "0")
+  TOTAL_JOBS=$($REDIS_CLI eval "
+    local total = 0
+    for _, key in ipairs(redis.call('keys', '*:queue:*')) do
+      total = total + redis.call('llen', key)
+    end
+    return total
+  " 0 2>/dev/null || echo "0")
   
-  # Laravel queues (common queue names) - compact format
-  QUEUE_NAMES=("default" "high" "low" "emails" "notifications")
-  QUEUE_STATUS=""
-  total_jobs=0
-  for queue in "${QUEUE_NAMES[@]}"; do
-    queue_length=$($REDIS_CLI llen "queues:$queue" 2>/dev/null || echo "0")
-    if [[ "$queue_length" -gt 0 ]]; then
-      QUEUE_STATUS+="$queue:$queue_length "
-      total_jobs=$((total_jobs + queue_length))
-    fi
-  done
-  if [[ "$total_jobs" -gt 0 ]]; then
-    QUEUE_INFO="$total_jobs jobs ($QUEUE_STATUS)"
-  else
-    QUEUE_INFO="empty"
+  if [[ "$TOTAL_JOBS" =~ ^[0-9]+$ && "$TOTAL_JOBS" -gt 0 ]]; then
+    QUEUE_INFO="$TOTAL_JOBS jobs"
   fi
-else
-  REDIS_INFO="not found"
-  REDIS_ANNOUNCE_KEYS="n/a"
 fi
 
-# PHP-FPM diagnostics (pools and process metrics)
-PHP_FPM_POOLS_INFO="(none found)"
-PHP_FPM_TOTAL_MAX_CHILDREN="(none)"
+# Redis info (compact)
+REDIS_INFO="OK"
+REDIS_ANNOUNCE_KEYS="0"
+if [[ -n "$REDIS_CLI" && -x "$REDIS_CLI" ]]; then
+  if ! $REDIS_CLI ping >/dev/null 2>&1; then
+    REDIS_INFO="ERROR"
+  else
+    REDIS_ANNOUNCE_KEYS=$($REDIS_CLI eval "return #redis.call('keys', '*announce*')" 0 2>/dev/null || echo "0")
+  fi
+fi
+
+# PHP-FPM info (super compact)
+PHP_FPM_TOTAL_MAX_CHILDREN=0
 PHP_FPM_PROCESS_COUNT=0
 PHP_FPM_AVG_RSS_MB="0"
-CPU_COUNT=$(nproc 2>/dev/null || echo "n/a")
 
 # Try to read pool files for any PHP version
 POOL_FILES=$(ls /etc/php/*/fpm/pool.d/*.conf 2>/dev/null || true)
 if [[ -n "$POOL_FILES" ]]; then
   PHP_FPM_POOLS_INFO=""
   total_max=0
-  active_pools=0
   for f in $POOL_FILES; do
     name=$(basename "$f" .conf)
     pm_children=$(grep -E '^pm\.max_children' "$f" 2>/dev/null | awk -F'=' '{gsub(/ /,"",$2); print $2}' || true)
     
-    # Skip if no pm.max_children or if it's commented out
     if [[ -n "$pm_children" && "$pm_children" =~ ^[0-9]+$ ]]; then
-      # Check if this pool is actually being used (has active processes)
       pool_processes=$(pgrep -f "pool $name" 2>/dev/null | wc -l)
       if [[ "$pool_processes" -gt 0 ]]; then
         total_max=$((total_max + pm_children))
-        active_pools=$((active_pools + 1))
         PHP_FPM_POOLS_INFO+="$name:$pm_children "
       fi
     fi
   done
   
-  # If no active pools found, fallback to all configured pools
-  if [[ "$active_pools" -eq 0 ]]; then
-    for f in $POOL_FILES; do
-      name=$(basename "$f" .conf)
-      pm_children=$(grep -E '^pm\.max_children' "$f" 2>/dev/null | awk -F'=' '{gsub(/ /,"",$2); print $2}' || true)
-      if [[ -n "$pm_children" && "$pm_children" =~ ^[0-9]+$ ]]; then
-        total_max=$((total_max + pm_children))
-        PHP_FPM_POOLS_INFO+="$name:$pm_children "
-      fi
-    done
-  fi
-  
-  PHP_FPM_TOTAL_MAX_CHILDREN="$total_max"
-  
-  # Count actual running PHP-FPM processes
+  PHP_FPM_TOTAL_MAX_CHILDREN=$total_max
   PHP_FPM_PROCESS_COUNT=$(pgrep -c -f 'php.*fpm' 2>/dev/null || echo "0")
   
-  # Average RSS of PHP-FPM processes
   avg_rss_kb=$(pgrep -f 'php.*fpm' | xargs -r ps -o rss= -p 2>/dev/null | awk '{sum+=$1; n+=1} END{ if(n>0) printf("%.0f", sum/n); else print "0"}')
   if [[ "$avg_rss_kb" =~ ^[0-9]+$ && "$avg_rss_kb" -gt 0 ]]; then
     PHP_FPM_AVG_RSS_MB=$(awk "BEGIN {printf \"%.1f\", ($avg_rss_kb/1024)}")
   fi
 fi
 
-# Build message with proper line breaks (ULTRA-COMPACT for Telegram limits)
+# Build message with proper line breaks
 MSG=$'🧾 '"${HOSTNAME}"$' - '"${DATE}"$'\n\n'
-
 MSG+=$'🖥️ '"${UPTIME}"$'\n'
 MSG+=$'📊 '"${LOAD}"$'\n'
 MSG+=$'⚙️ CPU:'"${CPU_USAGE}"$' RAM:'"${USED_MEM}"$'/'"${TOTAL_MEM}"$'MB Swap:'"${USED_SWAP}"$'MB Disco:'"${DISK_USAGE}"$'\n'
 MSG+=$'🌐 Conn:'"${ACTIVE_CONNS}"$' SSH:'"${SSH_SESSIONS}"$' | Servicios: '"${SERVICIO_STATUS}"$'\n\n'
 
 MSG+=$'🛰️ TRACKER: '"${ANNOUNCE_REQUESTS}"$' announces | '"${ANNOUNCE_UNIQUE_IPS}"$' IPs'
+if [[ "$ANNOUNCE_REQUESTS" == "0" || "$ANNOUNCE_REQUESTS" == "(log not found)" ]]; then
+  MSG+=$' (sin actividad reciente)'
+fi
 if [[ "$ANNOUNCE_429_COUNT" != "0" && "$ANNOUNCE_429_COUNT" -gt 0 ]]; then
   MSG+=$' | ⚠️'"${ANNOUNCE_429_COUNT}"$' 429s'
 fi
