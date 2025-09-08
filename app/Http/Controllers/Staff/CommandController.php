@@ -132,4 +132,15 @@ class CommandController extends Controller
         return to_route('staff.commands.index')
             ->with('info', trim(str_replace(["\r", "\n", '*'], '', Artisan::output())));
     }
+
+    /**
+     * Update User Groups Based On Requirements.
+     */
+    public function autoGroup(): \Illuminate\Contracts\View\Factory|\Illuminate\Http\RedirectResponse
+    {
+        Artisan::call('auto:group');
+
+        return to_route('staff.commands.index')
+            ->with('info', 'User groups have been automatically updated based on their requirements.');
+    }
 }

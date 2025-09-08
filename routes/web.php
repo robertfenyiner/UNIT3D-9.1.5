@@ -901,6 +901,7 @@ Route::middleware('language')->group(function (): void {
             Route::post('/clear-all-cache', [App\Http\Controllers\Staff\CommandController::class, 'clearAllCache']);
             Route::post('/set-all-cache', [App\Http\Controllers\Staff\CommandController::class, 'setAllCache']);
             Route::post('/test-email', [App\Http\Controllers\Staff\CommandController::class, 'testEmail']);
+            Route::post('/auto-group', [App\Http\Controllers\Staff\CommandController::class, 'autoGroup']);
         });
 
         // Distributors

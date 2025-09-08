@@ -140,6 +140,22 @@
             </div>
         </section>
         <section class="panelV2">
+            <h2 class="panel__heading">User Management</h2>
+            <div class="panel__body">
+                <div class="form__group form__group--horizontal">
+                    <form method="POST" action="{{ url('/dashboard/commands/auto-group') }}">
+                        @csrf
+                        <button
+                            class="form__button form__button--text"
+                            title="Actualiza automáticamente los grupos de usuarios basándose en sus estadísticas y requisitos configurados."
+                        >
+                            Actualizar Grupos de Usuarios
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </section>
+        <section class="panelV2">
             <h2 class="panel__heading">Email</h2>
             <div class="panel__body">
                 <div class="form__group form__group--horizontal">
