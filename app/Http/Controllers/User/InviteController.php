@@ -69,7 +69,10 @@ class InviteController extends Controller
 
         $minHours = config('other.hours-until-invite-after-2fa');
 
-        if ($user->two_factor_confirmed_at === null || $user->two_factor_confirmed_at->addHours($minHours)->isFuture()) {
+        // Eximir a owners y administradores de la restricción de 24 horas del 2FA
+        $isExemptFromWait = $user->group->is_owner || $user->group->is_admin;
+
+        if (!$isExemptFromWait && ($user->two_factor_confirmed_at === null || $user->two_factor_confirmed_at->addHours($minHours)->isFuture())) {
             return to_route('home.index')
                 ->withErrors("Two-factor authentication must be enabled for {$minHours} hours to send invites");
         }
@@ -98,7 +101,10 @@ class InviteController extends Controller
 
         $minHours = config('other.hours-until-invite-after-2fa');
 
-        if ($user->two_factor_confirmed_at === null || $user->two_factor_confirmed_at->addHours($minHours)->isFuture()) {
+        // Eximir a owners y administradores de la restricción de 24 horas del 2FA
+        $isExemptFromWait = $user->group->is_owner || $user->group->is_admin;
+
+        if (!$isExemptFromWait && ($user->two_factor_confirmed_at === null || $user->two_factor_confirmed_at->addHours($minHours)->isFuture())) {
             return to_route('home.index')
                 ->withErrors("Two-factor authentication must be enabled for {$minHours} hours to send invites");
         }
