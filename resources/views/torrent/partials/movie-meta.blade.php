@@ -198,7 +198,7 @@
                 <a
                     class="meta-id-tag"
                     {{-- cspell:disable-next-line --}}
-                    href="https://html.duckduckgo.com/html/?q={{ $meta->title ?? '' }}  ({{ substr($meta->release_date ?? '', 0, 4) ?? '' }})+site%3Arottentomatoes.com"
+                    href="https://www.rottentomatoes.com/search?search={{ urlencode($meta->title ?? '') }}%20{{ substr($meta->release_date ?? '', 0, 4) ?? '' }}"
                     title="Rotten Tomatoes: {{ $meta->title ?? '' }}  ({{ substr($meta->release_date ?? '', 0, 4) ?? '' }})"
                     target="_blank"
                     rel="noreferrer"
