@@ -29,6 +29,11 @@ class QuickSearchController extends Controller
     {
         $query = $request->input('query');
 
+        // Fix for issue #4861 - Handle null query
+        if ($query === null || $query === '') {
+            return response()->json(['results' => []]);
+        }
+
         $filters = [
             'deleted_at IS NULL',
             'status = '.ModerationStatus::APPROVED->value,

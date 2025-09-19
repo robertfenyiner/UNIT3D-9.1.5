@@ -274,14 +274,14 @@ class SimilarTorrent extends Component
             ])
             ->when(
                 $this->category->movie_meta,
-                fn ($query) => $query->whereRelation('category', 'movie_meta', '=', true),
+                fn ($query) => $query->whereRelation('category', 'movie_meta', '=', true)
+                    ->where('tmdb_movie_id', '=', $this->tmdbId),
             )
             ->when(
                 $this->category->tv_meta,
-                fn ($query) => $query->whereRelation('category', 'tv_meta', '=', true),
+                fn ($query) => $query->whereRelation('category', 'tv_meta', '=', true)
+                    ->where('tmdb_tv_id', '=', $this->tmdbId),
             )
-            ->when($this->category->tv_meta, fn ($query) => $query->where('tmdb_tv_id', '=', $this->tmdbId))
-            ->when($this->category->movie_meta, fn ($query) => $query->where('tmdb_movie_id', '=', $this->tmdbId))
             ->when($this->category->game_meta, fn ($query) => $query->where('igdb', '=', $this->igdbId))
             ->where((new TorrentSearchFiltersDTO(
                 name: $this->name,

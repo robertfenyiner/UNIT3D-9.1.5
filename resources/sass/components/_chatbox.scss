@@ -130,6 +130,11 @@
     grid-area: content;
     padding: 0 8px 8px 8px;
     font-size: 16px;
+    
+    /* Fix for issue #4864 - Chatbox Newlines & Style improvements */
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
 
     img:not(.comparison__image) {
         max-width: 400px !important;

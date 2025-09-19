@@ -187,6 +187,7 @@
 
     /* Quoting */
 
+    /* Fix for issue #4885 - BBCode code styles improvements */
     blockquote {
         margin-left: 2px;
         margin-right: 2px;
@@ -195,7 +196,7 @@
         border-left: 0.25em solid var(--bbcode-rendered-quote-border);
         font-size: 15px;
         background-color: var(--bbcode-rendered-quote-bg);
-        border-radius: 6px;
+        border-radius: 3px; /* Reduced from 6px */
 
         > cite {
             font-size: 12px;
@@ -405,7 +406,7 @@
         white-space: normal;
         font-size: 13px;
         background-color: var(--bbcode-rendered-neutral-muted);
-        border-radius: 6px;
+        border-radius: 3px; /* Reduced from 6px for consistency */
         font-family:
             ui-monospace,
             SFMono-Regular,
