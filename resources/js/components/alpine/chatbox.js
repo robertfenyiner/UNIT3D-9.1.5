@@ -186,17 +186,6 @@ document.addEventListener('alpine:init', () => {
                 document.getElementById('chatbody').setAttribute('audio', false);
             };
 
-            // Fix for issue #4877 - Handle tab/window closing
-            this.beforeUnloadHandler = () => {
-                if (this.auth && this.auth.id) {
-                    // Send status update when closing
-                    navigator.sendBeacon(`/api/chat/status`, JSON.stringify({
-                        user_id: this.auth.id,
-                        status: 'offline'
-                    }));
-                }
-            };
-
             Promise.all([
                 this.fetchStatuses(),
                 this.fetchEchoes(),
@@ -208,9 +197,6 @@ document.addEventListener('alpine:init', () => {
                     this.state.ui.loading = false;
                     this.listenForChatter();
                     this.attachAudible();
-
-                    // Add beforeunload listener for status update
-                    window.addEventListener('beforeunload', this.beforeUnloadHandler);
 
                     setInterval(() => {
                         this.timestampTick++;
@@ -231,7 +217,6 @@ document.addEventListener('alpine:init', () => {
                 }
                 window.removeEventListener('blur', this.blurHandler);
                 window.removeEventListener('focus', this.focusHandler);
-                window.removeEventListener('beforeunload', this.beforeUnloadHandler);
                 clearTimeout(this.typingTimeout);
             };
         },
