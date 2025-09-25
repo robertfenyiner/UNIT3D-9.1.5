@@ -109,6 +109,20 @@
                         >
                             {{ __('user.invites') }}
                         </option>
+                        <option
+                            class="form__option"
+                            value="username_change"
+                            @selected($bonExchange->username_change)
+                        >
+                            Cambio de nombre de usuario
+                        </option>
+                        <option
+                            class="form__option"
+                            value="remove_hnr"
+                            @selected($bonExchange->remove_hnr)
+                        >
+                            Restauración de HnR
+                        </option>
                     </select>
                     <label class="form__label form__label--floating" for="type">
                         {{ __('common.type') }}

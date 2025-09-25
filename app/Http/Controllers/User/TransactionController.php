@@ -112,6 +112,41 @@ class TransactionController extends Controller
                     $user->increment('invites', $bonExchange->value);
 
                     break;
+                case $bonExchange->username_change:
+                    // Crear una notificación al equipo de administración sobre el cambio solicitado
+                    // Aquí no cambiamos el nombre de usuario directamente, sino que creamos una solicitud
+                    // que un administrador debe aprobar
+
+                    // Crear una nueva entrada en la base de datos para la solicitud de cambio de nombre
+                    \App\Models\UserNameChange::create([
+                        'user_id' => $user->id,
+                        'status' => 'Pending', // Puede ser: Pending, Approved, Rejected
+                    ]);
+
+                    // Notificar a los administradores sobre la solicitud
+                    $staffs = \App\Models\User::where('group_id', '=', 10)->get(); // Suponiendo que 10 es el ID del grupo de administradores
+                    foreach ($staffs as $staff) {
+                        $staff->notify(new \App\Notifications\UsernameChangeRequest($user));
+                    }
+
+                    break;
+                case $bonExchange->remove_hnr:
+                    // Obtener el HnR más antiguo del usuario
+                    $hnr = \App\Models\Warning::where('user_id', '=', $user->id)
+                        ->where('active', '=', 1)
+                        ->whereNotNull('torrent')
+                        ->orderBy('created_at', 'asc')
+                        ->first();
+
+                    if (!$hnr) {
+                        return back()->withErrors('No tienes ningún Hit and Run activo para eliminar.');
+                    }
+
+                    // Marcar el HnR como inactivo
+                    $hnr->active = 0;
+                    $hnr->save();
+
+                    break;
             }
 
             BonTransactions::create([

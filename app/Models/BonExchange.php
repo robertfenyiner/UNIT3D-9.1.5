@@ -55,6 +55,8 @@ class BonExchange extends Model
             'download'           => 'bool',
             'personal_freeleech' => 'bool',
             'invite'             => 'bool',
+            'username_change'    => 'bool',
+            'remove_hnr'         => 'bool',
         ];
     }
 

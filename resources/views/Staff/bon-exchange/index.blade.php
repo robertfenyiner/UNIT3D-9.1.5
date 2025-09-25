@@ -58,6 +58,14 @@
                                         {{ __('user.invites') }}
 
                                         @break
+                                    @case($bonExchange->username_change)
+                                        Cambio de nombre de usuario
+
+                                        @break
+                                    @case($bonExchange->remove_hnr)
+                                        Restauración de HnR
+
+                                        @break
                                 @endswitch
                             </td>
                             <td>

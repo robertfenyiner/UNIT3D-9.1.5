@@ -92,6 +92,12 @@
                         <option class="form__option" value="invite">
                             {{ __('user.invites') }}
                         </option>
+                        <option class="form__option" value="username_change">
+                            Cambio de nombre de usuario
+                        </option>
+                        <option class="form__option" value="remove_hnr">
+                            Restauración de HnR
+                        </option>
                     </select>
                     <label class="form__label form__label--floating" for="type">
                         {{ __('common.type') }}

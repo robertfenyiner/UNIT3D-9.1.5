@@ -1215,6 +1215,15 @@ Route::middleware('language')->group(function (): void {
             Route::delete('/{user:username}', [App\Http\Controllers\Staff\UserController::class, 'destroy'])->name('destroy');
         });
 
+        // Username Changes
+        Route::prefix('username-changes')->group(function (): void {
+            Route::name('username-changes.')->group(function (): void {
+                Route::get('/', [App\Http\Controllers\Staff\UserNameChangeController::class, 'index'])->name('index');
+                Route::get('/{id}', [App\Http\Controllers\Staff\UserNameChangeController::class, 'show'])->name('show');
+                Route::post('/{id}', [App\Http\Controllers\Staff\UserNameChangeController::class, 'update'])->name('update');
+            });
+        });
+
         // Warnings Log
         Route::prefix('warnings')->group(function (): void {
             Route::name('warnings.')->group(function (): void {

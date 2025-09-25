@@ -52,6 +52,8 @@ class BonExchangeController extends Controller
             'download'           => $request->type === 'download',
             'personal_freeleech' => $request->type === 'personal_freeleech',
             'invite'             => $request->type === 'invite',
+            'username_change'    => $request->type === 'username_change',
+            'remove_hnr'         => $request->type === 'remove_hnr',
         ]
         + $request->validated());
 
@@ -79,6 +81,8 @@ class BonExchangeController extends Controller
             'download'           => $request->type === 'download',
             'personal_freeleech' => $request->type === 'personal_freeleech',
             'invite'             => $request->type === 'invite',
+            'username_change'    => $request->type === 'username_change',
+            'remove_hnr'         => $request->type === 'remove_hnr',
         ]
         + $request->validated());
 
