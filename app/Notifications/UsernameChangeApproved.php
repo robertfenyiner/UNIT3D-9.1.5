@@ -51,7 +51,7 @@ class UsernameChangeApproved extends Notification implements ShouldQueue
         return [
             'title'   => 'Cambio de nombre de usuario aprobado',
             'body'    => 'Tu solicitud de cambio de nombre de usuario ha sido aprobada. Tu nombre ha sido cambiado de '.$this->oldUsername.' a '.$this->newUsername.'.',
-            'url'     => URL::to('/dashboard/username-changes/' . $this->requestId),
+            'url'     => URL::to('/'),
         ];
     }
 }
