@@ -1,3 +1,4 @@
+use function url;
 <?php
 
 declare(strict_types=1);
@@ -51,6 +52,7 @@ class UsernameChangeApproved extends Notification implements ShouldQueue
         return [
             'title'   => 'Cambio de nombre de usuario aprobado',
             'body'    => 'Tu solicitud de cambio de nombre de usuario ha sido aprobada. Tu nombre ha sido cambiado de '.$this->oldUsername.' a '.$this->newUsername.'.',
+            'url'     => url('/notifications'),
         ];
     }
 }
