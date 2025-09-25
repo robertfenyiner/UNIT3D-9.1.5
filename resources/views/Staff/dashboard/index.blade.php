@@ -25,6 +25,14 @@
             </h2>
             <div class="panel__body">
                 <p class="form__group form__group--horizontal">
+                    <a
+                        class="form__button form__button--text"
+                        href="{{ route('staff.username-changes.index') }}"
+                    >
+                        <i class="fa fa-user-edit"></i>
+                        Solicitudes de cambio de nombre de usuario
+                    </a>
+                </p>
                     <a class="form__button form__button--text" href="{{ route('home.index') }}">
                         <i class="{{ config('other.font-awesome') }} fa-columns"></i>
                         {{ __('staff.frontend') }}
