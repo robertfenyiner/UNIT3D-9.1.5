@@ -93,10 +93,10 @@
                             {{ __('user.invites') }}
                         </option>
                         <option class="form__option" value="username_change">
-                            Cambio de nombre de usuario
+                            Cambio de nombre de usuario (1,000,000 BON)
                         </option>
                         <option class="form__option" value="remove_hnr">
-                            Restauración de HnR
+                            Restauración de HnR (300,000 BON)
                         </option>
                     </select>
                     <label class="form__label form__label--floating" for="type">
