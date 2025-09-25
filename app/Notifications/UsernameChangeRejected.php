@@ -50,9 +50,10 @@ class UsernameChangeRejected extends Notification implements ShouldQueue
     /**
      * Get the array representation of the notification.
      *
+     * @param mixed $notifiable
      * @return array<string, mixed>
      */
-    public function toArray(): array
+    public function toArray($notifiable): array
     {
         $message = 'Tu solicitud de cambio de nombre de usuario ha sido rechazada.';
 
@@ -65,7 +66,7 @@ class UsernameChangeRejected extends Notification implements ShouldQueue
         return [
             'title'   => 'Cambio de nombre de usuario rechazado',
             'body'    => $message,
-            'url'     => URL::route('staff.username-changes.index'),
+            'url'     => URL::route('user.profile', ['user' => $notifiable->id]),
         ];
     }
 }
