@@ -26,8 +26,10 @@ return new class () extends Migration {
     {
         Schema::create('user_name_changes', function (Blueprint $table): void {
             $table->id();
-            $table->foreignId('user_id')->constrained()->cascadeOnUpdate()->cascadeOnDelete();
-            $table->foreignId('staff_id')->nullable()->constrained('users')->cascadeOnUpdate()->nullOnDelete();
+            $table->unsignedInteger('user_id');
+            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade')->onUpdate('cascade');
+            $table->unsignedInteger('staff_id')->nullable();
+            $table->foreign('staff_id')->references('id')->on('users')->onDelete('set null')->onUpdate('cascade');
             $table->string('old_username')->nullable();
             $table->string('new_username')->nullable();
             $table->string('reason')->nullable();
