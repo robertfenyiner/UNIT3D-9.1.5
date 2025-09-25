@@ -54,6 +54,15 @@
                                         action="{{ route('users.transactions.store', ['user' => $user]) }}"
                                     >
                                         @csrf
+                                        @if ($item->username_change)
+                                            <input
+                                                type="text"
+                                                name="new_username"
+                                                class="form__text"
+                                                placeholder="Nuevo nombre de usuario"
+                                                required
+                                            />
+                                        @endif
                                         <button class="form__button form__button--filled">
                                             {{ __('bon.exchange') }}
                                         </button>

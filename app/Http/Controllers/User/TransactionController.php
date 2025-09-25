@@ -120,6 +120,7 @@ class TransactionController extends Controller
                     // Crear una nueva entrada en la base de datos para la solicitud de cambio de nombre
                     \App\Models\UserNameChange::create([
                         'user_id' => $user->id,
+                        'new_username' => $request->input('new_username'),
                         'status' => 'Pending', // Puede ser: Pending, Approved, Rejected
                     ]);
 
