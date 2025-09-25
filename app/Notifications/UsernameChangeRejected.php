@@ -66,7 +66,7 @@ class UsernameChangeRejected extends Notification implements ShouldQueue
         return [
             'title'   => 'Cambio de nombre de usuario rechazado',
             'body'    => $message,
-            'url'     => URL::route('user.profile', ['user' => $notifiable->id]),
+            'url'     => URL::to('/notifications'),
         ];
     }
 }
