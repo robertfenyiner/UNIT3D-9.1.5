@@ -1,6 +1,4 @@
-use function url;
 <?php
-
 declare(strict_types=1);
 
 /**
@@ -20,6 +18,7 @@ namespace App\Notifications;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Notification;
+use Illuminate\Support\Facades\URL;
 
 class UsernameChangeApproved extends Notification implements ShouldQueue
 {
@@ -52,7 +51,7 @@ class UsernameChangeApproved extends Notification implements ShouldQueue
         return [
             'title'   => 'Cambio de nombre de usuario aprobado',
             'body'    => 'Tu solicitud de cambio de nombre de usuario ha sido aprobada. Tu nombre ha sido cambiado de '.$this->oldUsername.' a '.$this->newUsername.'.',
-            'url'     => url('/notifications'),
+            'url'     => URL::to('/notifications'),
         ];
     }
 }
