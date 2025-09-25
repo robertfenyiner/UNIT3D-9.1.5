@@ -119,7 +119,7 @@ Route::middleware('language')->group(function (): void {
             Route::get('/user-icons/{user:username}', [App\Http\Controllers\AuthenticatedImageController::class, 'userIcon'])->name('user_icon');
         });
 
-    
+
 
         // Donation System
         Route::prefix('donations')->group(function (): void {

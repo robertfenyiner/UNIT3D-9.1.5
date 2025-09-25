@@ -63,15 +63,15 @@ class UserNameChangeController extends Controller
         return DB::transaction(function () use ($request, $usernameChange, $user) {
             // Registrar el staff que realizó el cambio
             $usernameChange->staff_id = auth()->id();
-            
+
             if ($request->status === 'Approved') {
                 // Guardar el nombre de usuario anterior
                 $oldUsername = $user->username;
-                
+
                 // Actualizar el nombre de usuario
                 $user->username = $request->new_username;
                 $user->save();
-                
+
                 // Actualizar el registro de cambio
                 $usernameChange->old_username = $oldUsername;
                 $usernameChange->new_username = $user->username;
@@ -80,11 +80,11 @@ class UserNameChangeController extends Controller
 
                 // Notificar al usuario
                 $user->notify(new \App\Notifications\UsernameChangeApproved($oldUsername, $user->username));
-                
+
                 return to_route('staff.username-changes.index')
                     ->with('success', 'El cambio de nombre de usuario ha sido aprobado.');
             }
-            
+
             // Si fue rechazado
             $usernameChange->status = 'Rejected';
             $usernameChange->rejection_reason = $request->rejection_reason;
@@ -92,7 +92,7 @@ class UserNameChangeController extends Controller
 
             // Notificar al usuario
             $user->notify(new \App\Notifications\UsernameChangeRejected($request->rejection_reason));
-            
+
             return to_route('staff.username-changes.index')
                 ->with('success', 'El cambio de nombre de usuario ha sido rechazado.');
         }, 5);

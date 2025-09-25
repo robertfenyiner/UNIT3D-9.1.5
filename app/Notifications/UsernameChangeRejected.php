@@ -1,3 +1,4 @@
+use \Illuminate\Support\Facades\URL;
 <?php
 
 declare(strict_types=1);
@@ -55,16 +56,17 @@ class UsernameChangeRejected extends Notification implements ShouldQueue
     public function toArray(): array
     {
         $message = 'Tu solicitud de cambio de nombre de usuario ha sido rechazada.';
-        
+
         if ($this->rejectionReason) {
             $message .= ' Razón: '.$this->rejectionReason;
         } else {
             $message .= ' Si deseas más información, contacta a un administrador.';
         }
-        
+
         return [
             'title'   => 'Cambio de nombre de usuario rechazado',
             'body'    => $message,
+            'url'     => URL::route('staff.username-changes.index'),
         ];
     }
 }

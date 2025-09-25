@@ -55,8 +55,8 @@ class UsernameChangeRequest extends Notification implements ShouldQueue
             ->latest()
             ->first();
 
-        $url = $usernameChange 
-            ? route('staff.username-changes.show', ['id' => $usernameChange->id]) 
+        $url = $usernameChange
+            ? route('staff.username-changes.show', ['id' => $usernameChange->id])
             : route('users.show', ['user' => $this->user]);
 
         return [

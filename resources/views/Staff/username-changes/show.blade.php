@@ -22,9 +22,9 @@
             Solicitud de cambio de nombre de usuario #{{ $usernameChange->id }}
         </h2>
         <div class="panel__body">
-            <form 
-                action="{{ route('staff.username-changes.update', ['id' => $usernameChange->id]) }}" 
-                method="POST" 
+            <form
+                action="{{ route('staff.username-changes.update', ['id' => $usernameChange->id]) }}"
+                method="POST"
                 x-data="{ status: '{{ $usernameChange->status }}' }"
             >
                 @csrf
@@ -42,11 +42,11 @@
                 </div>
                 <div class="form__group">
                     <label for="new_username" class="form__label">Nuevo nombre de usuario:</label>
-                    <input 
-                        type="text" 
-                        id="new_username" 
-                        name="new_username" 
-                        class="form__text" 
+                    <input
+                        type="text"
+                        id="new_username"
+                        name="new_username"
+                        class="form__text"
                         value="{{ $usernameChange->new_username }}"
                         {{ $usernameChange->status !== 'Pending' ? 'disabled' : '' }}
                     >
@@ -56,10 +56,10 @@
                 </div>
                 <div class="form__group">
                     <label for="reason" class="form__label">Razón:</label>
-                    <textarea 
-                        id="reason" 
-                        name="reason" 
-                        class="form__textarea" 
+                    <textarea
+                        id="reason"
+                        name="reason"
+                        class="form__textarea"
                         {{ $usernameChange->status !== 'Pending' ? 'disabled' : '' }}
                     >{{ $usernameChange->reason }}</textarea>
                 </div>
@@ -69,10 +69,10 @@
                 </div>
                 <div class="form__group">
                     <label for="status" class="form__label">Estado:</label>
-                    <select 
-                        id="status" 
-                        name="status" 
-                        class="form__select" 
+                    <select
+                        id="status"
+                        name="status"
+                        class="form__select"
                         x-model="status"
                         {{ $usernameChange->status !== 'Pending' ? 'disabled' : '' }}
                     >
@@ -83,9 +83,9 @@
                 </div>
                 <div class="form__group" x-show="status === 'Rejected'">
                     <label for="rejection_reason" class="form__label">Razón de rechazo:</label>
-                    <textarea 
-                        id="rejection_reason" 
-                        name="rejection_reason" 
+                    <textarea
+                        id="rejection_reason"
+                        name="rejection_reason"
                         class="form__textarea"
                         {{ $usernameChange->status !== 'Pending' ? 'disabled' : '' }}
                     >{{ $usernameChange->rejection_reason }}</textarea>

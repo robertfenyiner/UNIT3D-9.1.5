@@ -19,7 +19,7 @@ return new class () extends Migration {
             $table->string('new_username')->nullable();
             $table->enum('status', ['Pending', 'Approved', 'Rejected'])->default('Pending');
             $table->timestamps();
-            
+
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
         });
     }
