@@ -79,7 +79,7 @@ class UserNameChangeController extends Controller
                 $usernameChange->save();
 
                 // Notificar al usuario
-                $user->notify(new \App\Notifications\UsernameChangeApproved($oldUsername, $user->username));
+                $user->notify(new \App\Notifications\UsernameChangeApproved($oldUsername, $user->username, $usernameChange->id));
 
                 return to_route('staff.username-changes.index')
                     ->with('success', 'El cambio de nombre de usuario ha sido aprobado.');

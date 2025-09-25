@@ -27,7 +27,7 @@ class UsernameChangeApproved extends Notification implements ShouldQueue
     /**
      * Create a new notification instance.
      */
-    public function __construct(public string $oldUsername, public string $newUsername)
+    public function __construct(public string $oldUsername, public string $newUsername, public int $requestId)
     {
     }
 
@@ -51,7 +51,7 @@ class UsernameChangeApproved extends Notification implements ShouldQueue
         return [
             'title'   => 'Cambio de nombre de usuario aprobado',
             'body'    => 'Tu solicitud de cambio de nombre de usuario ha sido aprobada. Tu nombre ha sido cambiado de '.$this->oldUsername.' a '.$this->newUsername.'.',
-            'url'     => URL::to('/notifications'),
+            'url'     => URL::to('/dashboard/username-changes/' . $this->requestId),
         ];
     }
 }
