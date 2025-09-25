@@ -51,7 +51,7 @@ class StoreBonExchangeRequest extends FormRequest
             'type' => [
                 'required',
                 'string',
-                'in:upload,download,personal_freeleech,invite',
+                'in:upload,download,personal_freeleech,invite,username_change,remove_hnr',
                 'exclude',
             ],
         ];
