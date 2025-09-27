@@ -25,11 +25,14 @@ document.addEventListener('DOMContentLoaded', function () {
         mouseY = e.clientY;
     });
 
-    function animate() {
-        ghostX += (mouseX - ghostX) * 0.15;
-        ghostY += (mouseY - ghostY) * 0.15;
-        ghost.style.transform = `translate(-50%, -50%) translate(${ghostX}px, ${ghostY}px)`;
-        requestAnimationFrame(animate);
-    }
-    animate();
+  const ghostWidth = 80;
+  const ghostHeight = 80;
+  function animate() {
+    ghostX += (mouseX - ghostX) * 0.15;
+    ghostY += (mouseY - ghostY) * 0.15;
+    // Centrar el fantasma en el cursor
+    ghost.style.transform = `translate(${ghostX - ghostWidth/2}px, ${ghostY - ghostHeight/2}px)`;
+    requestAnimationFrame(animate);
+  }
+  animate();
 });
