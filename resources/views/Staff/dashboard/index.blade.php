@@ -17,6 +17,10 @@
 @section('page', 'page__staff-dashboard--index')
 
 @section('main')
+    <!-- Fantasma visual siguiendo el cursor -->
+    <link rel="stylesheet" href="/css/ghost.css?v=1">
+    <script src="/js/ghost.js?v=1" defer></script>
+
     <div class="dashboard__menus">
         <section class="panelV2 panel--grid-item">
             <h2 class="panel__heading">
